@@ -1,4 +1,4 @@
-package boot
+package strago
 
 import (
 	"fmt"
@@ -9,10 +9,10 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/starfork/micro-boot/interceptor/recovery"
-	"github.com/starfork/micro-boot/interceptor/validator"
-	"github.com/starfork/micro-boot/interceptor/zap"
-	"github.com/starfork/micro-boot/registry"
+	"github.com/starfork/strago/interceptor/recovery"
+	"github.com/starfork/strago/interceptor/validator"
+	"github.com/starfork/strago/interceptor/zap"
+	"github.com/starfork/strago/registry"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -45,7 +45,7 @@ func New(opts ...Option) *App {
 
 	if options.Registry != "" {
 		//log.Printf("Balancer: [%s]\n", options.Balancer)
-		go registry.Register(options.Balancer, options.Name, options.Port, 5)
+		go registry.Register(options.Registry, options.Name, options.Port, 5)
 	}
 
 	return &App{

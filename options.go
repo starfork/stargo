@@ -1,4 +1,4 @@
-package boot
+package strago
 
 import "google.golang.org/grpc"
 
@@ -34,13 +34,6 @@ func Port(port string) Option {
 func Reflect() Option {
 	return func(o *Options) {
 		o.Reflect = true
-	}
-}
-
-//Balancer set server name
-func Balancer(b string) Option {
-	return func(o *Options) {
-		o.Balancer = b
 	}
 }
 
