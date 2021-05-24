@@ -8,7 +8,8 @@ import (
 
 var (
 	//JwtKey for encrypt
-	defaultKey = "zomeisagoodguy"
+	defaultKey    = "zomeisagoodguy"
+	defaultIssuer = "zome"
 )
 
 //Jwt 统一的鉴权jwt数据
@@ -54,13 +55,10 @@ func Issuer(issuer string) Option {
 
 //DefaultOptions default options
 func DefaultOptions() *Jwt {
-	nowTime := time.Now()
-	expireTime := nowTime.Add(24 * 30 * time.Hour)
-
 	o := &Jwt{}
 	o.Key = defaultKey
-	o.Issuer = "zome" //
-	o.ExpiresAt = expireTime.Unix()
+	o.Issuer = defaultIssuer
+	o.ExpiresAt = time.Now().Add(24 * 30 * time.Hour).Unix()
 	return o
 }
 

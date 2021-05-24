@@ -12,7 +12,6 @@ import (
 	"github.com/starfork/strago/interceptor/recovery"
 	"github.com/starfork/strago/interceptor/validator"
 	"github.com/starfork/strago/interceptor/zap"
-	"github.com/starfork/strago/registry"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -45,7 +44,7 @@ func New(opts ...Option) *App {
 
 	if options.Registry != "" {
 		//log.Printf("Balancer: [%s]\n", options.Balancer)
-		go registry.Register(options.Registry, options.Name, options.Port, 5)
+		//go registry.Register(options.Registry, options.Name, options.Port, 5)
 	}
 
 	return &App{
@@ -70,10 +69,10 @@ func (s *App) Run() {
 	go func() {
 		s := <-ch
 		fmt.Println(s)
-		if opt.Balancer != "" {
-			log.Printf("UnRegister: [%s]\n", opt.Name)
-			balancer.UnRegister(opt.Name, opt.Balancer)
-		}
+		// if opt.Balancer != "" {
+		// 	log.Printf("UnRegister: [%s]\n", opt.Name)
+		// 	balancer.UnRegister(opt.Name, opt.Balancer)
+		// }
 
 		if i, ok := s.(syscall.Signal); ok {
 			os.Exit(int(i))

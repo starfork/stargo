@@ -8,3 +8,5 @@ keywords:
  - Elasticsearch
  - golang
  - docker
+ - gorm
+ - protobuf
