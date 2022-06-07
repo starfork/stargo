@@ -1,4 +1,4 @@
-package strago
+package server
 
 import (
 	"fmt"
@@ -21,13 +21,13 @@ import (
 )
 
 //App App
-type App struct {
+type Server struct {
 	Option     Options
 	GRPCServer *grpc.Server
 }
 
 //New app
-func New(opts ...Option) *App {
+func New(opts ...Option) *Server {
 
 	time.LoadLocation("Asia/Shanghai")
 
@@ -35,7 +35,7 @@ func New(opts ...Option) *App {
 	for _, o := range opts {
 		o(&options)
 	}
-	//目前只测试了unaryserver
+
 	s := newServer(options.UnaryInterceptor...)
 
 	if options.Reflect {
@@ -47,7 +47,7 @@ func New(opts ...Option) *App {
 		//go registry.Register(options.Registry, options.Name, options.Port, 5)
 	}
 
-	return &App{
+	return &Server{
 		Option:     options,
 		GRPCServer: s,
 	}
@@ -56,7 +56,7 @@ func New(opts ...Option) *App {
 }
 
 //Run   server
-func (s *App) Run() {
+func (s *Server) Run() {
 	opt := s.Option
 	lis, err := net.Listen("tcp", opt.Port)
 	if err != nil {
@@ -65,7 +65,7 @@ func (s *App) Run() {
 	log.Printf("Starting: gRPC Listener [%s]\n", opt.Port)
 
 	ch := make(chan os.Signal, 1)
-	signal.Notify(ch, syscall.SIGTERM, syscall.SIGINT, syscall.SIGKILL, syscall.SIGHUP, syscall.SIGQUIT)
+	signal.Notify(ch, syscall.SIGTERM, syscall.SIGINT, syscall.SIGHUP, syscall.SIGQUIT)
 	go func() {
 		s := <-ch
 		fmt.Println(s)
@@ -89,17 +89,17 @@ func (s *App) Run() {
 }
 
 // Stop server
-func (s *App) Stop() {
+func (s *Server) Stop() {
 	//os.Exit(0)
 }
 
 // Restart server
-func (s *App) Restart() {
+func (s *Server) Restart() {
 
 }
 
 //Server set server name
-func (s *App) Server() *grpc.Server {
+func (s *Server) Server() *grpc.Server {
 	return s.GRPCServer
 }
 

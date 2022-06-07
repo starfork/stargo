@@ -1,63 +1,29 @@
-package strago
+package stargo
 
-import "google.golang.org/grpc"
+import "github.com/starfork/stargo/server"
 
-//Options 参数
 type Options struct {
-	Name string
-	Port string
-	//Server           *grpc.Server
-	UnaryInterceptor []grpc.UnaryServerInterceptor
-	Registry         string
-	Reflect          bool
-	Pb               interface{}
+	Name, Port string
+	serverOpts server.Options
+	//balancerOpts
+	//brokerOpts
+	Server server.Server
 }
 
-//Option Option
-type Option func(o *Options)
-
-//Name set server name
-func Name(name string) Option {
+func Server(s server.Server) Option {
 	return func(o *Options) {
-		o.Name = name
+		o.Server = s
 	}
 }
 
-//Port set server name
-func Port(port string) Option {
+func Name(n string) Option {
 	return func(o *Options) {
-		o.Port = port
+		o.serverOpts.Name = n
 	}
 }
 
-//Reflect set server name
-func Reflect() Option {
+func Port(p string) Option {
 	return func(o *Options) {
-		o.Reflect = true
+		o.serverOpts.Port = p
 	}
-}
-
-//Pb set server name
-func Pb(pb func()) Option {
-	return func(o *Options) {
-		o.Pb = pb
-	}
-}
-
-//UnaryInterceptor Unary server interceptor
-func UnaryInterceptor(opt ...grpc.UnaryServerInterceptor) Option {
-	return func(o *Options) {
-		for _, v := range opt {
-			o.UnaryInterceptor = append(o.UnaryInterceptor, v)
-		}
-	}
-}
-
-//DefaultOptions default options
-func DefaultOptions() Options {
-	o := Options{
-		Name:     "Default",
-		Balancer: "",
-	}
-	return o
 }
