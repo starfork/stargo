@@ -1,0 +1,153 @@
+package registry
+
+import (
+	"context"
+	"encoding/json"
+	"time"
+
+	clientv3 "go.etcd.io/etcd/client/v3"
+	//他妈了个傻逼的go.etcd.io/etcd/clientv3
+)
+
+const etcdSchema = "etcd"
+
+type etcdRegistry struct {
+	service Service
+	//addrs       []string
+	DialTimeout int
+
+	stop        chan error
+	leaseID     clientv3.LeaseID
+	keepAliveCh <-chan *clientv3.LeaseKeepAliveResponse
+
+	cli *clientv3.Client
+	ttl int64
+
+	//logger *zap.Logger
+}
+
+// NewRegister create a register
+func NewEtcdRegistry(addrs []string, ttl int64) (Registry, error) {
+	var err error
+
+	cli, err := clientv3.New(clientv3.Config{
+		Endpoints:   addrs,
+		DialTimeout: time.Second * 200,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	r := &etcdRegistry{
+		cli: cli,
+		ttl: ttl,
+	}
+
+	//r := &etcdnaming.GRPCResolver{Client: cli}
+	return r, nil
+}
+
+func (e *etcdRegistry) Register(service Service) error {
+	e.service = service
+	if err := e.register(); err != nil {
+		return err
+	}
+
+	go e.keepAlive()
+	return nil
+}
+func (e *etcdRegistry) UnRegister() {
+	if err := e.unregister(); err != nil {
+		//e.loggee.Error("unregister failed", zap.Error(err))
+	}
+
+	// 取消任期
+	if err := e.revoke(); err != nil {
+		//e.loggee.Error("revoke failed", zap.Error(err))
+	}
+	e.stop <- nil
+}
+
+// GetServerInfo 获取已注册的server信息
+func (e *etcdRegistry) GetService() (Service, error) {
+	resp, err := e.cli.Get(context.Background(), e.getKey())
+	if err != nil {
+		return e.service, err
+	}
+
+	info := Service{}
+	if resp.Count >= 1 {
+		if err := json.Unmarshal(resp.Kvs[0].Value, &info); err != nil {
+			return info, err
+		}
+	}
+	return info, nil
+}
+
+// revoke revokes the given lease.
+func (e *etcdRegistry) revoke() error {
+	if _, err := e.cli.Revoke(context.Background(), e.leaseID); err != nil {
+		return err
+	}
+	//r.logger.Info("service stop", zap.String("key", r.getKey()))
+	return nil
+}
+
+// unregister 从etcd删除当前
+func (e *etcdRegistry) unregister() error {
+	_, err := e.cli.Delete(context.Background(), e.getKey())
+	return err
+}
+
+func (e *etcdRegistry) keepAlive() {
+	ticker := time.NewTicker(time.Duration(e.ttl) * time.Second)
+	for {
+		select {
+		case <-e.stop:
+			return
+		case res := <-e.keepAliveCh:
+			//	e.loggee.Info("keepAlive",
+			//		zap.String(e.SrvInfo.Addr, strconv.FormatInt(res.TTL, 10)))
+			if res == nil {
+				if err := e.register(); err != nil {
+					//e.loggee.Error("register failed", zap.Error(err))
+				}
+			}
+		case <-ticker.C:
+			if e.keepAliveCh == nil {
+				if err := e.register(); err != nil {
+					//e.loggee.Error("register failed", zap.Error(err))
+				}
+			}
+		}
+	}
+}
+
+func (e *etcdRegistry) getKey() string {
+	return etcdSchema + "://" + e.service.Name + "/" + e.service.Addr
+}
+
+// register 注册进etcd
+func (e *etcdRegistry) register() error {
+	key := e.getKey() // g.srv.mail/127.0.0.1:8972
+	data, _ := json.Marshal(e.service)
+	//e.loggee.Info("register", zap.String(key, string(data)))
+
+	leaseCtx, cancel := context.WithTimeout(context.Background(), time.Duration(e.DialTimeout)*time.Second)
+	defer cancel()
+
+	// 创建一个租约
+	leaseResp, err := e.cli.Grant(leaseCtx, e.ttl)
+	if err != nil {
+		return err
+	}
+
+	_, err = e.cli.Put(context.Background(), key, string(data), clientv3.WithLease(leaseResp.ID))
+	if err != nil {
+		return err
+	}
+
+	e.leaseID = leaseResp.ID
+	e.keepAliveCh, err = e.cli.KeepAlive(context.Background(), leaseResp.ID)
+	return err
+}
