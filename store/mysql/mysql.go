@@ -5,6 +5,7 @@ import (
 
 	"github.com/starfork/stargo/config"
 	"github.com/starfork/stargo/store/mysql/plugin"
+
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
