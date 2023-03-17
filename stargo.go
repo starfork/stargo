@@ -40,6 +40,10 @@ type App struct {
 	redis  *redis.Redis
 }
 
+func NewApp(opts ...Option) *App {
+	return New(opts...)
+}
+
 func New(opts ...Option) *App {
 
 	options := DefaultOptions()
