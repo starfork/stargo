@@ -1,9 +1,8 @@
 package redis
 
 import (
-	"public/pkg/config"
-
 	"github.com/go-redis/redis"
+	"github.com/starfork/stargo/config"
 )
 
 var (

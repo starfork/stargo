@@ -3,13 +3,12 @@ package mysql
 import (
 	"database/sql"
 
+	"github.com/starfork/stargo/config"
+	"github.com/starfork/stargo/store/mysql/plugin"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 	"gorm.io/gorm/schema"
-
-	"public/pkg/config"
-	"public/pkg/store/mysql/plugin"
 )
 
 var TIME_LOCATION = "Asia/Shanghai" //上海

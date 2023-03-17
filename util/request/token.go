@@ -5,9 +5,8 @@ import (
 	"net/http"
 	"strings"
 
-	"public/pkg/util/crypt/jwt"
-
 	"github.com/golang/glog"
+	"github.com/starfork/stargo/util/crypt/jwt"
 )
 
 // Token 检查header获取token

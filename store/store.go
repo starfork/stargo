@@ -1,6 +1,6 @@
 package store
 
-import "public/pkg/config"
+import "github.com/starfork/stargo/config"
 
 type Store interface {
 	Connect(*config.ServerConfig)

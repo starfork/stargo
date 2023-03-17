@@ -2,9 +2,10 @@ package gslice_test
 
 import (
 	"fmt"
-	"public/pkg/util/gslice"
 	"strings"
 	"testing"
+
+	"github.com/starfork/stargo/util/gslice"
 )
 
 func TestContainsFilter(t *testing.T) {

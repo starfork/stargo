@@ -2,11 +2,11 @@ package plugin
 
 import (
 	"fmt"
-	"public/pkg/config"
-	"public/pkg/util/ustring"
 	"reflect"
 	"strings"
 
+	"github.com/starfork/stargo/config"
+	"github.com/starfork/stargo/util/ustring"
 	"gorm.io/gorm"
 )
 

@@ -2,10 +2,10 @@ package limiter
 
 import (
 	"net/http"
-	"public/pkg/util/request"
 	"strings"
 	"sync"
 
+	"github.com/starfork/stargo/util/request"
 	"go.uber.org/ratelimit"
 )
 
