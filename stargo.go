@@ -51,7 +51,7 @@ func New(opts ...Option) *App {
 		o(&options)
 	}
 
-	conf := options.Conf.GetServerConfig()
+	conf := options.Config.GetServerConfig()
 
 	if conf.Timezome != "" {
 		time.LoadLocation(conf.Timezome)
@@ -63,9 +63,9 @@ func New(opts ...Option) *App {
 	app := &App{
 		opts:   options,
 		server: s,
-		logger: logger.New(conf.Log),
+		logger: logger.NewZapSugar(conf.Log),
 		conf:   conf,
-		config: options.Conf,
+		config: options.Config,
 		//	Loger:  log.Sugar,
 	}
 	//注册reflection

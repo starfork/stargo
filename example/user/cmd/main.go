@@ -13,7 +13,7 @@ func main() {
 	//conf := c.GetServerConfig()
 
 	app := stargo.New(
-		stargo.Conf(c),
+		stargo.Config(c),
 	)
 
 	pb.RegisterUserHandlerServer(app.Server(), server.New())

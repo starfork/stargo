@@ -13,9 +13,7 @@ type Config struct {
 }
 
 func (c *Config) GetServerConfig(server_name ...string) *ServerConfig {
-
 	if len(server_name) > 0 {
-
 		if c, ok := c.Server[server_name[0]]; ok {
 			return c
 		}

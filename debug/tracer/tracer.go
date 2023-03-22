@@ -1,4 +1,4 @@
-package app
+package tracer
 
 import (
 	"fmt"
@@ -8,6 +8,9 @@ import (
 	jaeger "github.com/uber/jaeger-client-go"
 	config "github.com/uber/jaeger-client-go/config"
 )
+
+type Tracer interface {
+}
 
 func InitJaeger(service string) (opentracing.Tracer, io.Closer) {
 	cfg := &config.Configuration{
