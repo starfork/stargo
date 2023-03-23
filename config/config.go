@@ -10,12 +10,21 @@ type Config struct {
 
 	Base   *ServerConfig //如果各个服务么有单独设置，则公用
 	Server map[string]*ServerConfig
+	Api    *ApiConfig
 }
 
-func (c *Config) GetServerConfig(server_name ...string) *ServerConfig {
-	if len(server_name) > 0 {
-		if c, ok := c.Server[server_name[0]]; ok {
+// 拉取配置。
+// GetServerConfig("finance",true)
+// 第一个参数是服务名，第二个是：是否强制拉取
+func (c *Config) GetServerConfig(param ...interface{}) *ServerConfig {
+
+	if len(param) > 0 {
+		if c, ok := c.Server[param[0].(string)]; ok {
 			return c
+		} else {
+			if len(param) > 1 && param[1].(bool) {
+				return nil
+			}
 		}
 	}
 	return c.Base
@@ -35,6 +44,13 @@ type ServerConfig struct {
 	MongoDb    *MongoDBConfig
 	FileServer *FileServerConfig
 	Log        *LogConfig
+}
+
+type ApiConfig struct {
+	Environment string
+
+	Name string //
+	Port string //Api端口
 }
 
 // Mysql
