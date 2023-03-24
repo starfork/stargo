@@ -6,11 +6,11 @@ var (
 )
 
 type Config struct {
-	Deploy string
-
-	Base   *ServerConfig //如果各个服务么有单独设置，则公用
-	Server map[string]*ServerConfig
-	Api    *ApiConfig
+	Deploy  string
+	Monitor bool
+	Base    *ServerConfig //如果各个服务么有单独设置，则公用
+	Server  map[string]*ServerConfig
+	Api     *ApiConfig
 }
 
 // 拉取配置。

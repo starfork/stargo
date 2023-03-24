@@ -1,12 +1,11 @@
 //实现接口
 //"google.golang.org/grpc/resolver"
 
-package resolver
+package pool
 
 import "google.golang.org/grpc/resolver"
 
 const (
-	poolScheme         = "example"
 	exampleServiceName = "resolver.example.grpc.io"
 
 	backendAddr = "localhost:50051"
@@ -19,6 +18,7 @@ func NewPoolBuilder() (resolver.Builder, error) {
 }
 
 func (*poolResolverBuilder) Build(target resolver.Target, cc resolver.ClientConn, opts resolver.BuildOptions) (resolver.Resolver, error) {
+	//endpoint := target.URL.Path
 	r := &poolResolver{
 		target: target,
 		cc:     cc,
@@ -29,13 +29,16 @@ func (*poolResolverBuilder) Build(target resolver.Target, cc resolver.ClientConn
 	r.start()
 	return r, nil
 }
-func (*poolResolverBuilder) Scheme() string { return poolScheme }
+func (*poolResolverBuilder) Scheme() string {
+	return "pool"
+}
 
 // poolResolver is a
 // Resolver(https://godoc.org/google.golang.org/grpc/resolver#Resolver).
 type poolResolver struct {
-	target     resolver.Target
-	cc         resolver.ClientConn
+	target resolver.Target
+	cc     resolver.ClientConn
+
 	addrsStore map[string][]string
 }
 

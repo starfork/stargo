@@ -7,11 +7,14 @@ import (
 	"github.com/starfork/stargo/store/mysql"
 	"github.com/starfork/stargo/store/redis"
 	"go.uber.org/zap"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"google.golang.org/grpc"
 )
 
+// 执行方法，按照规则制定 namespace.[service].XxxHandler
 func (s *App) Invoke(ctx context.Context, app, method string, in, rs interface{}) error {
-	return s.invoke(ctx, app, method, "Handler", in, rs)
+	return s.invoke(ctx, app, method, cases.Title(language.English).String(app)+"Handler", in, rs)
 }
 
 // 更合理的，应该是通过port连接而不是定义app的map<?>
@@ -28,7 +31,7 @@ func (s *App) invoke(ctx context.Context, app, method, handler string, in, rs in
 	if err != nil {
 		return err
 	}
-	return conn.Invoke(ctx, "/zome."+app+"."+handler+"/"+method, in, rs)
+	return conn.Invoke(ctx, "/"+s.name+"."+app+"."+handler+"/"+method, in, rs)
 }
 
 func (s *App) GetLogger() *zap.SugaredLogger {

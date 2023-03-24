@@ -13,7 +13,7 @@ import (
 	"github.com/starfork/stargo/interceptor/recovery"
 	"github.com/starfork/stargo/interceptor/validator"
 	"github.com/starfork/stargo/logger"
-	"github.com/starfork/stargo/registry"
+	"github.com/starfork/stargo/naming"
 	"github.com/starfork/stargo/store/mysql"
 	"github.com/starfork/stargo/store/redis"
 	"go.uber.org/zap"
@@ -30,6 +30,7 @@ var (
 // App App
 type App struct {
 	opts   Options
+	name   string //服务名称，对应项目名称
 	server *grpc.Server
 	lis    net.Listener
 	logger *zap.SugaredLogger
@@ -61,6 +62,7 @@ func New(opts ...Option) *App {
 
 	s := newServer(options)
 	app := &App{
+		name:   options.Name,
 		opts:   options,
 		server: s,
 		logger: logger.NewZapSugar(conf.Log),
@@ -77,7 +79,7 @@ func New(opts ...Option) *App {
 	//注册registry
 	if options.Registry != nil {
 		//options.Name, options.Port, 1800
-		options.Registry.Register(registry.Service{
+		options.Registry.Register(naming.Service{
 			Name: conf.ServerName,
 			Addr: conf.ServerPort,
 		})
