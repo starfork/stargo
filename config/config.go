@@ -19,11 +19,12 @@ type Config struct {
 func (c *Config) GetServerConfig(param ...interface{}) *ServerConfig {
 
 	if len(param) > 0 {
-		if c, ok := c.Server[param[0].(string)]; ok {
+		svc := param[0].(string)
+		if c, ok := c.Server[svc]; ok {
 			return c
 		} else {
 			if len(param) > 1 && param[1].(bool) {
-				return nil
+				panic("missing server [" + svc + "] config")
 			}
 		}
 	}

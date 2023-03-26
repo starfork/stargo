@@ -34,7 +34,7 @@ func (e *Storage) AddJob(name, key, value string, interval float64) error {
 	}
 	e.rdc.ZAdd(e.name, member)
 	e.rdc.Set(e.name+"."+subkey, value, 0)
-	e.logger.Debugf("添加定时任务:%s,%f \r\n", subkey, interval)
+	//e.logger.Debugf("添加定时任务:%s,%f \r\n", subkey, interval)
 	return nil
 	//fmt.Println("添加定时任务", funcname)
 }

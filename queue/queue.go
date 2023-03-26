@@ -3,20 +3,25 @@ package queue
 import (
 	"sync"
 	"time"
+
+	"go.uber.org/zap"
 )
 
 type Queue struct {
-	storage  *Store
+	store    Store
 	handlers *sync.Map
-	//logger   *zap.SugaredLogger
+	logger   *zap.SugaredLogger
 	//interval   time.Duration //间隔时段
 	//workers int           //最大处理数
 }
 
-func New(storage *Store) *Queue {
+func New(store Store, logger ...*zap.SugaredLogger) *Queue {
 	q := &Queue{
-		storage:  storage,
+		store:    store,
 		handlers: &sync.Map{},
+	}
+	if len(logger) > 0 {
+		q.logger = logger[0]
 	}
 	go q.run()
 	return q
@@ -24,11 +29,15 @@ func New(storage *Store) *Queue {
 
 // Push 任务
 func (q *Queue) Push(t *Task) {
-	q.storage.AddJob(t)
+
+	str := t.MarshalJson()
+	delay := time.Now().Unix() + t.Delay
+	//fmt.Println("add job time" + time.Now().Format("2006-01-02 15:04:05"))
+	q.store.AddJob(t.Tag, t.Key, str, float64(delay))
 
 }
 func (q *Queue) Pop(t Task) {
-	q.storage.RemoveTask(&t)
+	q.store.RemoveTask(t.Tag, t.Key)
 }
 
 // Register 执行方法
@@ -53,11 +62,12 @@ func (q *Queue) run() {
 	}
 }
 func (q *Queue) exec() {
-	rs := q.storage.FetchJob()
+	rs := q.store.FetchJob()
 	for _, v := range rs {
-		task := q.storage.FetchTask(v)
-		q.storage.RemoveTask(task)
-		hander, ok := q.handlers.Load(task.Tag)
+		t := q.store.FetchTask(v)
+		task, _ := UnmarshalJson(t)
+		q.store.RemoveTask(task.Tag, task.Key)
+		h, ok := q.handlers.Load(task.Tag)
 		if !ok {
 			//log
 			continue
@@ -65,12 +75,17 @@ func (q *Queue) exec() {
 		//开启goroutine ==> workers
 		go func() {
 			//hander.(Handler)(task)
-
-			if err := hander.(Handler)(task); err != nil {
-				//q.storage.AddJob(task)
-				//q.logger.Debug("执行失败", err)
+			if err := h.(Handler)(task); err != nil {
+				//q.store.AddJob(task)
+				q.log("执行失败", err)
 			}
 			//TODO 如果执行错误，那么就重新添加到队列中（根据策略）
 		}()
+	}
+}
+
+func (q *Queue) log(template string, args ...interface{}) {
+	if q != nil {
+		q.logger.Debugf(template, args...)
 	}
 }

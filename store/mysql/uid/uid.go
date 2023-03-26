@@ -18,14 +18,14 @@ var Logger logger
 // ErrTimeOut 获取uid超时错误
 var ErrTimeOut = errors.New("get uid timeout")
 
-//UID struct
+// UID struct
 type UID struct {
 	db         *gorm.DB    // 数据库连接
 	businessID string      // 业务id
 	ch         chan uint32 // id缓冲池
 
 	min, max  uint32 // id段最小值，最大值
-	CheckFunc []CheckFunc
+	checkFunc []CheckFunc
 }
 
 type CheckFunc func(num ...uint32) uint32
@@ -56,18 +56,15 @@ func (u *UID) Get() (uint32, error) {
 
 // productID 生产id，当ch达到最大容量时，这个方法会阻塞，直到ch中的id被消费
 func (u *UID) productID() {
-
 	u.reLoad()
-
 	for {
 		if u.min >= u.max {
 			u.reLoad()
 		}
 		u.min++
-
 		//过滤方法
-		if len(u.CheckFunc) > 0 {
-			filter := u.CheckFunc[0]
+		if len(u.checkFunc) > 0 {
+			filter := u.checkFunc[0]
 			if filter(u.min) != 0 {
 				u.ch <- u.min
 			}
@@ -114,8 +111,8 @@ func (u *UID) getFromDB() error {
 		return err
 	}
 	//步长过滤。避免productID多次调用db执行
-	if len(u.CheckFunc) > 1 {
-		filter := u.CheckFunc[1]
+	if len(u.checkFunc) > 1 {
+		filter := u.checkFunc[1]
 		rs.MaxID = filter(rs.MaxID, rs.Step)
 	}
 
