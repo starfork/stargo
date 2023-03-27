@@ -48,7 +48,7 @@ func Connect(config *config.ServerConfig) *Mysql {
 	var db *gorm.DB
 
 	if db, err = gorm.Open(mysql.Open(dsn), conf); err != nil {
-		panic("Db Connect Error:" + err.Error())
+		panic("Db Connect TO " + dsn + " With Error:" + err.Error())
 	}
 
 	sqlDB, _ := db.DB()

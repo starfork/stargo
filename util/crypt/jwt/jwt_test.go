@@ -2,8 +2,9 @@ package jwt_test
 
 import (
 	"fmt"
-	"public/pkg/util/crypt/jwt"
 	"testing"
+
+	"github.com/starfork/stargo/util/crypt/jwt"
 )
 
 func TestEncode(t *testing.T) {
