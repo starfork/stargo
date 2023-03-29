@@ -97,7 +97,7 @@ func (e *UID) getFromDB() error {
 	tx := e.opt.db.Begin()
 	defer tx.Rollback()
 
-	if err := tx.Raw("SELECT max_id,step FROM ? WHERE business_id = ? FOR UPDATE", e.opt.table, e.opt.id).Scan(&rs).Error; err != nil {
+	if err := tx.Raw("SELECT max_id,step FROM "+e.opt.table+" WHERE business_id = ? FOR UPDATE", e.opt.id).Scan(&rs).Error; err != nil {
 		return err
 	}
 	//步长过滤。避免productID多次调用db执行
@@ -106,7 +106,7 @@ func (e *UID) getFromDB() error {
 		rs.MaxID = filter(rs.MaxID, rs.Step)
 	}
 
-	if err := tx.Exec("UPDATE ? SET max_id = ? WHERE business_id = ?", e.opt.table, rs.MaxID+rs.Step, e.opt.id).Error; err != nil {
+	if err := tx.Exec("UPDATE "+e.opt.table+" SET max_id = ? WHERE business_id = ?", rs.MaxID+rs.Step, e.opt.id).Error; err != nil {
 		return err
 	}
 	if err := tx.Commit().Error; err != nil {
