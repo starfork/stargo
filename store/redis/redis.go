@@ -1,7 +1,9 @@
 package redis
 
 import (
-	"github.com/go-redis/redis"
+	"context"
+
+	"github.com/redis/go-redis/v9"
 	"github.com/starfork/stargo/config"
 )
 
@@ -22,7 +24,7 @@ func Connect(config *config.ServerConfig) *Redis {
 		Password: c.Auth,
 	})
 
-	_, err := rdc.Ping().Result()
+	_, err := rdc.Ping(context.Background()).Result()
 	if err != nil {
 		panic(err)
 	}
