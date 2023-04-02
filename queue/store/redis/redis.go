@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"fmt"
 	"strconv"
 	"time"
 
@@ -48,6 +49,9 @@ func (e *Storage) FetchJob() []string {
 		Max: e_unix, //当前时间
 	}
 	rs := e.rdc.ZRangeByScore(e.name, opt)
+	if rs.Err() != nil {
+		fmt.Println(rs.Err())
+	}
 	return rs.Val()
 
 }

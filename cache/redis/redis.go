@@ -2,7 +2,6 @@ package redis
 
 import (
 	"context"
-	"time"
 
 	"github.com/redis/go-redis/v9"
 	"github.com/starfork/stargo"
@@ -18,14 +17,14 @@ func New(app *stargo.App) *Redis {
 		rdc: app.GetRedis().GetInstance(),
 	}
 
-	go func() {
-		t := time.NewTicker(time.Second * 5) //TODO，传入配置，interval
-		defer t.Stop()
-		for {
-			<-t.C
-			c.clear(context.Background())
-		}
-	}()
+	// go func() {
+	// 	t := time.NewTicker(time.Second * 5) //TODO，传入配置，interval
+	// 	defer t.Stop()
+	// 	for {
+	// 		<-t.C
+	// 		c.clear(context.Background())
+	// 	}
+	// }()
 
 	return c
 }

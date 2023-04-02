@@ -57,3 +57,12 @@ func TestGet(t *testing.T) {
 	fmt.Printf("%+v", data)
 
 }
+
+func TestSadd(t *testing.T) {
+
+	r := sredis.Connect(test_conf)
+	rdc = r.GetInstance()
+
+	rdc.SAdd(context.Background(), "abc", "sdfdsfsd")
+
+}

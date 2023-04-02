@@ -45,6 +45,8 @@ type ServerConfig struct {
 	MongoDb    *MongoDBConfig
 	FileServer *FileServerConfig
 	Log        *LogConfig
+
+	Registry *Registry
 }
 
 type ApiConfig struct {
@@ -96,4 +98,11 @@ type LogConfig struct {
 	MaxSize    int    //日志文件最大尺寸
 	MaxBackups int    //最大备份数
 	MaxAge     int    //最大停留
+}
+
+type Registry struct {
+	Name string
+	Addr string //连接地址
+	Auth string //认证
+	Num  int    //库的数字
 }

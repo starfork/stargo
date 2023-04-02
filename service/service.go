@@ -1,4 +1,4 @@
-package naming
+package service
 
 type Service struct {
 	Name    string `json:"name"`

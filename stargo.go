@@ -14,6 +14,7 @@ import (
 	"github.com/starfork/stargo/interceptor/validator"
 	"github.com/starfork/stargo/logger"
 	"github.com/starfork/stargo/naming"
+	"github.com/starfork/stargo/service"
 	"github.com/starfork/stargo/store/mysql"
 	"github.com/starfork/stargo/store/redis"
 	"go.uber.org/zap"
@@ -30,7 +31,6 @@ var (
 // App App
 type App struct {
 	opts   Options
-	name   string //服务名称，对应项目名称
 	server *grpc.Server
 	lis    net.Listener
 	logger *zap.SugaredLogger
@@ -39,6 +39,8 @@ type App struct {
 	conf   *config.ServerConfig
 	mysql  *mysql.Mysql
 	redis  *redis.Redis
+
+	registry naming.Registry
 }
 
 func NewApp(opts ...Option) *App {
@@ -60,14 +62,20 @@ func New(opts ...Option) *App {
 		time.LoadLocation("Asia/Shanghai")
 	}
 
+	if conf.ServerName != "" {
+		options.Name = conf.ServerName
+	}
+
 	s := newServer(options)
+
 	app := &App{
-		name:   options.Name,
 		opts:   options,
 		server: s,
 		logger: logger.NewZapSugar(conf.Log),
 		conf:   conf,
 		config: options.Config,
+		//registry: conf.Registry.Name,
+
 		//	Loger:  log.Sugar,
 	}
 	//注册reflection
@@ -75,14 +83,19 @@ func New(opts ...Option) *App {
 		app.logger.Debug("env:" + conf.Environment)
 		reflection.Register(s)
 	}
-
 	//注册registry
-	if options.Registry != nil {
+	if conf.Registry != nil {
+
+		r := naming.NewRegistry(conf.Registry)
 		//options.Name, options.Port, 1800
-		options.Registry.Register(naming.Service{
+		if err := r.Register(service.Service{
 			Name: conf.ServerName,
 			Addr: conf.ServerPort,
-		})
+		}); err != nil {
+			panic(err)
+		}
+
+		app.registry = r
 	}
 
 	return app
@@ -122,12 +135,20 @@ func (s *App) Run() {
 // Stop server
 func (s *App) Stop() {
 
-	if s.opts.Registry != nil {
+	if s.registry != nil {
 		s.logger.Debugf("UnRegister: [%s]\n", s.conf.ServerName)
-		s.opts.Registry.UnRegister()
+		//s.registry.UnRegister(s.Service())
 	}
 
 	s.server.Stop()
+}
+
+// 返回标准服务格式
+func (s *App) Service() service.Service {
+	return service.Service{
+		Name: s.opts.Name,
+		Addr: s.opts.Addr,
+	}
 }
 
 // Restart server
