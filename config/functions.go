@@ -2,7 +2,6 @@ package config
 
 import (
 	"flag"
-	"fmt"
 	"os"
 
 	jsoniter "github.com/json-iterator/go"
@@ -17,7 +16,7 @@ func LoadConfig(config_file ...string) (*Config, error) {
 		configFile = flag.String("c", "../config/debug.json", "config file path")
 	}
 	flag.Parse()
-	fmt.Println(*configFile)
+	//fmt.Println(*configFile)
 	return ParseConfig(*configFile)
 }
 

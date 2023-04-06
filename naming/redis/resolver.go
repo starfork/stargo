@@ -41,14 +41,11 @@ func NewResolver(conf *config.Registry) resolver.Builder {
 func (e *Resolver) Build(target resolver.Target, cc resolver.ClientConn, opts resolver.BuildOptions) (resolver.Resolver, error) {
 	var address []resolver.Address
 	key := e.name + "_" + target.URL.Host
-	fmt.Println(key)
 	rs := e.rdc.SMembers(e.ctx, key)
 	if rs.Err() != nil {
 		fmt.Println(rs.Err())
 		return nil, rs.Err()
 	}
-
-	fmt.Printf("%+v", rs.Val())
 
 	for _, v := range rs.Val() {
 		address = append(address, resolver.Address{
