@@ -70,17 +70,17 @@ func (q *Queue) exec() {
 			//log
 			continue
 		}
-		//开启goroutine ==> workers
-		go func() {
-			//hander.(Handler)(task)
-			if err := hander.(Handler)(task); err != nil {
-				q.opts.logger.Debugf("执行失败%+v", err)
+		if err := hander.(Handler)(task); err != nil {
+			q.opts.logger.Debugf("执行失败%+v", err)
+			//如果有循环条件设置。则循环加入
+			if task.Retry > 0 {
+				task.Delay = task.Retry
+				q.store.Update(task)
+			} else {
+				q.store.Pop(task)
 			}
-			// if err := hander.(Handler)(task); err != nil {
-			// 	//q.storage.AddJob(task)
-			// 	//q.logger.Debug("执行失败", err)
-			// }
-			//TODO 如果执行错误，那么就重新添加到队列中（根据策略）
-		}()
+		} else {
+			q.store.Pop(task)
+		}
 	}
 }
