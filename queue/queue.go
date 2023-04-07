@@ -48,6 +48,11 @@ func (q *Queue) Push(t *Task) error {
 	return q.store.Push(t)
 }
 
+// 一般意义上来说，重复添加一个队列，即表示一个更新
+//
+//	func (q *Queue) Update(t *Task) error {
+//		return q.store.Update(t)
+//	}
 func (q *Queue) run() {
 	t := time.NewTicker(time.Second * time.Duration(q.opts.interval)) //TODO，传入配置，interval
 	defer t.Stop()
@@ -57,7 +62,11 @@ func (q *Queue) run() {
 	}
 }
 func (q *Queue) exec() {
-	rs, _ := q.store.FetchJob(q.opts.step)
+	rs, err := q.store.FetchJob(q.opts.step)
+
+	if err != nil {
+		q.log("任务队列获取失败%+v", err)
+	}
 
 	for _, v := range rs {
 		task, err := q.store.ReadTask(v)
@@ -67,20 +76,34 @@ func (q *Queue) exec() {
 		q.store.Pop(task)
 		hander, ok := q.handlers.Load(task.Tag)
 		if !ok {
+			q.log("任务获取失败%+v", task.Tag)
 			//log
 			continue
 		}
-		if err := hander.(Handler)(task); err != nil {
-			q.opts.logger.Debugf("执行失败%+v", err)
-			//如果有循环条件设置。则循环加入
-			if task.Retry > 0 {
-				task.Delay = task.Retry
-				q.store.Update(task)
+		//开启goroutine ==> workers
+		go func() {
+			q.log("sart task ")
+			//执行成功则删除任务，否则如果设置了
+			if err := hander.(Handler)(task); err != nil {
+				q.log("执行失败%+v", err)
+				//如果有循环条件设置。则循环加入
+				task.Retry++
+				if task.TTL > 0 && task.Retry <= task.RetryMax {
+					task.Delay = task.TTL
+					q.store.Update(task)
+				} else {
+					q.store.Pop(task)
+				}
+
 			} else {
 				q.store.Pop(task)
 			}
-		} else {
-			q.store.Pop(task)
-		}
+		}()
+	}
+}
+
+func (q *Queue) log(template string, args ...interface{}) {
+	if q.opts.logger != nil {
+		q.opts.logger.Debugf(template, args...)
 	}
 }

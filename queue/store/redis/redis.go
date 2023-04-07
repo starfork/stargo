@@ -9,6 +9,10 @@ import (
 	"go.uber.org/zap"
 )
 
+/**
+通过redis的有续集和实现的一个任务延迟队列
+*/
+
 type Redis struct {
 	rdc    *redis.Client
 	name   string
@@ -29,18 +33,16 @@ func New(name string, rdc *redis.Client, logger ...*zap.SugaredLogger) queue.Sto
 
 // 添加任务
 func (e *Redis) Push(t *queue.Task) error {
-	name := e.name + "_" + t.Tag
 	value := t.MarshalJson()
 	interval := time.Now().Unix() + t.Delay
-	subkey := t.Tag + "." + t.Key
 	member := redis.Z{
 		Score:  float64(interval), //执行时间
-		Member: subkey,
+		Member: t.Subkey(),
 	}
-	if rs := e.rdc.ZAdd(name, member); rs.Err() != nil {
+	if rs := e.rdc.ZAdd(e.name, member); rs.Err() != nil {
 		return rs.Err()
 	}
-	if rs := e.rdc.Set(e.name+"."+subkey, value, 0); rs.Err() != nil {
+	if rs := e.rdc.Set(e.name+"."+t.Subkey(), value, 0); rs.Err() != nil {
 		return rs.Err()
 	}
 	return nil
@@ -48,13 +50,11 @@ func (e *Redis) Push(t *queue.Task) error {
 }
 
 func (e *Redis) Pop(t *queue.Task) error {
-	name := e.name + "_" + t.Tag
-	subkey := t.Tag + "." + t.Key
 	//e.logger.Debug("RemoveTask:", subkey)
-	if rs := e.rdc.ZRem(name, subkey); rs.Err() != nil {
+	if rs := e.rdc.ZRem(e.name, t.Subkey()); rs.Err() != nil {
 		return rs.Err()
 	}
-	if rs := e.rdc.Del(name + "." + subkey); rs.Err() != nil {
+	if rs := e.rdc.Del(e.name + "." + t.Subkey()); rs.Err() != nil {
 		return rs.Err()
 	}
 	return nil
