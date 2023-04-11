@@ -46,6 +46,7 @@ func (e *Plugin) RebuildPrefix(str string) string {
 
 func (e *Plugin) AfterQuery(db *gorm.DB) {
 	//fmt.Println(db.Statement.Schema)
+	//fmt.Println(db.Statement.Schema)
 
 	value := db.Statement.ReflectValue
 	if value.Kind() == reflect.Int64 {
@@ -98,17 +99,24 @@ func (e *Plugin) SetOssImg(item reflect.Value, parseField []string) {
 	if len(parseField) == 0 {
 		return
 	}
+	//fmt.Print(parseField)
 	//parseField = []string{"image_url", "image_url_list"}
 	for _, field := range parseField {
 		f := item.FieldByName(field)
 		if (f != reflect.Value{}) { //字段没找到
-			f.SetString(e.ReplacePrefix(f.String()))
-		} else {
-			// if log != nil {
-			// 	log.Info(context.TODO(), "field not found %s", field)
-			// }
-			//log
+			if f.CanSet() {
+				f.SetString(e.ReplacePrefix(f.String()))
+			} else {
+				fmt.Println("field can not set " + field)
+			}
+			//f.SetString(ReplacePrefix(f.String()))
 		}
+		// else {
+		// 	if log != nil {
+		// 		log.Info(context.TODO(), "field not found %s", field)
+		// 	}
+		// 	//log
+		// }
 	}
 }
 

@@ -48,9 +48,10 @@ func Table(c string) Option {
 	}
 }
 
-func Fun(c []CheckFunc) Option {
+// 可多次调用
+func Fun(c CheckFunc) Option {
 	return func(o *Options) {
-		o.fun = append(o.fun, c...)
+		o.fun = append(o.fun, c)
 	}
 }
 

@@ -75,6 +75,9 @@ func (s *App) GetMongo() *mongo.Mongo {
 func (s *App) GetConfig() *config.Config {
 	return s.config
 }
+func (s *App) GetServerConfig() *config.ServerConfig {
+	return s.config.GetServerConfig()
+}
 
 func (s *App) GetSfid(conf ...sf.Settings) *sf.Sonyflake {
 	if s.sfid != nil {

@@ -35,7 +35,7 @@ func (c *Config) GetServerConfig(param ...interface{}) *ServerConfig {
 type ServerConfig struct {
 	Environment string
 
-	ServerName string //服务名称
+	//ServerName string //服务名称--4-11改。通过app启动设置
 	ServerPort string //服务端口
 	ApiPort    string //api端口
 	Timezome   string //时区设置
@@ -45,8 +45,8 @@ type ServerConfig struct {
 	MongoDb    *MongoDBConfig
 	FileServer *FileServerConfig
 	Log        *LogConfig
-
-	Registry *Registry
+	Broker     *BrokerConfig
+	Registry   *Registry
 }
 
 type ApiConfig struct {
@@ -103,8 +103,14 @@ type LogConfig struct {
 }
 
 type Registry struct {
+	Org  string
 	Name string
 	Addr string //连接地址
 	Auth string //认证
 	Num  int    //库的数字
+}
+
+type BrokerConfig struct {
+	Name string
+	Host string //连接地址
 }

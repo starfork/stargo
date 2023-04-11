@@ -52,14 +52,14 @@ func NewApp(opts ...Option) *App {
 	return New(opts...)
 }
 
-func New(opts ...Option) *App {
+func New(opt ...Option) *App {
 
-	options := DefaultOptions()
-	for _, o := range opts {
-		o(&options)
+	opts := DefaultOptions()
+	for _, o := range opt {
+		o(&opts)
 	}
 
-	conf := options.Config.GetServerConfig()
+	conf := opts.Config.GetServerConfig()
 
 	if conf.Timezome != "" {
 		time.LoadLocation(conf.Timezome)
@@ -67,25 +67,21 @@ func New(opts ...Option) *App {
 		time.LoadLocation("Asia/Shanghai")
 	}
 
-	if conf.ServerName != "" {
-		options.Name = conf.ServerName
-	}
-
-	s := newServer(options)
+	s := newServer(opts)
 
 	app := &App{
-		opts:   options,
+		opts:   opts,
 		server: s,
 		logger: logger.NewZapSugar(conf.Log),
 		conf:   conf,
-		config: options.Config,
+		config: opts.Config,
 		//registry: conf.Registry.Name,
 
 		//	Loger:  log.Sugar,
 	}
 	//注册reflection
 	if conf.Environment != ENV_PRODUCTION {
-		app.logger.Debug("env:" + conf.Environment)
+		//app.logger.Debug("env:" + conf.Environment)
 		reflection.Register(s)
 	}
 	//注册registry
@@ -94,7 +90,7 @@ func New(opts ...Option) *App {
 		r := naming.NewRegistry(conf.Registry)
 		//options.Name, options.Port, 1800
 		if err := r.Register(service.Service{
-			Name: conf.ServerName,
+			Name: opts.Name,
 			Addr: conf.ServerPort,
 		}); err != nil {
 			panic(err)
@@ -141,7 +137,7 @@ func (s *App) Run() {
 func (s *App) Stop() {
 
 	if s.registry != nil {
-		s.logger.Debugf("UnRegister: [%s]\n", s.conf.ServerName)
+		s.logger.Debugf("UnRegister: [%s]\n", s.opts.Name)
 		//s.registry.UnRegister(s.Service())
 	}
 
