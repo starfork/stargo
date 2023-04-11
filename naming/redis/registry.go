@@ -13,6 +13,7 @@ type Registry struct {
 	rdc  *redis.Client
 	name string
 	ctx  context.Context
+	conf *config.Registry
 }
 
 func NewRegistry(conf *config.Registry) *Registry {
@@ -29,24 +30,29 @@ func NewRegistry(conf *config.Registry) *Registry {
 		//rdc:  app.GetRedis().GetInstance(),
 		ctx:  context.Background(),
 		name: Scheme,
+		conf: conf,
 	}
 }
 
+// stargo_registryredis[xxx]abc
+func (e *Registry) key(name string) string {
+	return KeyPrefix + "_" + e.conf.Org + "_" + name
+}
 func (e *Registry) Register(svc service.Service) error {
-	key := e.name + "_" + svc.Name
+	key := e.key(svc.Name)
 	err := e.rdc.SAdd(context.TODO(), key, svc.Addr).Err()
 	return err
 }
 
 func (e *Registry) UnRegister(svc service.Service) error {
 
-	key := e.name + "_" + svc.Name
+	key := e.key(svc.Name)
 	err := e.rdc.SRem(e.ctx, key, svc.Addr).Err()
 	return err
 }
 
 func (e *Registry) List(name string) []service.Service {
-	key := e.name + "_" + name
+	key := e.key(name)
 
 	rs := e.rdc.SMembers(e.ctx, key)
 	data := []service.Service{}

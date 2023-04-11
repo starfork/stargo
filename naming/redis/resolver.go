@@ -2,7 +2,6 @@ package redis
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/redis/go-redis/v9"
 	"github.com/starfork/stargo/config"
@@ -11,12 +10,14 @@ import (
 	"google.golang.org/grpc/resolver"
 )
 
+const KeyPrefix = "stargo_registry"
 const Scheme = "redis"
 
 type Resolver struct {
 	rdc  *redis.Client
 	name string
 	ctx  context.Context
+	conf *config.Registry
 }
 
 func NewResolver(conf *config.Registry) resolver.Builder {
@@ -32,18 +33,22 @@ func NewResolver(conf *config.Registry) resolver.Builder {
 		name: Scheme,
 		rdc:  rds.GetInstance(),
 		ctx:  context.Background(),
+		conf: conf,
 	}
 
 	resolver.Register(r)
 	return r
 }
 
+// stargo_registryredis[xxx]abc
+func (e *Resolver) key(name string) string {
+	return KeyPrefix + "_" + e.conf.Org + "_" + name
+}
 func (e *Resolver) Build(target resolver.Target, cc resolver.ClientConn, opts resolver.BuildOptions) (resolver.Resolver, error) {
 	var address []resolver.Address
-	key := e.name + "_" + target.URL.Host
+	key := e.key(target.URL.Host)
 	rs := e.rdc.SMembers(e.ctx, key)
 	if rs.Err() != nil {
-		fmt.Println(rs.Err())
 		return nil, rs.Err()
 	}
 
@@ -58,7 +63,8 @@ func (e *Resolver) Build(target resolver.Target, cc resolver.ClientConn, opts re
 }
 
 func (e *Resolver) List(name string) []service.Service {
-	key := e.name + "_" + name
+
+	key := e.key(name)
 	rs := e.rdc.SMembers(e.ctx, key)
 	data := []service.Service{}
 	for _, v := range rs.Val() {

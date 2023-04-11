@@ -26,7 +26,8 @@ func NewClient(conf *config.ServerConfig) *Client {
 }
 
 // 没有对外的调用，目前只支持不带验证的
-func (e *Client) Invoke(ctx context.Context, app, method string, in, rs interface{}) error {
+// 默认执行
+func (e *Client) Invoke(ctx context.Context, app, method string, in, rs interface{}, h ...string) error {
 
 	//统一独立部署，只有一个target
 	target := app
@@ -40,6 +41,9 @@ func (e *Client) Invoke(ctx context.Context, app, method string, in, rs interfac
 
 	//handler := cases.Title(language.English).String(app) + "Handler"
 	handler := "Handler"
+	if len(h) > 0 {
+		handler = h[0] + handler
+	}
 	//[org].[app].[Handler].[method]
 	return conn.Invoke(ctx, "/"+e.org+"."+app+"."+handler+"/"+method, in, rs)
 }

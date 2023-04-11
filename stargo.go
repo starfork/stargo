@@ -50,10 +50,6 @@ type App struct {
 	registry naming.Registry
 }
 
-func NewApp(opts ...Option) *App {
-	return New(opts...)
-}
-
 func New(opt ...Option) *App {
 
 	opts := DefaultOptions()
@@ -71,33 +67,27 @@ func New(opt ...Option) *App {
 
 	s := newServer(opts)
 
+	//注册reflection
+	if conf.Environment != ENV_PRODUCTION {
+		//app.logger.Debug("env:" + conf.Environment)
+		reflection.Register(s)
+	}
+
 	app := &App{
 		opts:   opts,
 		server: s,
 		logger: logger.NewZapSugar(conf.Log),
 		conf:   conf,
 		config: opts.Config,
-		//registry: conf.Registry.Name,
+	}
 
-		//	Loger:  log.Sugar,
-	}
-	//注册reflection
-	if conf.Environment != ENV_PRODUCTION {
-		//app.logger.Debug("env:" + conf.Environment)
-		reflection.Register(s)
-	}
 	//注册registry
 	if conf.Registry != nil {
-
+		app.conf.Registry.Org = opts.Org
 		r := naming.NewRegistry(conf.Registry)
-		//options.Name, options.Port, 1800
-		if err := r.Register(service.Service{
-			Name: opts.Name,
-			Addr: conf.ServerPort,
-		}); err != nil {
+		if err := r.Register(app.Service()); err != nil {
 			panic(err)
 		}
-
 		app.registry = r
 	}
 
@@ -120,7 +110,7 @@ func (s *App) Run() {
 	signal.Notify(ch, syscall.SIGTERM, syscall.SIGINT, syscall.SIGHUP, syscall.SIGQUIT)
 	go func() {
 		sg := <-ch
-		s.server.Stop()
+		s.Stop()
 		if i, ok := sg.(syscall.Signal); ok {
 			os.Exit(int(i))
 		} else {
@@ -140,7 +130,7 @@ func (s *App) Stop() {
 
 	if s.registry != nil {
 		s.logger.Debugf("UnRegister: [%s]\n", s.opts.Name)
-		//s.registry.UnRegister(s.Service())
+		s.registry.UnRegister(s.Service())
 	}
 
 	s.server.Stop()
@@ -149,8 +139,9 @@ func (s *App) Stop() {
 // 返回标准服务格式
 func (s *App) Service() service.Service {
 	return service.Service{
+		Org:  s.opts.Org,
 		Name: s.opts.Name,
-		Addr: s.opts.Addr,
+		Addr: s.conf.ServerPort,
 	}
 }
 
