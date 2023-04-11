@@ -73,6 +73,7 @@ func Connect(config *config.ServerConfig) *Mysql {
 }
 
 func (e *Mysql) GetInstance() *gorm.DB {
+
 	return e.db
 }
 

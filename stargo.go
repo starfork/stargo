@@ -20,6 +20,8 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
+
+	sf "github.com/sony/sonyflake"
 )
 
 var (
@@ -34,6 +36,7 @@ type App struct {
 	server *grpc.Server
 	lis    net.Listener
 	logger *zap.SugaredLogger
+	sfid   *sf.Sonyflake
 
 	config *config.Config
 	conf   *config.ServerConfig

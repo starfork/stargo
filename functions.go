@@ -2,6 +2,7 @@ package stargo
 
 import (
 	"context"
+	"time"
 
 	"github.com/starfork/stargo/config"
 	"github.com/starfork/stargo/naming"
@@ -12,6 +13,8 @@ import (
 	"golang.org/x/text/language"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+
+	sf "github.com/sony/sonyflake"
 )
 
 // 执行方法，按照规则制定 namespace.[service].XxxHandler
@@ -60,4 +63,16 @@ func (s *App) GetRedis() *redis.Redis {
 func (s *App) GetConfig() *config.Config {
 
 	return s.config
+}
+
+func (s *App) GetSfid(conf ...sf.Settings) *sf.Sonyflake {
+	if s.sfid != nil {
+		return s.sfid
+	}
+	st := sf.Settings{}
+	if len(conf) > 0 {
+		st = conf[0]
+	}
+	st.StartTime = time.Date(2021, 1, 18, 0, 0, 0, 0, time.UTC)
+	return sf.NewSonyflake(st)
 }
