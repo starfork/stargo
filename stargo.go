@@ -9,6 +9,7 @@ import (
 	"time"
 
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
+	"github.com/starfork/stargo/client"
 	"github.com/starfork/stargo/config"
 	"github.com/starfork/stargo/interceptor/recovery"
 	"github.com/starfork/stargo/interceptor/validator"
@@ -44,6 +45,7 @@ type App struct {
 	mysql  *mysql.Mysql
 	redis  *redis.Redis
 	mongo  *mongo.Mongo
+	client *client.Client
 
 	registry naming.Registry
 }

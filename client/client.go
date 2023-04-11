@@ -5,8 +5,6 @@ import (
 
 	"github.com/starfork/stargo/config"
 	"github.com/starfork/stargo/naming"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -40,7 +38,8 @@ func (e *Client) Invoke(ctx context.Context, app, method string, in, rs interfac
 		return err
 	}
 
-	handler := cases.Title(language.English).String(app) + "Handler"
+	//handler := cases.Title(language.English).String(app) + "Handler"
+	handler := "Handler"
 	//[org].[app].[Handler].[method]
 	return conn.Invoke(ctx, "/"+e.org+"."+app+"."+handler+"/"+method, in, rs)
 }
