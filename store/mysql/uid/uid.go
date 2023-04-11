@@ -3,6 +3,8 @@ package uid
 import (
 	"errors"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 // Logger Log接口，如果设置了Logger，就使用Logger打印日志，如果没有设置，就使用内置库log打印日志
@@ -23,13 +25,13 @@ type UID struct {
 // New 创建一个UID;len：缓冲池大小()
 // db:数据库连接
 // len：缓冲池大小(长度可控制缓存中剩下多少id时，去DB中加载)
-func New(opts ...Option) (*UID, error) {
+func New(db *gorm.DB, opts ...Option) (*UID, error) {
 
 	opt := DefaultOptions()
 	for _, o := range opts {
 		o(&opt)
 	}
-
+	opt.db = db
 	lid := UID{
 		ch:  make(chan uint32, opt.len),
 		opt: opt,

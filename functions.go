@@ -6,6 +6,7 @@ import (
 
 	"github.com/starfork/stargo/config"
 	"github.com/starfork/stargo/naming"
+	"github.com/starfork/stargo/store/mongo"
 	"github.com/starfork/stargo/store/mysql"
 	"github.com/starfork/stargo/store/redis"
 	"go.uber.org/zap"
@@ -60,8 +61,14 @@ func (s *App) GetRedis() *redis.Redis {
 	return s.redis
 }
 
-func (s *App) GetConfig() *config.Config {
+func (s *App) GetMongo() *mongo.Mongo {
+	if s.mongo == nil {
+		return mongo.Connect(s.conf)
+	}
+	return s.mongo
+}
 
+func (s *App) GetConfig() *config.Config {
 	return s.config
 }
 

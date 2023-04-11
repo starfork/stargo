@@ -15,6 +15,7 @@ import (
 	"github.com/starfork/stargo/logger"
 	"github.com/starfork/stargo/naming"
 	"github.com/starfork/stargo/service"
+	"github.com/starfork/stargo/store/mongo"
 	"github.com/starfork/stargo/store/mysql"
 	"github.com/starfork/stargo/store/redis"
 	"go.uber.org/zap"
@@ -42,6 +43,7 @@ type App struct {
 	conf   *config.ServerConfig
 	mysql  *mysql.Mysql
 	redis  *redis.Redis
+	mongo  *mongo.Mongo
 
 	registry naming.Registry
 }

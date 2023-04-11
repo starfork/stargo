@@ -9,7 +9,6 @@ type Queue struct {
 	store    Store
 	handlers *sync.Map
 	opts     Options
-
 	//interval   time.Duration //间隔时段
 	//workers int           //最大处理数
 }

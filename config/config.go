@@ -78,10 +78,12 @@ type RedisConfig struct {
 
 // Mongo
 type MongoDBConfig struct {
-	Host string
-	Port string
-	Auth string
-	Num  int
+	Host     string //地址
+	Port     string //端口
+	User     string //账户
+	Password string //
+	Monitor  bool   //监控
+	DbName   string //库名
 }
 
 // 文件服务器配置

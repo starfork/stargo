@@ -29,7 +29,8 @@ type RedisConfig struct {
 func New(name string, app *stargo.App) queue.Store {
 
 	s := &Redis{
-		rdc: app.GetRedis().GetInstance(), name: name,
+		rdc:    app.GetRedis().GetInstance(),
+		name:   name,
 		logger: app.GetLogger(),
 	}
 
