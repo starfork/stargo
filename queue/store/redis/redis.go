@@ -32,6 +32,7 @@ func New(name string, app *stargo.App) queue.Store {
 		rdc:    app.GetRedis().GetInstance(),
 		name:   name,
 		logger: app.GetLogger(),
+		ctx:    context.Background(),
 	}
 
 	return s
@@ -79,6 +80,7 @@ func (e *Redis) FetchJob(step int64) ([]string, error) {
 		Min: s_unix, //1秒前
 		Max: e_unix, //当前时间
 	}
+
 	rs := e.rdc.ZRangeByScore(e.ctx, e.name, opt)
 	return rs.Val(), rs.Err()
 

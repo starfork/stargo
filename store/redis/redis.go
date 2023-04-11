@@ -23,7 +23,6 @@ func Connect(config *config.ServerConfig) *Redis {
 		DB:       c.Num,
 		Password: c.Auth,
 	})
-
 	_, err := rdc.Ping(context.Background()).Result()
 	if err != nil {
 		panic(err)
