@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/starfork/stargo/config"
 	"github.com/starfork/stargo/naming"
@@ -43,8 +44,9 @@ func (e *Client) Invoke(ctx context.Context, app, method string, in, rs interfac
 	//handler := cases.Title(language.English).String(app) + "Handler"
 	handler := "Handler"
 	if len(h) > 0 {
-		handler = h[0] + handler
+		handler = h[0] + "Handler"
 	}
 	//[org].[app].[Handler].[method]
+	fmt.Println("/" + e.org + "." + app + "." + handler + "/" + method)
 	return conn.Invoke(ctx, "/"+e.org+"."+app+"."+handler+"/"+method, in, rs)
 }

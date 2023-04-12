@@ -3,7 +3,6 @@ package redis
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/redis/go-redis/v9"
 	"github.com/starfork/stargo/config"
@@ -49,12 +48,11 @@ func (e *Resolver) key(name string) string {
 func (e *Resolver) Build(target resolver.Target, cc resolver.ClientConn, opts resolver.BuildOptions) (resolver.Resolver, error) {
 	var address []resolver.Address
 	key := e.key(target.URL.Host)
-	fmt.Println(key)
+
 	rs := e.rdc.SMembers(e.ctx, key)
 	if rs.Err() != nil {
 		return nil, rs.Err()
 	}
-	fmt.Println(rs.Val())
 	if len(rs.Val()) == 0 {
 		return nil, errors.New(" 无可用注册服务: " + target.URL.Host)
 	}

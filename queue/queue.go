@@ -1,6 +1,7 @@
 package queue
 
 import (
+	"fmt"
 	"sync"
 	"time"
 )
@@ -83,6 +84,7 @@ func (q *Queue) exec() {
 		go func() {
 			q.log("sart task ")
 			//执行成功则删除任务，否则如果设置了
+			fmt.Println(task)
 			if err := hander.(Handler)(task); err != nil {
 				q.log("执行失败%+v", err)
 				//如果有循环条件设置。则循环加入

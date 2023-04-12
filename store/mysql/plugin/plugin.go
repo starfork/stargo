@@ -31,6 +31,7 @@ func (e *Plugin) ReplacePrefix(str string) string {
 	if str == "" {
 		return ""
 	}
+
 	str = strings.ReplaceAll(str, "private://", e.fsc.PrivateStaticUrl)
 	str = strings.ReplaceAll(str, "public://", e.fsc.PublicStaticUrl)
 	return str
@@ -45,8 +46,6 @@ func (e *Plugin) RebuildPrefix(str string) string {
 }
 
 func (e *Plugin) AfterQuery(db *gorm.DB) {
-	//fmt.Println(db.Statement.Schema)
-	//fmt.Println(db.Statement.Schema)
 
 	value := db.Statement.ReflectValue
 	if value.Kind() == reflect.Int64 {
@@ -65,9 +64,8 @@ func (e *Plugin) AfterQuery(db *gorm.DB) {
 		// 	moneyField = append(moneyField, ustring.ToCamel(f))
 		// }
 	}
-
 	if value.Kind() == reflect.Slice {
-		//fmt.Println(value.Len())
+
 		for i := 0; i < value.Len(); i++ {
 			//非指针类型的不能设置这些东东
 			if reflect.Value(value.Index(i)).Kind() == reflect.Ptr {
@@ -89,8 +87,8 @@ func unmarshal(item reflect.Value) {
 	it := reflect.TypeOf((*interface{ Unmarshal() })(nil)).Elem()
 	addr := item.Addr()
 	if addr.Type().Implements(it) {
-		//fmt.Println("unmarshal")
 		addr.MethodByName("Unmarshal").Call(nil)
+
 	}
 }
 
@@ -99,7 +97,6 @@ func (e *Plugin) SetOssImg(item reflect.Value, parseField []string) {
 	if len(parseField) == 0 {
 		return
 	}
-	//fmt.Print(parseField)
 	//parseField = []string{"image_url", "image_url_list"}
 	for _, field := range parseField {
 		f := item.FieldByName(field)
@@ -133,12 +130,10 @@ func (e *Plugin) BeforeUpdate(db *gorm.DB) {
 			parseField = append(parseField, ustring.ToCamel(f))
 		}
 	}
-	//fmt.Println(parseField)
 	if len(parseField) == 0 {
 		return
 	}
 	item := reflect.Value(value)
-	//fmt.Println(item)
 	for _, field := range parseField {
 		f := item.FieldByName(field)
 		if f.CanSet() {
@@ -146,7 +141,5 @@ func (e *Plugin) BeforeUpdate(db *gorm.DB) {
 		} else {
 			fmt.Println("field can not set " + field)
 		}
-		//fmt.Println(f)
 	}
-	//fmt.Println(item)
 }
