@@ -2,6 +2,7 @@ package redis
 
 import (
 	"context"
+	"errors"
 
 	"github.com/redis/go-redis/v9"
 	"github.com/starfork/stargo/config"
@@ -40,7 +41,7 @@ func NewResolver(conf *config.Registry) resolver.Builder {
 	return r
 }
 
-// stargo_registryredis[xxx]abc
+// /"stargo_registry_[or]_[service]"
 func (e *Resolver) key(name string) string {
 	return KeyPrefix + "_" + e.conf.Org + "_" + name
 }
@@ -50,6 +51,9 @@ func (e *Resolver) Build(target resolver.Target, cc resolver.ClientConn, opts re
 	rs := e.rdc.SMembers(e.ctx, key)
 	if rs.Err() != nil {
 		return nil, rs.Err()
+	}
+	if len(rs.Val()) == 0 {
+		return nil, errors.New(" 无可用注册服务: " + target.URL.Host)
 	}
 
 	for _, v := range rs.Val() {

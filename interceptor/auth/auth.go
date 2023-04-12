@@ -2,7 +2,6 @@ package auth
 
 import (
 	"context"
-	"fmt"
 
 	"google.golang.org/grpc"
 )
@@ -23,7 +22,6 @@ func AuthServerUnary() grpc.UnaryServerInterceptor {
 		if err != nil {
 			return nil, err
 		}
-		fmt.Printf("req %+v", req)
 		return handler(ctx, req)
 	}
 }

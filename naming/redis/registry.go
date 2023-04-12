@@ -34,7 +34,7 @@ func NewRegistry(conf *config.Registry) *Registry {
 	}
 }
 
-// stargo_registryredis[xxx]abc
+// /"stargo_registry_[or]_[service]"
 func (e *Registry) key(name string) string {
 	return KeyPrefix + "_" + e.conf.Org + "_" + name
 }

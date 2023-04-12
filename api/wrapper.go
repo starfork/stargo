@@ -2,7 +2,6 @@ package api
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -19,7 +18,7 @@ import (
 type RequestData map[string]interface{}
 
 func (e RequestData) Set(key string, value interface{}) RequestData {
-	fmt.Println(e)
+
 	e[key] = value
 	return e
 }

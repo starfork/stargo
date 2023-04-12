@@ -97,7 +97,7 @@ func New(opt ...Option) *App {
 // Run   server
 func (s *App) Run() {
 
-	s.logger.Debugf("ServerPort%+v", s.conf.ServerPort)
+	//s.logger.Debugf("ServerPort%+v", s.conf.ServerPort)
 	lis, err := net.Listen("tcp", s.conf.ServerPort)
 	s.lis = lis
 

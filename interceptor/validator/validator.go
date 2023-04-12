@@ -18,7 +18,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-//Unary Interceptor
+// Unary Interceptor
 func Unary() grpc.UnaryServerInterceptor {
 	var (
 		validate = validator.New()
@@ -42,18 +42,15 @@ func Unary() grpc.UnaryServerInterceptor {
 		method := ""
 		if md, ok := metadata.FromIncomingContext(ctx); ok {
 			m := md.Get("g-method")
-			//fmt.Printf("%+v", m)
 			if len(md.Get("g-method")) > 0 {
 				method = strings.ToLower(m[0])
 			}
 
 		}
-		//fmt.Println(method)
 		if method != "" {
 			tp := reflect.TypeOf(req).Elem()
 			for i := 0; i < tp.NumField(); i++ {
 				f := tp.Field(i)
-				//fmt.Println("vexcept:" + f.Tag.Get("vexcept"))
 				if strings.Contains(strings.ToLower(f.Tag.Get("vexcept")), method) {
 					vfields = append(vfields, f.Name)
 				}

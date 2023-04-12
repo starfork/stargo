@@ -86,7 +86,6 @@ func (e *Redis) FetchJob(step int64) ([]string, error) {
 
 }
 func (e *Redis) ReadTask(key string) (*queue.Task, error) {
-	//fmt.Println("redis task:", name)
 	rs := e.rdc.Get(e.ctx, e.name+"."+key)
 	if rs.Err() != nil {
 		return nil, rs.Err()
