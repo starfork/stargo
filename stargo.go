@@ -5,6 +5,7 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -98,13 +99,18 @@ func New(opt ...Option) *App {
 func (s *App) Run() {
 
 	//s.logger.Debugf("ServerPort%+v", s.conf.ServerPort)
-	lis, err := net.Listen("tcp", s.conf.ServerPort)
+	ports := strings.Split(s.conf.ServerPort, ":")
+	port := ports[0]
+	if len(ports) > 1 {
+		port = ports[1] //centos docker 监听ip:port模式有问题
+	}
+	lis, err := net.Listen("tcp", port)
 	s.lis = lis
 
 	if err != nil {
 		s.logger.Fatalf("failed to listen: %v", err)
 	}
-	s.logger.Debugf("Starting: gRPC Listener [%s]\n", s.conf.ServerPort)
+	s.logger.Debugf("Starting: gRPC Listener [%s]\n", port)
 
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGTERM, syscall.SIGINT, syscall.SIGHUP, syscall.SIGQUIT)

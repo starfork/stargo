@@ -34,6 +34,7 @@ func (e *Client) Invoke(ctx context.Context, app, method string, in, rs interfac
 
 	conn, err := grpc.Dial(e.r.Scheme()+"://"+target,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithDefaultServiceConfig(`{"loadBalancingConfig": [{"round_robin":{}}]}`),
 		grpc.WithResolvers(e.s))
 	if err != nil {
 		return err
