@@ -2,6 +2,7 @@ package stargo
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/starfork/stargo/client"
@@ -17,6 +18,7 @@ import (
 
 // 执行方法，按照规则制定 namespace.[service].XxxHandler
 func (s *App) Invoke(ctx context.Context, app, method string, in, rs interface{}, h ...string) error {
+	fmt.Println(s.client)
 	if s.client == nil {
 		s.client = client.NewClient(s.conf)
 	}
@@ -72,5 +74,5 @@ func (s *App) GetSfid(conf ...sf.Settings) *sf.Sonyflake {
 }
 
 func (s *App) InitClient(dialOpt ...grpc.DialOption) {
-	s.client = client.NewClient(s.conf)
+	s.client = client.NewClient(s.conf, dialOpt...)
 }
