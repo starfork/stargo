@@ -47,18 +47,23 @@ type Client struct {
 	org     string
 	s       naming.Resolver
 	r       naming.Registry
-	dialOpt []grpc.DialOption
+	dialOpt map[string][]grpc.DialOption
 }
 
-func NewClient(conf *config.ServerConfig, dialOpt ...grpc.DialOption) *Client {
+func NewClient(conf *config.ServerConfig, dialOpt ...map[string][]grpc.DialOption) *Client {
 
-	return &Client{
-		conf:    conf,
-		org:     conf.Registry.Org,
-		s:       naming.NewResolver(conf.Registry),
-		r:       naming.NewRegistry(conf.Registry),
-		dialOpt: dialOpt,
+	c := &Client{
+		conf: conf,
+		org:  conf.Registry.Org,
+		s:    naming.NewResolver(conf.Registry),
+		r:    naming.NewRegistry(conf.Registry),
+		//dialOpt: dialOpt,
 	}
+
+	if len(dialOpt) > 0 {
+		c.dialOpt = dialOpt[0]
+	}
+	return c
 
 }
 
@@ -82,7 +87,10 @@ func (e *Client) Invoke(ctx context.Context, app, method string, in, rs interfac
 			PermitWithoutStream: true,
 		}),
 	}
-	opts = append(opts, e.dialOpt...)
+	if opt, ok := e.dialOpt[app]; ok {
+		opts = append(opts, opt...)
+	}
+
 	conn, err := grpc.Dial(e.r.Scheme()+"://"+target, opts...)
 	if err != nil {
 		return err
