@@ -11,19 +11,22 @@ import (
 )
 
 type Client struct {
-	conf *config.ServerConfig
-	org  string
-	s    naming.Resolver
-	r    naming.Registry
+	conf    *config.ServerConfig
+	org     string
+	s       naming.Resolver
+	r       naming.Registry
+	dialOpt []grpc.DialOption
 }
 
-func NewClient(conf *config.ServerConfig) *Client {
+func NewClient(conf *config.ServerConfig, dialOpt ...grpc.DialOption) *Client {
 	return &Client{
-		conf: conf,
-		org:  conf.Registry.Org,
-		s:    naming.NewResolver(conf.Registry),
-		r:    naming.NewRegistry(conf.Registry),
+		conf:    conf,
+		org:     conf.Registry.Org,
+		s:       naming.NewResolver(conf.Registry),
+		r:       naming.NewRegistry(conf.Registry),
+		dialOpt: dialOpt,
 	}
+
 }
 
 // 没有对外的调用，目前只支持不带验证的
@@ -33,10 +36,13 @@ func (e *Client) Invoke(ctx context.Context, app, method string, in, rs interfac
 	//统一独立部署，只有一个target
 	target := app
 
-	conn, err := grpc.Dial(e.r.Scheme()+"://"+target,
+	opts := []grpc.DialOption{
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithDefaultServiceConfig(`{"loadBalancingConfig": [{"round_robin":{}}]}`),
-		grpc.WithResolvers(e.s))
+	}
+	opts = append(opts, e.dialOpt...)
+
+	conn, err := grpc.Dial(e.r.Scheme()+"://"+target, opts...)
 	if err != nil {
 		return err
 	}

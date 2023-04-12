@@ -10,6 +10,7 @@ import (
 	"github.com/starfork/stargo/store/mysql"
 	"github.com/starfork/stargo/store/redis"
 	"go.uber.org/zap"
+	"google.golang.org/grpc"
 
 	sf "github.com/sony/sonyflake"
 )
@@ -68,4 +69,8 @@ func (s *App) GetSfid(conf ...sf.Settings) *sf.Sonyflake {
 	}
 	st.StartTime = time.Date(2021, 1, 18, 0, 0, 0, 0, time.UTC)
 	return sf.NewSonyflake(st)
+}
+
+func (s *App) InitClient(dialOpt ...grpc.DialOption) {
+	s.client = client.NewClient(s.conf)
 }
