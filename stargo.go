@@ -104,7 +104,7 @@ func (s *App) Run() {
 	if len(ports) > 1 {
 		port = ports[1] //centos docker 监听ip:port模式有问题
 	}
-	lis, err := net.Listen("tcp", port)
+	lis, err := net.Listen("tcp", ":"+port)
 	s.lis = lis
 
 	if err != nil {
