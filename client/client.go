@@ -92,9 +92,12 @@ func (e *Client) Invoke(ctx context.Context, app, method string, in, rs interfac
 	}
 
 	conn, err := grpc.Dial(e.r.Scheme()+"://"+target, opts...)
+
 	if err != nil {
 		return err
 	}
+	defer conn.Close()
+
 	//handler := cases.Title(language.English).String(app) + "Handler"
 	handler := "Handler"
 	if len(h) > 0 {
