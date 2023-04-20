@@ -67,13 +67,7 @@ func NewClient(conf *config.ServerConfig, dialOpt ...map[string][]grpc.DialOptio
 
 }
 
-// 没有对外的调用，目前只支持不带验证的
-// 默认执行
-func (e *Client) Invoke(ctx context.Context, app, method string, in, rs interface{}, h ...string) error {
-
-	//统一独立部署，只有一个target
-	target := app
-
+func DefaultOptions() []grpc.DialOption {
 	opts := []grpc.DialOption{
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithDefaultServiceConfig(`{"loadBalancingConfig": [{"round_robin":{}}]}`),
@@ -87,10 +81,21 @@ func (e *Client) Invoke(ctx context.Context, app, method string, in, rs interfac
 			PermitWithoutStream: true,
 		}),
 	}
+	return opts
+}
+
+// 没有对外的调用，目前只支持不带验证的
+// 默认执行
+func (e *Client) Invoke(ctx context.Context, app, method string, in, rs interface{}, h ...string) error {
+
+	//统一独立部署，只有一个target
+	target := app
+
+	opts := DefaultOptions()
 	if opt, ok := e.dialOpt[app]; ok {
 		opts = append(opts, opt...)
 	}
-
+	//fmt.Println(e.r.Scheme() + "://" + target)
 	conn, err := grpc.Dial(e.r.Scheme()+"://"+target, opts...)
 
 	if err != nil {

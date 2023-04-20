@@ -2,7 +2,7 @@ package gslice
 
 // 各种类型的slice
 type Number interface {
-	int | float32 | float64 | string | uint32
+	int | float32 | float64 | string | uint32 | uint64
 }
 type Slice[T Number] []T
 

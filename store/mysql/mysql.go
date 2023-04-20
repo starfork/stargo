@@ -2,6 +2,7 @@ package mysql
 
 import (
 	"database/sql"
+	"fmt"
 
 	"github.com/starfork/stargo/config"
 	"github.com/starfork/stargo/store/mysql/plugin"
@@ -51,8 +52,11 @@ func Connect(config *config.ServerConfig) *Mysql {
 		panic("Db Connect TO " + dsn + " With Error:" + err.Error())
 	}
 
-	sqlDB, _ := db.DB()
-
+	sqlDB, err := db.DB()
+	if err != nil {
+		panic(err)
+	}
+	//defer sqlDB.Close()
 	sqlDB.SetMaxIdleConns(5)
 	if c.MaxIdle > 0 {
 		sqlDB.SetMaxIdleConns(c.MaxIdle)
@@ -68,7 +72,8 @@ func Connect(config *config.ServerConfig) *Mysql {
 	db.Callback().Update().Before("gorm:update").Register("ossimage:before_update", p.BeforeUpdate)
 
 	return &Mysql{
-		db: db,
+		db:   db,
+		conn: sqlDB,
 	}
 }
 
@@ -79,6 +84,7 @@ func (e *Mysql) GetInstance() *gorm.DB {
 
 func (e *Mysql) Close() {
 	if e.conn != nil {
+		fmt.Println("mysql close-----------")
 		e.conn.Close()
 	}
 }

@@ -138,6 +138,9 @@ func (s *App) Stop() {
 		s.logger.Debugf("UnRegister: [%s]\n", s.opts.Name)
 		s.registry.UnRegister(s.Service())
 	}
+	s.GetMysql().Close()
+	s.GetRedis().Close()
+	s.GetMongo().Close()
 
 	s.server.Stop()
 }
