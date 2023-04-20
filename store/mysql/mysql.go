@@ -25,7 +25,6 @@ type Mysql struct {
 // Connect 初始化MySQLme
 func Connect(config *config.ServerConfig) *Mysql {
 	c := config.Mysql
-
 	if config.Timezome != "" {
 		TIME_LOCATION = config.Timezome
 	}
