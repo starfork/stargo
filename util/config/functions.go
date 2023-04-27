@@ -6,9 +6,12 @@ import (
 )
 
 // Get config value
-func (e *Config) Get(name string) string {
+func (e *Config) Get(name string, deft ...string) string {
 	if v, ok := e.val[name]; ok {
 		return v
+	}
+	if len(deft) > 0 {
+		return deft[0]
 	}
 	return ""
 }
@@ -17,18 +20,24 @@ func (e *Config) GetAll() Val {
 	return e.val
 }
 
-func (e *Config) GetInt(name string) int {
+func (e *Config) GetInt(name string, deft ...int) int {
 	if v, ok := e.val[name]; ok {
 		i, _ := strconv.Atoi(v)
 		return i
 	}
+	if len(deft) > 0 {
+		return deft[0]
+	}
 	return 0
 }
-func (e *Config) GetUint32(name string) uint32 {
-	return uint32(e.GetInt(name))
+func (e *Config) GetUint32(name string, deft ...int) uint32 {
+	return uint32(e.GetInt(name, deft...))
 }
-func (e *Config) GetUint64(name string) uint64 {
-	return uint64(e.GetInt(name))
+func (e *Config) GetUint64(name string, deft ...int) uint64 {
+	return uint64(e.GetInt(name, deft...))
+}
+func (e *Config) GetInt64(name string, deft ...int) int64 {
+	return int64(e.GetInt(name, deft...))
 }
 
 // 多行的，用竖线隔开的配置。 "abc|def"=>map[abc:def]
