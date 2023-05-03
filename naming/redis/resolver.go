@@ -3,6 +3,7 @@ package redis
 import (
 	"context"
 	"errors"
+	"strings"
 
 	"github.com/redis/go-redis/v9"
 	"github.com/starfork/stargo/config"
@@ -58,6 +59,10 @@ func (e *Resolver) Build(target resolver.Target, cc resolver.ClientConn, opts re
 	}
 
 	for _, v := range rs.Val() {
+		t := strings.Split(v, ":")
+		if e.conf.Environment == "debug" && len(t) > 1 {
+			v = ":" + t[1] //测试环境，只要端口号
+		}
 		address = append(address, resolver.Address{
 			Addr: v,
 		})

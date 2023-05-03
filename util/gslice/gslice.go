@@ -30,6 +30,7 @@ func (s Slice[T]) ContainsFilter(f func(key T) bool) bool {
 	return false
 }
 
+// 默认返回
 func (s Slice[T]) Default(k, v T) T {
 	if s.Contains(k) {
 		return k
@@ -37,6 +38,7 @@ func (s Slice[T]) Default(k, v T) T {
 	return v
 }
 
+// 求和
 func (s Slice[T]) Sum() T {
 	var sum T
 	for _, v := range s {

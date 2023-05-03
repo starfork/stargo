@@ -103,11 +103,12 @@ type LogConfig struct {
 }
 
 type Registry struct {
-	Org  string
-	Name string
-	Addr string //连接地址
-	Auth string //认证
-	Num  int    //库的数字
+	Environment string
+	Org         string
+	Name        string
+	Addr        string //连接地址
+	Auth        string //认证
+	Num         int    //库的数字
 }
 
 type BrokerConfig struct {
