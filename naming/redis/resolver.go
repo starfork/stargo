@@ -63,6 +63,9 @@ func (e *Resolver) Build(target resolver.Target, cc resolver.ClientConn, opts re
 		if e.conf.Environment == "debug" && len(t) > 1 {
 			v = ":" + t[1] //测试环境，只要端口号
 		}
+		if e.conf.Environment == "docker" && len(t) == 1 {
+			v = "host.docker.internal" + v
+		}
 		address = append(address, resolver.Address{
 			Addr: v,
 		})
