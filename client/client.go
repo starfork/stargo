@@ -110,6 +110,9 @@ func (e *Client) Invoke(ctx context.Context, app, method string, in, rs interfac
 		handler = h[0] + "Handler"
 	}
 	//[org].[app].[Handler].[method]
-	fmt.Println("/" + e.org + "." + app + "." + handler + "/" + method)
-	return conn.Invoke(ctx, "/"+e.org+"."+app+"."+handler+"/"+method, in, rs)
+	rpcMethod := "/" + e.org + "." + app + "." + handler + "/" + method
+	fmt.Println(rpcMethod)
+	fmt.Printf("request%+v", in)
+	fmt.Printf("response%+v", rs)
+	return conn.Invoke(ctx, rpcMethod, in, rs)
 }
