@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/starfork/stargo/config"
@@ -109,6 +110,6 @@ func (e *Client) Invoke(ctx context.Context, app, method string, in, rs interfac
 		handler = h[0] + "Handler"
 	}
 	//[org].[app].[Handler].[method]
-	//fmt.Println("/" + e.org + "." + app + "." + handler + "/" + method)
+	fmt.Println("/" + e.org + "." + app + "." + handler + "/" + method)
 	return conn.Invoke(ctx, "/"+e.org+"."+app+"."+handler+"/"+method, in, rs)
 }
