@@ -17,15 +17,6 @@ func New(app *stargo.App) *Redis {
 		rdc: app.GetRedis().GetInstance(),
 	}
 
-	// go func() {
-	// 	t := time.NewTicker(time.Second * 5) //TODO，传入配置，interval
-	// 	defer t.Stop()
-	// 	for {
-	// 		<-t.C
-	// 		c.clear(context.Background())
-	// 	}
-	// }()
-
 	return c
 }
 
@@ -54,7 +45,7 @@ func (e *Redis) Scan(ctx context.Context, key string, data any) error {
 }
 
 // 过期清除，好像用不着
-func (e *Redis) clear(ctx context.Context) {
+func (e *Redis) Clear(ctx context.Context) {
 	iter := e.rdc.Scan(ctx, 0, "", 0).Iterator()
 
 	for iter.Next(ctx) {

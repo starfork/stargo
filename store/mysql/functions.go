@@ -37,62 +37,18 @@ func Page(page, lmt uint32) func(db *gorm.DB) *gorm.DB {
 // Timezome time qquery
 // tz["from"] 开始时间戳,tz["to"]截止时间戳
 // field 时间字段名
-func Timezome(tz map[string]int64, field string) func(db *gorm.DB) *gorm.DB {
+func Timezome(tz map[string]int64, field string, format ...string) func(db *gorm.DB) *gorm.DB {
 
 	return func(db *gorm.DB) *gorm.DB {
-		//fmt.Println(tz["from"] / 1000)
 		if tz["from"] != 0 && tz["to"] != 0 {
-
-			return db.Where(field+" BETWEEN ? AND ?", int2time(tz["from"]), int2time(tz["to"]))
+			return db.Where("`"+field+"` BETWEEN ? AND ?", int2time(tz["from"], format...), int2time(tz["to"], format...))
 		}
 		if tz["from"] != 0 && tz["to"] == 0 {
-			return db.Where(field+" >= ?", int2time(tz["from"]))
+			return db.Where("`"+field+"` >= ?", int2time(tz["from"], format...))
 		}
 		if tz["from"] == 0 && tz["to"] != 0 {
-			return db.Where(field+" <= ?", int2time(tz["to"]))
+			return db.Where("`"+field+"` <= ?", int2time(tz["to"], format...))
 		}
-		return db
-
-	}
-}
-
-// TimeAdded
-// tz["from"] 开始时间戳,tz["to"]截止时间戳
-// field 时间字段名
-// ts n为空 m为本月 d为当天
-func TimeAdded(tz map[string]int64, field string, ts string) func(db *gorm.DB) *gorm.DB {
-	return func(db *gorm.DB) *gorm.DB {
-		if ts == "n" {
-			if tz["from"] != 0 && tz["to"] != 0 {
-				return db.Where(field+" BETWEEN ? AND ?", int2time(tz["from"]), int2time(tz["to"]))
-			}
-			if tz["from"] != 0 && tz["to"] == 0 {
-				return db.Where(field+" >= ?", int2time(tz["from"]))
-			}
-			if tz["from"] == 0 && tz["to"] != 0 {
-				return db.Where(field+" <= ?", int2time(tz["to"]))
-			}
-		} else {
-			if tz["from"] == 0 && tz["to"] == 0 {
-				timeNow := time.Now()
-				//本月
-				if ts == "m" {
-					from := timeNow.Unix() //当前时间戳
-					//月初时间
-					to := time.Date(timeNow.Year(), timeNow.Month(), 1, 0, 0, 0, 0, timeNow.Location()).Unix()
-					return db.Where(field+" BETWEEN ? AND ?", int2time(from), int2time(to))
-				}
-				//当天
-				if ts == "d" {
-					//当前开始时间
-					from := time.Date(time.Now().Year(), time.Now().Month(), time.Now().Day(), 0, 0, 0, 0, time.Now().Location()).Unix()
-					to := timeNow.Unix() //当前时间戳
-					return db.Where(field+" BETWEEN ? AND ?", int2time(from), int2time(to))
-				}
-
-			}
-		}
-
 		return db
 
 	}
@@ -113,8 +69,12 @@ func ParseTime(format, time_str string) (time.Time, error) {
 
 }
 
-func int2time(stamp int64) string {
-	return time.Unix(stamp, 0).Format("2006-01-02 15:04:05")
+func int2time(stamp int64, format ...string) string {
+	f := "2006-01-02 15:04:05"
+	if len(format) > 0 {
+		f = format[0]
+	}
+	return time.Unix(stamp, 0).Format(f)
 }
 
 // func formatMoney(money float64) float64 {

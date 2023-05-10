@@ -13,7 +13,7 @@ func RangeJob[T Number](ids []T, step int, job func([]T), duration ...time.Durat
 		if len(duration) > 0 {
 			time.Sleep(duration[0])
 		}
-		job(ids[i:h])
+		go job(ids[i:h])
 		i = i + step
 	}
 }
