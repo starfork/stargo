@@ -3,6 +3,9 @@ package config
 var (
 	DEPLOY_Monolithic = "Monolithic" //单体/整体部署
 	DEPLOY_MICRO      = "Micro"      //分布式微服务部署
+
+	ENV_DEBUG      = "debug"
+	ENV_PRODUCTION = "production"
 )
 
 type Config struct {
@@ -100,6 +103,7 @@ type LogConfig struct {
 	MaxSize    int    //日志文件最大尺寸
 	MaxBackups int    //最大备份数
 	MaxAge     int    //最大停留
+	Level      int
 }
 
 type Registry struct {

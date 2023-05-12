@@ -38,10 +38,12 @@ func NewZapSugar(c ...*config.LogConfig) *zap.SugaredLogger {
 
 	var writeSyncer zapcore.WriteSyncer
 	var target, logFile string
-
+	level := zap.DebugLevel
 	if len(c) > 0 {
-		target = c[0].Target
-		logFile = c[0].LogFile
+		conf := c[0]
+		target = conf.Target
+		logFile = conf.LogFile
+		level = zapcore.Level(conf.Level)
 	}
 	if target == "" {
 		target = "console"
@@ -67,7 +69,7 @@ func NewZapSugar(c ...*config.LogConfig) *zap.SugaredLogger {
 	core := zapcore.NewCore(
 		zapcore.NewConsoleEncoder(NewEncoderConfig()),
 		writeSyncer,
-		zap.DebugLevel,
+		level,
 	)
 
 	return zap.New(core, zap.AddCaller()).Sugar()
