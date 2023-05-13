@@ -1,4 +1,4 @@
-package gslice
+package slice
 
 import (
 	"fmt"

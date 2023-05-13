@@ -1,4 +1,4 @@
-package gslice
+package slice
 
 // 各种类型的slice
 type Number interface {
@@ -74,8 +74,16 @@ func (s Slice[T]) One(index ...int) T {
 	return s[idx : idx+1][0]
 }
 
+func (s Slice[T]) Map(fn func(k T) T) Slice[T] {
+	var res []T
+	for _, item := range s {
+		res = append(res, fn(item))
+	}
+	return res
+}
+
 // 过滤
-func (s Slice[T]) Filter(fn func(T) bool) []T {
+func (s Slice[T]) Filter(fn func(T) bool) Slice[T] {
 	var res []T
 	for _, item := range s {
 		if fn(item) {

@@ -11,8 +11,8 @@ import (
 	"github.com/golang/glog"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/starfork/stargo/util/crypt/jwt"
-	"github.com/starfork/stargo/util/gslice"
 	"github.com/starfork/stargo/util/request"
+	"github.com/starfork/stargo/util/slice"
 )
 
 type RequestData map[string]interface{}
@@ -72,7 +72,7 @@ func (e *Request) Pack() {
 }
 
 // 过滤不需要验证的url
-func (e *Request) NoAuth(noAuth gslice.Slice[string]) bool {
+func (e *Request) NoAuth(noAuth slice.Slice[string]) bool {
 	return noAuth.Contains(e.req.URL.Path, func(key string) bool {
 		return strings.Contains(e.req.URL.Path, key)
 	})
