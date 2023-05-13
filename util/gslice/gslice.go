@@ -10,27 +10,27 @@ func New[T Number](a []T) Slice[T] {
 	return a
 }
 
-func (s Slice[T]) Contains(key T) bool {
+// 包含，f过滤函数
+func (s Slice[T]) Contains(key T, f ...func(k T) bool) bool {
+	var fn func(k T) bool
+
+	if len(f) == 0 {
+		fn = func(v T) bool {
+			return key == v
+		}
+	} else {
+		fn = f[0]
+	}
+
 	for _, v := range s {
-		if v == key {
+		if fn(v) {
 			return true
 		}
 	}
 	return false
 }
 
-//通过函数过滤确认是否包含
-
-func (s Slice[T]) ContainsFilter(f func(key T) bool) bool {
-	for _, v := range s {
-		if f(v) {
-			return true
-		}
-	}
-	return false
-}
-
-// 默认返回
+// 默认返回.不包含k，则返回v
 func (s Slice[T]) Default(k, v T) T {
 	if s.Contains(k) {
 		return k
@@ -47,9 +47,51 @@ func (s Slice[T]) Sum() T {
 	return sum
 }
 
-// 取一个
-func (s Slice[T]) One(idx int) T {
+// 取最大值。
+func (s Slice[T]) Max() T {
+	var max T = s[0]
+	for _, item := range s {
+		if item > max {
+			max = item
+		}
+	}
+	return max
+}
+
+// 取一个.非随机取一个
+func (s Slice[T]) One(index ...int) T {
+	max := len(s)
+	if max == 1 {
+		return s[0]
+	}
+	var idx int = 0
+	if len(index) > 0 {
+		idx = index[0]
+	}
+	if idx > max {
+		idx = max - 1
+	}
 	return s[idx : idx+1][0]
+}
+
+// 过滤
+func (s Slice[T]) Filter(fn func(T) bool) []T {
+	var res []T
+	for _, item := range s {
+		if fn(item) {
+			res = append(res, item)
+		}
+	}
+	return res
+}
+
+// Tail 获取切片尾部元素
+// dv: 空切片默认值
+func (s Slice[T]) Tail(dv ...T) T {
+	if s == nil && len(dv) > 0 {
+		return dv[0]
+	}
+	return s[len(s)-1]
 }
 
 // 交集

@@ -73,7 +73,7 @@ func (e *Request) Pack() {
 
 // 过滤不需要验证的url
 func (e *Request) NoAuth(noAuth gslice.Slice[string]) bool {
-	return noAuth.ContainsFilter(func(key string) bool {
+	return noAuth.Contains(e.req.URL.Path, func(key string) bool {
 		return strings.Contains(e.req.URL.Path, key)
 	})
 

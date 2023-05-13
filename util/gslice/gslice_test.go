@@ -10,11 +10,13 @@ import (
 
 func TestContainsFilter(t *testing.T) {
 	noAuth := gslice.New([]string{"/v1/passport/", "/v1/public/"})
-	path := "/v1/passport1/login"
-	rs := noAuth.ContainsFilter(func(key string) bool {
+	path := "/v1/passport/login"
+	rs := noAuth.Contains(path, func(key string) bool {
 		return strings.Contains(path, key)
 	})
 	fmt.Println(rs)
+	rs1 := noAuth.Contains("/v1/passport/")
+	fmt.Println(rs1)
 }
 
 func TestAsSlice(t *testing.T) {
@@ -55,6 +57,12 @@ func TestUnion(t *testing.T) {
 	a := gslice.New([]string{"/v1/passport/", "/v1/public/", "/v1/public/2"})
 	b := gslice.New([]string{"/v1/passport/", "/v1/public/1"})
 	fmt.Println(a.Union(b))
+}
+
+func TestOne(t *testing.T) {
+	a := gslice.New([]string{"/v1/passport/", "/v1/public/", "/v1/public/2", "/v1/public/4"})
+
+	fmt.Println(a.One(5))
 }
 
 func TestCalc(t *testing.T) {
