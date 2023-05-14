@@ -12,11 +12,12 @@ func TestContains(t *testing.T) {
 	noAuth := slice.New([]string{"/v1/passport/", "/v1/public/"})
 	path := "/v1/passport/login"
 	rs := noAuth.Contains(path, func(key string) bool {
+		fmt.Println(path, key)
 		return strings.Contains(path, key)
 	})
 	fmt.Println(rs)
-	rs1 := noAuth.Contains("/v1/passport/")
-	fmt.Println(rs1)
+	//rs1 := noAuth.Contains("/v1/passport/")
+	//fmt.Println(rs1)
 }
 
 func TestAsSlice(t *testing.T) {

@@ -12,16 +12,13 @@ func New[T Number](a []T) Slice[T] {
 
 // 包含，f过滤函数
 func (s Slice[T]) Contains(key T, f ...func(k T) bool) bool {
-	var fn func(k T) bool
 
-	if len(f) == 0 {
-		fn = func(v T) bool {
-			return key == v
-		}
-	} else {
+	fn := func(v T) bool {
+		return key == v
+	}
+	if len(f) > 0 {
 		fn = f[0]
 	}
-
 	for _, v := range s {
 		if fn(v) {
 			return true

@@ -30,19 +30,18 @@ func (s *App) GetLogger() *zap.SugaredLogger {
 
 func (s *App) GetMysql() *mysql.Mysql {
 
-	if s.mysql == nil {
-		s.mysql = mysql.Connect(s.conf)
-		return s.mysql
-	}
 	return s.mysql
+
+	// if s.mysql == nil {
+	// 	s.mysql = mysql.Connect(s.conf)
+	// 	return s.mysql
+	// }
+	// return s.mysql
 }
 
 func (s *App) GetRedis() *redis.Redis {
-	if s.redis == nil {
-		s.redis = redis.Connect(s.conf)
-		return s.redis
-	}
 	return s.redis
+
 }
 
 func (s *App) GetMongo() *mongo.Mongo {

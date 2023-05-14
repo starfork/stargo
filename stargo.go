@@ -92,6 +92,13 @@ func New(opt ...Option) *App {
 		app.registry = r
 	}
 
+	if conf.Mysql != nil {
+		app.mysql = mysql.Connect(conf)
+	}
+	if conf.Redis != nil {
+		app.redis = redis.Connect(conf)
+	}
+
 	return app
 }
 
@@ -138,9 +145,15 @@ func (s *App) Stop() {
 		s.logger.Debugf("UnRegister: [%s]\n", s.opts.Name)
 		s.registry.UnRegister(s.Service())
 	}
-
-	s.GetMysql().Close()
-	s.GetRedis().Close()
+	if s.mysql != nil {
+		s.mysql.Close()
+	}
+	if s.redis != nil {
+		s.redis.Close()
+	}
+	if s.mongo != nil {
+		s.mongo.Close()
+	}
 	//s.GetMongo().Close()
 
 	s.server.Stop()
@@ -157,6 +170,7 @@ func (s *App) Service() service.Service {
 
 // Restart server
 func (s *App) Restart() {
+	//mysql 那些重连？
 	s.server.GracefulStop()
 	s.server.Serve(s.lis)
 }
