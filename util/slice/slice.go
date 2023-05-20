@@ -1,12 +1,8 @@
 package slice
 
-// 各种类型的slice
-type Number interface {
-	int | float32 | float64 | string | uint32 | uint64
-}
-type Slice[T Number] []T
+type Slice[T comparable] []T
 
-func New[T Number](a []T) Slice[T] {
+func New[T comparable](a []T) Slice[T] {
 	return a
 }
 
@@ -33,26 +29,6 @@ func (s Slice[T]) Default(k, v T) T {
 		return k
 	}
 	return v
-}
-
-// 求和
-func (s Slice[T]) Sum() T {
-	var sum T
-	for _, v := range s {
-		sum += v
-	}
-	return sum
-}
-
-// 取最大值。
-func (s Slice[T]) Max() T {
-	var max T = s[0]
-	for _, item := range s {
-		if item > max {
-			max = item
-		}
-	}
-	return max
 }
 
 // 取一个.非随机取一个
