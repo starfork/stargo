@@ -11,21 +11,26 @@ import (
 )
 
 type Store struct {
-	Table string
+	table string
 	db    *gorm.DB
 }
 
-func New(db *gorm.DB) config.StoreInterface {
-	return &Store{
+func New(db *gorm.DB, table ...string) config.StoreInterface {
+	s := &Store{
 		db: db,
 	}
+	s.table = "config"
+	if len(table) > 0 {
+		s.table = table[0]
+	}
+	return s
 }
 
 // Setup  初始化数据库中的配置
 func (e *Store) Load() []*config.KV {
 
 	result := []*config.KV{}
-	e.db.Table("config").Select("`key`", "`val`").Find(&result)
+	e.db.Table(e.table).Select("`key`", "`val`").Find(&result)
 	return result
 
 }
@@ -35,7 +40,7 @@ func (e *Store) Set(pfx string, value map[string]string) error {
 		return errors.New("无效配置")
 	}
 	var buffer bytes.Buffer
-	sql := "REPLACE INTO  `config` (`key`,`val`) values"
+	sql := "REPLACE INTO  `" + e.table + "` (`key`,`val`) values"
 	if _, err := buffer.WriteString(sql); err != nil {
 		return err
 	}

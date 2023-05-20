@@ -59,7 +59,7 @@ func DefaultOptions() Options {
 	o := Options{
 		table: "uid",
 		id:    "user_auth",
-		len:   100,
+		len:   100, //step一般需要设置大于100，不然每次启动服务发会运行两次getFromDB
 	}
 	return o
 }
