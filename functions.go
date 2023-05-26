@@ -71,6 +71,13 @@ func (s *App) GetSfid(conf ...sf.Settings) *sf.Sonyflake {
 	return sf.NewSonyflake(st)
 }
 
-func (s *App) InitClient(dialOpt map[string][]grpc.DialOption) {
-	s.client = client.NewClient(s.conf, dialOpt)
+func (s *App) InitClient(dialOpt ...map[string][]grpc.DialOption) {
+	s.client = client.NewClient(s.conf, dialOpt...)
+}
+
+func (s *App) GetClient(dialOpt ...map[string][]grpc.DialOption) *client.Client {
+	if s.client == nil {
+		s.client = client.NewClient(s.conf, dialOpt...)
+	}
+	return s.client
 }
