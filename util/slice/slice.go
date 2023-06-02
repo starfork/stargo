@@ -66,6 +66,21 @@ func (s Slice[T]) Filter(fn func(T) bool) Slice[T] {
 	return res
 }
 
+// 去重
+func (s Slice[T]) Unique() Slice[T] {
+	tmp := map[T]T{}
+
+	for _, item := range s {
+		tmp[item] = item
+	}
+	var res []T
+	for _, k := range tmp {
+		res = append(res, k)
+	}
+	s = res
+	return s
+}
+
 // Tail 获取切片尾部元素
 // dv: 空切片默认值
 func (s Slice[T]) Tail(dv ...T) T {

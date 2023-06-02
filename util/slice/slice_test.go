@@ -81,3 +81,9 @@ func TestCalc(t *testing.T) {
 		fmt.Printf("add-v,%d,%+v\n", k, v)
 	}
 }
+
+func TestUnique(t *testing.T) {
+	a := slice.New([]string{"/v1/passport/", "/v1/public/", "/v1/public/2", "/v1/public/"})
+
+	fmt.Println(a.Unique())
+}
