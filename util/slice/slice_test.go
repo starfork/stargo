@@ -83,7 +83,7 @@ func TestCalc(t *testing.T) {
 }
 
 func TestUnique(t *testing.T) {
-	a := slice.New([]string{"/v1/passport/", "/v1/public/", "/v1/public/2", "/v1/public/"})
+	a := slice.New([]string{"/v1/passport/", "/v1/public/", "/v1/public/2", "/v1/public/", "/v1/public/", "/v1/public/2"})
 
 	fmt.Println(a.Unique())
 }
