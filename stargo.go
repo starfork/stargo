@@ -151,10 +151,11 @@ func (s *App) Stop() {
 		s.registry.UnRegister(s.Service())
 	}
 	if s.mysql != nil {
-		s.logger.Debugf("UnRegister: [%s]\n", s.opts.Name)
+		s.logger.Debugf("Close Mysql: [%s]\n", s.conf.Mysql.Host)
 		s.mysql.Close()
 	}
 	if s.redis != nil {
+		s.logger.Debugf("Close Redis: [%s]\n", s.conf.Redis.Addr)
 		s.redis.Close()
 	}
 	if s.mongo != nil {
