@@ -77,9 +77,14 @@ func New(opt ...Option) *App {
 	app := &App{
 		opts:   opts,
 		server: s,
-		logger: logger.NewZapSugar(conf.Log),
+		//logger: logger.NewZapSugar(conf.Log),
 		conf:   conf,
 		config: opts.Config,
+	}
+	if conf.Log != nil {
+		app.logger = logger.NewZapSugar(conf.Log)
+	} else {
+		app.logger = logger.NewZapSugar()
 	}
 
 	//注册registry
@@ -146,6 +151,7 @@ func (s *App) Stop() {
 		s.registry.UnRegister(s.Service())
 	}
 	if s.mysql != nil {
+		s.logger.Debugf("UnRegister: [%s]\n", s.opts.Name)
 		s.mysql.Close()
 	}
 	if s.redis != nil {
@@ -153,6 +159,9 @@ func (s *App) Stop() {
 	}
 	if s.mongo != nil {
 		s.mongo.Close()
+	}
+	if s.client != nil {
+		s.client.Close()
 	}
 	//s.GetMongo().Close()
 

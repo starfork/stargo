@@ -2,7 +2,6 @@ package mysql
 
 import (
 	"database/sql"
-	"fmt"
 
 	"github.com/starfork/stargo/config"
 	"github.com/starfork/stargo/store/mysql/plugin"
@@ -83,7 +82,6 @@ func (e *Mysql) GetInstance() *gorm.DB {
 
 func (e *Mysql) Close() {
 	if e.conn != nil {
-		fmt.Println("mysql close-----------")
 		e.conn.Close()
 	}
 }
