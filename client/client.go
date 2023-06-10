@@ -2,7 +2,6 @@ package client
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/starfork/stargo/config"
@@ -93,9 +92,7 @@ func (e *Client) Connection(app string, appendOpts ...[]grpc.DialOption) (conn *
 
 	var ok bool
 	conn, ok = e.conns[app]
-	fmt.Printf("Connection%+v", conn)
 	if !ok {
-
 		opts := DefaultOptions()
 		if opt, ok := e.dialOpt[app]; ok {
 			opts = append(opts, opt...)
@@ -107,7 +104,6 @@ func (e *Client) Connection(app string, appendOpts ...[]grpc.DialOption) (conn *
 		if conn, err = grpc.Dial(e.r.Scheme()+"://"+app, opts...); err != nil {
 			return nil, err
 		}
-		fmt.Println("Connection2")
 		//defer conn.Close()
 
 		e.conns[app] = conn
