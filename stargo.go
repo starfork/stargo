@@ -77,14 +77,9 @@ func New(opt ...Option) *App {
 	app := &App{
 		opts:   opts,
 		server: s,
-		//logger: logger.NewZapSugar(conf.Log),
+		logger: logger.NewZapSugar(conf.Log),
 		conf:   conf,
 		config: opts.Config,
-	}
-	if conf.Log != nil {
-		app.logger = logger.NewZapSugar(conf.Log)
-	} else {
-		app.logger = logger.NewZapSugar()
 	}
 
 	//注册registry

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/starfork/stargo/config"
+	"github.com/starfork/stargo/util/ustring"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	lumberjackv2 "gopkg.in/natefinch/lumberjack.v2"
@@ -35,33 +36,28 @@ func TimeEncoder(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
 
 // Init Init
 func NewZapSugar(c ...*config.LogConfig) *zap.SugaredLogger {
-
 	var writeSyncer zapcore.WriteSyncer
-	var target, logFile string
 	level := zap.DebugLevel
 
-	if len(c) > 0 {
-		conf := c[0]
-		target = conf.Target
-		logFile = conf.LogFile
-		if conf.Level > 0 {
+	conf := &config.LogConfig{
+		Target:  "console",
+		LogFile: "debug.log",
+	}
+	if len(c) > 0 && c[0] != nil {
+		tmp := c[0]
+		conf.Target = ustring.OrString("console", tmp.Target)
+		conf.LogFile = ustring.OrString("debug.log", tmp.LogFile)
+		if tmp.Level > 0 {
 			level = zapcore.Level(conf.Level)
 		}
 		//
 	}
-	if target == "" {
-		target = "console"
-	}
-	if logFile == "" {
-		logFile = "debug.log"
-	}
-
-	if target == "console" {
+	if conf.Target == "console" {
 		writeSyncer = zapcore.NewMultiWriteSyncer(zapcore.AddSync(os.Stdout))
 	}
-	if target == "file" {
+	if conf.Target == "file" {
 		w := zapcore.AddSync(&lumberjackv2.Logger{
-			Filename:   logFile,
+			Filename:   conf.LogFile,
 			MaxSize:    1024, // megabytes
 			MaxBackups: 10,
 			MaxAge:     7, // days
