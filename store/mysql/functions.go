@@ -56,8 +56,7 @@ func Timezome(tz map[string]int64, field string, format ...string) func(db *gorm
 
 func Now() string {
 	var cstSh, _ = time.LoadLocation(TIME_LOCATION)
-	format := "2006-01-02 15:04:05"
-	return time.Now().In(cstSh).Format(format)
+	return time.Now().In(cstSh).Format(TFORMAT)
 }
 
 func ParseTime(format, time_str string) (time.Time, error) {
@@ -70,7 +69,7 @@ func ParseTime(format, time_str string) (time.Time, error) {
 }
 
 func int2time(stamp int64, format ...string) string {
-	f := "2006-01-02 15:04:05"
+	f := TFORMAT
 	if len(format) > 0 {
 		f = format[0]
 	}
