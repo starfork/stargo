@@ -41,13 +41,13 @@ func Timezome(tz map[string]int64, field string, format ...string) func(db *gorm
 
 	return func(db *gorm.DB) *gorm.DB {
 		if tz["from"] != 0 && tz["to"] != 0 {
-			return db.Where("`"+field+"` BETWEEN ? AND ?", int2time(tz["from"], format...), int2time(tz["to"], format...))
+			return db.Where(field+" BETWEEN ? AND ?", int2time(tz["from"], format...), int2time(tz["to"], format...))
 		}
 		if tz["from"] != 0 && tz["to"] == 0 {
-			return db.Where("`"+field+"` >= ?", int2time(tz["from"], format...))
+			return db.Where(field+" >= ?", int2time(tz["from"], format...))
 		}
 		if tz["from"] == 0 && tz["to"] != 0 {
-			return db.Where("`"+field+"` <= ?", int2time(tz["to"], format...))
+			return db.Where(field+" <= ?", int2time(tz["to"], format...))
 		}
 		return db
 
