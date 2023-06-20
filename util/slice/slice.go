@@ -1,5 +1,7 @@
 package slice
 
+import "github.com/starfork/stargo/util/number"
+
 type Slice[T comparable] []T
 
 func New[T comparable](a []T) Slice[T] {
@@ -44,6 +46,12 @@ func (s Slice[T]) One(index ...int) T {
 	if idx >= max {
 		idx = max - 1
 	}
+	return s[idx : idx+1][0]
+}
+
+func (s Slice[T]) Rand() T {
+	max := len(s)
+	idx, _ := number.RangeRand(0, int64(max-1))
 	return s[idx : idx+1][0]
 }
 
