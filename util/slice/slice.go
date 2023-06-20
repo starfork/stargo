@@ -41,7 +41,7 @@ func (s Slice[T]) One(index ...int) T {
 	if len(index) > 0 {
 		idx = index[0]
 	}
-	if idx > max {
+	if idx >= max {
 		idx = max - 1
 	}
 	return s[idx : idx+1][0]
