@@ -92,12 +92,12 @@ func New(opt ...Option) *App {
 		app.registry = r
 	}
 
-	if conf.Mysql != nil {
-		app.mysql = mysql.Connect(conf)
-	}
-	if conf.Redis != nil {
-		app.redis = redis.Connect(conf)
-	}
+	// if conf.Mysql != nil {
+	// 	app.mysql = mysql.Connect(conf)
+	// }
+	// if conf.Redis != nil {
+	// 	app.redis = redis.Connect(conf)
+	// }
 
 	return app
 }

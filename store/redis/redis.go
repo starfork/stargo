@@ -7,37 +7,32 @@ import (
 	"github.com/starfork/stargo/config"
 )
 
-var (
-	//Rdc rediscli
-	rdc *redis.Client
-)
-
 type Redis struct {
-	client *redis.Client
+	rdc *redis.Client
 }
 
 func Connect(config *config.ServerConfig) *Redis {
 	c := config.Redis
-	rdc = redis.NewClient(&redis.Options{
+	rdc := redis.NewClient(&redis.Options{
 		Addr:     c.Addr,
 		DB:       c.Num,
 		Password: c.Auth,
 	})
-	_, err := rdc.Ping(context.Background()).Result()
-	if err != nil {
+
+	if _, err := rdc.Ping(context.Background()).Result(); err != nil {
 		panic(err)
 	}
 	return &Redis{
-		client: rdc,
+		rdc: rdc,
 	}
 }
 
 func (e *Redis) GetInstance() *redis.Client {
-	return e.client
+	return e.rdc
 }
 
 func (e *Redis) Close() {
-	if e.client != nil {
-		e.client.Close()
+	if e.rdc != nil {
+		e.rdc.Close()
 	}
 }
