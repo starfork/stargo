@@ -43,6 +43,7 @@ require (
 )
 
 require (
+	github.com/casbin/casbin-server v1.12.1
 	github.com/go-playground/validator/v10 v10.11.2
 	github.com/golang-jwt/jwt/v5 v5.0.0-rc.1
 	github.com/golang/glog v1.1.0
