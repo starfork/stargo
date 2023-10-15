@@ -1,47 +1,25 @@
 package config
 
 var (
-	DEPLOY_Monolithic = "Monolithic" //单体/整体部署
-	DEPLOY_MICRO      = "Micro"      //分布式微服务部署
-
 	ENV_DEBUG      = "debug"
 	ENV_PRODUCTION = "production"
 )
 
-type Config struct {
-	Deploy  string
-	Monitor bool
-	Base    *ServerConfig //如果各个服务么有单独设置，则公用
-	Server  map[string]*ServerConfig
-	Api     *ApiConfig
-}
-
-// 拉取配置。
-// GetServerConfig("finance",true)
-// 第一个参数是服务名，第二个是：是否强制拉取
-func (c *Config) GetServerConfig(param ...interface{}) *ServerConfig {
-
-	if len(param) > 0 {
-		svc := param[0].(string)
-		if c, ok := c.Server[svc]; ok {
-			return c
-		} else {
-			if len(param) > 1 && param[1].(bool) {
-				panic("missing server [" + svc + "] config")
-			}
-		}
-	}
-	return c.Base
-}
+// type Config struct {
+// 	Deploy  string
+// 	Monitor bool
+// 	Base    *ServerConfig //如果各个服务么有单独设置，则公用
+// 	Server  map[string]*ServerConfig
+// }
 
 // 公共配置模板
-type ServerConfig struct {
+type Config struct {
 	Environment string
 
 	//ServerName string //服务名称--4-11改。通过app启动设置
 	ServerPort string //服务端口
-	ApiPort    string //api端口
-	Timezome   string //时区设置
+	//ApiPort    string //api端口
+	Timezome string //时区设置
 
 	Mysql      *MysqlConfig
 	Redis      *RedisConfig
@@ -50,13 +28,6 @@ type ServerConfig struct {
 	Log        *LogConfig
 	Broker     *BrokerConfig
 	Registry   *Registry
-}
-
-type ApiConfig struct {
-	Environment string
-
-	Name string //
-	Port string //Api端口
 }
 
 // Mysql

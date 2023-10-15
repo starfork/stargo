@@ -42,7 +42,7 @@ const (
 )
 
 type Client struct {
-	conf    *config.ServerConfig
+	conf    *config.Config
 	org     string
 	s       naming.Resolver
 	r       naming.Registry
@@ -50,7 +50,7 @@ type Client struct {
 	conns   map[string]*grpc.ClientConn
 }
 
-func NewClient(conf *config.ServerConfig, dialOpt ...map[string][]grpc.DialOption) *Client {
+func NewClient(conf *config.Config, dialOpt ...map[string][]grpc.DialOption) *Client {
 
 	c := &Client{
 		conf:  conf,

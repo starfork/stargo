@@ -15,7 +15,7 @@ import (
 
 var rdc *redis.Client
 
-var test_conf = &config.ServerConfig{
+var test_conf = &config.Config{
 	Redis: &config.RedisConfig{
 		Addr: "127.0.0.1:6379",
 	},

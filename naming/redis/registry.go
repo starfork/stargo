@@ -18,7 +18,7 @@ type Registry struct {
 
 func NewRegistry(conf *config.Registry) *Registry {
 
-	r := ssredis.Connect(&config.ServerConfig{
+	r := ssredis.Connect(&config.Config{
 		Redis: &config.RedisConfig{
 			Addr: conf.Addr,
 			Auth: conf.Auth,

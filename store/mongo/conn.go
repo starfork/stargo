@@ -14,7 +14,7 @@ type Mongo struct {
 	client *mongo.Client
 }
 
-func Connect(conf *config.ServerConfig) *Mongo {
+func Connect(conf *config.Config) *Mongo {
 	c := conf.MongoDb
 	auth := options.Credential{
 		//AuthSource: "<authenticationDb>",

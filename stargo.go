@@ -41,8 +41,9 @@ type App struct {
 	logger *zap.SugaredLogger
 	sfid   *sf.Sonyflake
 
-	config *config.Config
-	conf   *config.ServerConfig
+	//config *config.Config
+
+	conf   *config.Config
 	mysql  *mysql.Mysql
 	redis  *redis.Redis
 	mongo  *mongo.Mongo
@@ -58,7 +59,7 @@ func New(opt ...Option) *App {
 		o(&opts)
 	}
 
-	conf := opts.Config.GetServerConfig()
+	conf := opts.Config
 
 	if conf.Timezome != "" {
 		time.LoadLocation(conf.Timezome)
@@ -79,7 +80,7 @@ func New(opt ...Option) *App {
 		server: s,
 		logger: logger.NewZapSugar(conf.Log),
 		conf:   conf,
-		config: opts.Config,
+		//config: opts.Config,
 	}
 
 	//注册registry
@@ -91,13 +92,6 @@ func New(opt ...Option) *App {
 		}
 		app.registry = r
 	}
-
-	// if conf.Mysql != nil {
-	// 	app.mysql = mysql.Connect(conf)
-	// }
-	// if conf.Redis != nil {
-	// 	app.redis = redis.Connect(conf)
-	// }
 
 	return app
 }
@@ -173,6 +167,11 @@ func (s *App) Service() service.Service {
 	}
 }
 
+func (s *App) RegisterService(sd *grpc.ServiceDesc, ss any) *App {
+	s.server.RegisterService(sd, ss)
+	return s
+}
+
 // Restart server
 func (s *App) Restart() {
 	//mysql 那些重连？
@@ -180,7 +179,7 @@ func (s *App) Restart() {
 	s.server.Serve(s.lis)
 }
 
-// Server set server name
+// Server
 func (s *App) Server() *grpc.Server {
 	return s.server
 }

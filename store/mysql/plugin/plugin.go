@@ -16,7 +16,7 @@ type Plugin struct {
 	//log *config.Config
 }
 
-func New(conf *config.ServerConfig) *Plugin {
+func New(conf *config.Config) *Plugin {
 	return &Plugin{
 		fsc: conf.FileServer,
 	}

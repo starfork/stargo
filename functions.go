@@ -54,10 +54,7 @@ func (s *App) GetMongo() *mongo.Mongo {
 }
 
 func (s *App) GetConfig() *config.Config {
-	return s.config
-}
-func (s *App) GetServerConfig() *config.ServerConfig {
-	return s.config.GetServerConfig()
+	return s.conf
 }
 
 func (s *App) GetSfid(conf ...sf.Settings) *sf.Sonyflake {
@@ -73,7 +70,7 @@ func (s *App) GetSfid(conf ...sf.Settings) *sf.Sonyflake {
 }
 
 func (s *App) InitClient(dialOpt ...map[string][]grpc.DialOption) {
-	s.client = client.NewClient(s.GetServerConfig(), dialOpt...)
+	s.client = client.NewClient(s.conf, dialOpt...)
 }
 
 func (s *App) GetClient(dialOpt ...map[string][]grpc.DialOption) *client.Client {

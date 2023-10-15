@@ -11,7 +11,7 @@ type Redis struct {
 	rdc *redis.Client
 }
 
-func Connect(config *config.ServerConfig) *Redis {
+func Connect(config *config.Config) *Redis {
 	c := config.Redis
 	rdc := redis.NewClient(&redis.Options{
 		Addr:     c.Addr,
