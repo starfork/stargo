@@ -1,7 +1,10 @@
 package naming
 
 import (
+	"strings"
+
 	"github.com/starfork/stargo/config"
+	"github.com/starfork/stargo/naming/etcd"
 	"github.com/starfork/stargo/naming/redis"
 	"google.golang.org/grpc/resolver"
 )
@@ -12,8 +15,12 @@ type Resolver interface {
 }
 
 func NewResolver(conf *config.Registry) Resolver {
-	if conf.Name == "redis" {
+	name := strings.ToLower(conf.Name)
+	if name == "redis" {
 		return redis.NewResolver(conf)
 	}
-	return nil
+	if name == "etcd" {
+		return etcd.NewResolver(conf)
+	}
+	panic("unknow resolver")
 }

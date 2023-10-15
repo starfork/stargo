@@ -1,8 +1,6 @@
 package etcd
 
 import (
-	"context"
-
 	"github.com/starfork/stargo/config"
 	"github.com/starfork/stargo/service"
 	clientv3 "go.etcd.io/etcd/client/v3"
@@ -16,33 +14,44 @@ type Registry struct {
 	name string
 	cli  *clientv3.Client
 
-	em       endpoints.Manager
-	ctx      context.Context
-	conf     *config.Registry
-	services []service.Service
+	em   endpoints.Manager
+	conf *config.Registry
+	//services []service.Service
 }
 
 func NewRegistry(conf *config.Registry) *Registry {
-	cli, err := clientv3.NewFromURL("http://localhost:2379")
+	cli := newClient(conf)
+
+	//defer cli.Close()
+
+	em, err := endpoints.NewManager(cli, conf.Org)
 	if err != nil {
 		panic(err)
 	}
+
 	return &Registry{
 		cli:  cli,
-		ctx:  context.Background(),
 		name: Scheme,
+		em:   em,
 		conf: conf,
 	}
+}
+func (e *Registry) key(name string) string {
+	return e.conf.Org + "/" + name
 }
 
 func (e *Registry) Register(svc service.Service) error {
 
-	return nil
+	p := endpoints.Endpoint{
+		Addr: svc.Addr,
+	}
+	key := e.key(svc.Name)
+	return e.em.AddEndpoint(e.cli.Ctx(), key, p)
 }
 
 func (e *Registry) UnRegister(svc service.Service) error {
-
-	return nil
+	key := e.key(svc.Name)
+	return e.em.DeleteEndpoint(e.cli.Ctx(), key)
 }
 
 func (e *Registry) List(name string) []service.Service {

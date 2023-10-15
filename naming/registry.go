@@ -1,7 +1,10 @@
 package naming
 
 import (
+	"strings"
+
 	"github.com/starfork/stargo/config"
+	"github.com/starfork/stargo/naming/etcd"
 	"github.com/starfork/stargo/naming/redis"
 	"github.com/starfork/stargo/service"
 )
@@ -16,8 +19,12 @@ type Registry interface {
 }
 
 func NewRegistry(conf *config.Registry) Registry {
-	if conf.Name == "redis" {
+	name := strings.ToLower(conf.Name)
+	if name == "redis" {
 		return redis.NewRegistry(conf)
 	}
-	return nil
+	if name == "etcd" {
+		return etcd.NewRegistry(conf)
+	}
+	panic("unknow registry")
 }
