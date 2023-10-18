@@ -19,7 +19,8 @@ type Config struct {
 	//ServerName string //服务名称--4-11改。通过app启动设置
 	ServerPort string //服务端口
 	//ApiPort    string //api端口
-	Timezome string //时区设置
+	Timezome   string //时区设置
+	Timeformat string
 
 	Mysql      *MysqlConfig
 	Redis      *RedisConfig
@@ -41,6 +42,7 @@ type MysqlConfig struct {
 	MaxIdle     int
 	MaxOpen     int
 	TablePrefix string
+	Plugins     []string
 }
 
 // redis
@@ -62,8 +64,8 @@ type MongoDBConfig struct {
 
 // 文件服务器配置
 type FileServerConfig struct {
-	PublicStaticUrl  string //公共文件URL
-	PrivateStaticUrl string //私有文件URL
+	PublicUrl  string //公共文件URL
+	PrivateUrl string //私有文件URL
 }
 
 // log

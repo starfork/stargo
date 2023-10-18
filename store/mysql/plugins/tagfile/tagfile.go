@@ -1,4 +1,8 @@
-package plugin
+package tagfile
+
+//替换文件地址插件
+//使用方法 1，在proto文件的字段中插入tag  `gorm:"tagfile:Nm;"`
+//配置文件配置 fileserver
 
 import (
 	"fmt"
@@ -10,16 +14,23 @@ import (
 	"gorm.io/gorm"
 )
 
-type Plugin struct {
+type TagFile struct {
 	//file server config
 	fsc *config.FileServerConfig
+
 	//log *config.Config
 }
 
-func New(conf *config.Config) *Plugin {
-	return &Plugin{
+func Register(db *gorm.DB, conf *config.Config) {
+	if conf.FileServer == nil {
+		return
+	}
+	p := &TagFile{
 		fsc: conf.FileServer,
 	}
+	db.Callback().Query().After("gorm:find").Register("tagfile:after_query", p.AfterQuery)
+	db.Callback().Update().Before("gorm:update").Register("tagfile:before_update", p.BeforeUpdate)
+
 }
 
 // 接口定义
@@ -27,38 +38,37 @@ type Unmarshaler interface {
 	Unmarshal()
 }
 
-func (e *Plugin) ReplacePrefix(str string) string {
+func (e *TagFile) Parse(str string) string {
 	if str == "" {
 		return ""
 	}
-
-	str = strings.ReplaceAll(str, "private://", e.fsc.PrivateStaticUrl)
-	str = strings.ReplaceAll(str, "public://", e.fsc.PublicStaticUrl)
+	str = strings.ReplaceAll(str, "private://", e.fsc.PrivateUrl)
+	str = strings.ReplaceAll(str, "public://", e.fsc.PublicUrl)
 	return str
 }
-func (e *Plugin) RebuildPrefix(str string) string {
+func (e *TagFile) Rebuild(str string) string {
 	if str == "" {
 		return ""
 	}
-	str = strings.ReplaceAll(str, e.fsc.PrivateStaticUrl, "private://")
-	str = strings.ReplaceAll(str, e.fsc.PublicStaticUrl, "public://")
+	str = strings.ReplaceAll(str, e.fsc.PrivateUrl, "private://")
+	str = strings.ReplaceAll(str, e.fsc.PublicUrl, "public://")
 	return str
 }
 
-func (e *Plugin) AfterQuery(db *gorm.DB) {
+func (e *TagFile) AfterQuery(db *gorm.DB) {
 
 	value := db.Statement.ReflectValue
 	if value.Kind() == reflect.Int64 {
 		return
 	}
 
-	var imgParseField []string
+	var tagFields []string
 	//var moneyField []string
 
 	for _, field := range db.Statement.Schema.Fields {
-		//parseField, _ = field.TagSettings["IMGPARSE"]---这样居然不行。golang这个变量作用域。。
-		if f, ok := field.TagSettings["IMGPARSE"]; ok {
-			imgParseField = append(imgParseField, ustring.ToCamel(f))
+		//parseField, _ = field.TagSettings["TAGFILE"]---这样居然不行。golang这个变量作用域。。
+		if f, ok := field.TagSettings["TAGFILE"]; ok {
+			tagFields = append(tagFields, ustring.ToCamel(f))
 		}
 		// if f, ok := field.TagSettings["FMONEY"]; ok {
 		// 	moneyField = append(moneyField, ustring.ToCamel(f))
@@ -70,29 +80,30 @@ func (e *Plugin) AfterQuery(db *gorm.DB) {
 			//非指针类型的不能设置这些东东
 			if reflect.Value(value.Index(i)).Kind() == reflect.Ptr {
 				item := reflect.Value(value.Index(i)).Elem()
-				unmarshal(item)
-				e.SetOssImg(item, imgParseField)
+				e.unmarshal(item)
+				e.SetTagFile(item, tagFields)
 			}
 
 		}
 	} else if value.Kind() == reflect.Struct {
 		item := reflect.Value(value)
-		unmarshal(item)
-		e.SetOssImg(item, imgParseField)
+
+		e.unmarshal(item)
+		e.SetTagFile(item, tagFields)
 	}
 
 }
 
-func unmarshal(item reflect.Value) {
+func (e *TagFile) unmarshal(item reflect.Value) {
 	it := reflect.TypeOf((*interface{ Unmarshal() })(nil)).Elem()
 	addr := item.Addr()
+
 	if addr.Type().Implements(it) {
 		addr.MethodByName("Unmarshal").Call(nil)
-
 	}
 }
 
-func (e *Plugin) SetOssImg(item reflect.Value, parseField []string) {
+func (e *TagFile) SetTagFile(item reflect.Value, parseField []string) {
 
 	if len(parseField) == 0 {
 		return
@@ -102,7 +113,7 @@ func (e *Plugin) SetOssImg(item reflect.Value, parseField []string) {
 		f := item.FieldByName(field)
 		if (f != reflect.Value{}) { //字段没找到
 			if f.CanSet() {
-				f.SetString(e.ReplacePrefix(f.String()))
+				f.SetString(e.Parse(f.String()))
 			} else {
 				fmt.Println("field can not set " + field)
 			}
@@ -117,7 +128,7 @@ func (e *Plugin) SetOssImg(item reflect.Value, parseField []string) {
 	}
 }
 
-func (e *Plugin) BeforeUpdate(db *gorm.DB) {
+func (e *TagFile) BeforeUpdate(db *gorm.DB) {
 	value := db.Statement.ReflectValue
 	//fmt.Println(value.Kind())
 	if value.Kind() != reflect.Struct {
@@ -126,7 +137,7 @@ func (e *Plugin) BeforeUpdate(db *gorm.DB) {
 	var parseField []string
 
 	for _, field := range db.Statement.Schema.Fields {
-		if f, ok := field.TagSettings["IMGPARSE"]; ok {
+		if f, ok := field.TagSettings["TAGFILE"]; ok {
 			parseField = append(parseField, ustring.ToCamel(f))
 		}
 	}
@@ -137,7 +148,7 @@ func (e *Plugin) BeforeUpdate(db *gorm.DB) {
 	for _, field := range parseField {
 		f := item.FieldByName(field)
 		if f.CanSet() {
-			f.SetString(e.RebuildPrefix(f.String()))
+			f.SetString(e.Rebuild(f.String()))
 		} else {
 			fmt.Println("field can not set " + field)
 		}

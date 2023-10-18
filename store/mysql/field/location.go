@@ -49,13 +49,3 @@ func (loc Location) GormValue(ctx context.Context, db *gorm.DB) clause.Expr {
 		Vars: []interface{}{"POINT(" + l + ")"},
 	}
 }
-
-func Distance(point string, dist uint32) func(db *gorm.DB) *gorm.DB {
-	return func(db *gorm.DB) *gorm.DB {
-		l := strings.Replace(point, ",", " ", -1)
-		if dist < 1000 || dist > 10000 {
-			dist = 1000
-		}
-		return db.Where("ST_Distance_Sphere(ST_GeomFromText(\"POINT("+l+")\"),location) < ?", dist)
-	}
-}

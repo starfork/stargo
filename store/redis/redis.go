@@ -27,7 +27,11 @@ func Connect(config *config.Config) *Redis {
 	}
 }
 
-func (e *Redis) GetInstance() *redis.Client {
+func (e *Redis) GetInstance(conf ...*config.Config) *redis.Client {
+	if len(conf) > 0 {
+		rs := Connect(conf[0])
+		return rs.rdc
+	}
 	return e.rdc
 }
 

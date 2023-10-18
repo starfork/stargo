@@ -1,6 +1,7 @@
 package mysql
 
 import (
+	"strings"
 	"time"
 
 	"gorm.io/gorm"
@@ -80,3 +81,13 @@ func int2time(stamp int64, format ...string) string {
 // 	value, _ := strconv.ParseFloat(fmt.Sprintf("%.2f", money), 64)
 // 	return value
 // }
+
+func Distance(point string, dist uint32) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		l := strings.Replace(point, ",", " ", -1)
+		if dist < 1000 || dist > 10000 {
+			dist = 1000
+		}
+		return db.Where("ST_Distance_Sphere(ST_GeomFromText(\"POINT("+l+")\"),location) < ?", dist)
+	}
+}

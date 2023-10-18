@@ -10,7 +10,7 @@ import (
 	"golang.org/x/text/language"
 )
 
-//New New
+// New New
 func New(l int, t string) string {
 	var str string
 	switch t {
@@ -48,40 +48,35 @@ func U32String(ids []uint32) string {
 	return build.String()
 }
 
-func ToCamel(str string) string {
+func ToCamel(str string, tag ...language.Tag) string {
 	s := strings.Split(str, "_")
 	if len(s) == 1 {
 		return str
 	}
 	var tmp string
 	for _, v := range s {
-		tmp += strings.Title(strings.ToLower(v))
+		tmp += Title(strings.ToLower(v), tag...)
 	}
 
 	return tmp
 }
 
-func BuildSN(app int32, sn uint64) string {
-	return strconv.Itoa(int(app)) + strconv.FormatUint(sn, 10)
-}
-func BuildSNS(app int32, sn string) string {
-	return strconv.Itoa(int(app)) + sn
-}
-
-func ParseSN(strsn string) (pa int32, sn uint64) {
-	app, _ := strconv.Atoi(strsn[:3])
-	sn, _ = strconv.ParseUint(strsn[3:], 10, 64)
-	return int32(app), sn
+// ucfirst
+func Title(s string, tag ...language.Tag) string {
+	t := language.English
+	if len(tag) > 0 {
+		t = tag[0]
+	}
+	return cases.Title(t).String(s)
 }
 
-func Title(s string) string {
-	return cases.Title(language.English).String(s)
-}
-
-//如果str2不是空则返回str2，否则返回str1
+// 如果str2不是空则返回str2，否则返回str1
 func OrString(str1, str2 string) string {
 	if str2 != "" {
 		return str2
 	}
 	return str1
+}
+func Or(str1, str2 string) string {
+	return OrString(str1, str2)
 }

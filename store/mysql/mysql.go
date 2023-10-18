@@ -4,7 +4,6 @@ import (
 	"database/sql"
 
 	"github.com/starfork/stargo/config"
-	"github.com/starfork/stargo/store/mysql/plugin"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -28,6 +27,9 @@ func Connect(config *config.Config) *Mysql {
 	if config.Timezome != "" {
 		TIME_LOCATION = config.Timezome
 	}
+	if config.Timeformat != "" {
+		TFORMAT = config.Timeformat
+	}
 
 	var err error
 	//dsn = "root:@tcp(127.0.0.1:3306)/zome_ucenter?charset=utf8mb4&parseTime=True&loc=Local"
@@ -43,7 +45,6 @@ func Connect(config *config.Config) *Mysql {
 	}
 	if c.Debug {
 		conf.Logger = logger.Default.LogMode(logger.Info)
-		//log = conf.Logger
 	}
 	var db *gorm.DB
 
@@ -65,10 +66,13 @@ func Connect(config *config.Config) *Mysql {
 		sqlDB.SetMaxOpenConns(c.MaxOpen)
 	}
 
-	p := plugin.New(config)
+	//p := plugin.New(config)
+	if len(c.Plugins) > 0 {
+		RegisterPlugins(db, config, c.Plugins)
+	}
 
-	db.Callback().Query().After("gorm:find").Register("ossimage:after_query", p.AfterQuery)
-	db.Callback().Update().Before("gorm:update").Register("ossimage:before_update", p.BeforeUpdate)
+	//db.Callback().Query().After("gorm:find").Register("ossimage:after_query", p.AfterQuery)
+	//db.Callback().Update().Before("gorm:update").Register("ossimage:before_update", p.BeforeUpdate)
 
 	return &Mysql{
 		db:   db,
@@ -76,8 +80,11 @@ func Connect(config *config.Config) *Mysql {
 	}
 }
 
-func (e *Mysql) GetInstance() *gorm.DB {
-
+func (e *Mysql) GetInstance(conf ...*config.Config) *gorm.DB {
+	if len(conf) > 0 {
+		rs := Connect(conf[0])
+		return rs.db
+	}
 	return e.db
 }
 

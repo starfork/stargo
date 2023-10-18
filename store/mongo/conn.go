@@ -49,7 +49,11 @@ func Connect(conf *config.Config) *Mongo {
 	//fmt.Println("Connected to MongoDB!")
 }
 
-func (e *Mongo) GetInstance() *mongo.Client {
+func (e *Mongo) GetInstance(conf ...*config.Config) *mongo.Client {
+	if len(conf) > 0 {
+		rs := Connect(conf[0])
+		return rs.client
+	}
 	return e.client
 }
 
