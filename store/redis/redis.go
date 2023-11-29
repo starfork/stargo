@@ -2,9 +2,12 @@ package redis
 
 import (
 	"context"
+	"os"
+	"strconv"
 
 	"github.com/redis/go-redis/v9"
 	"github.com/starfork/stargo/config"
+	"github.com/starfork/stargo/util/ustring"
 )
 
 type Redis struct {
@@ -14,9 +17,9 @@ type Redis struct {
 func Connect(config *config.Config) *Redis {
 	c := config.Redis
 	rdc := redis.NewClient(&redis.Options{
-		Addr:     c.Addr,
-		DB:       c.Num,
-		Password: c.Auth,
+		Addr:     ustring.Or(c.Addr, os.Getenv("REDIS_ADDR")),
+		DB:       ustring.Int(ustring.OrString(strconv.Itoa(c.Num), os.Getenv("REDIS_NUM"))),
+		Password: ustring.Or(c.Auth, os.Getenv("REDIS_AUTH")),
 	})
 
 	if _, err := rdc.Ping(context.Background()).Result(); err != nil {

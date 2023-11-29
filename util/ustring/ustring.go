@@ -10,8 +10,10 @@ import (
 	"golang.org/x/text/language"
 )
 
+type Ustring string
+
 // New New
-func New(l int, t string) string {
+func NewRand(l int, t string) string {
 	var str string
 	switch t {
 	case "lower":
@@ -33,8 +35,8 @@ func New(l int, t string) string {
 	return string(result)
 }
 
-func Number(l int) string {
-	return New(l, "number")
+func RandNumber(l int) string {
+	return NewRand(l, "number")
 }
 
 func U32String(ids []uint32) string {
@@ -79,4 +81,12 @@ func OrString(str1, str2 string) string {
 }
 func Or(str1, str2 string) string {
 	return OrString(str1, str2)
+}
+
+func Int(s string) int {
+	i, err := strconv.Atoi(s)
+	if err != nil {
+		return 0
+	}
+	return i
 }
