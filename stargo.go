@@ -99,7 +99,7 @@ func New(opt ...Option) *App {
 // Run   server
 func (s *App) Run() {
 
-	//s.logger.Debugf("ServerPort%+v", s.conf.ServerPort)
+	s.logger.Debugf("ServerPort%+v", s.conf.ServerPort)
 	ports := strings.Split(s.conf.ServerPort, ":")
 	port := ports[0]
 	if len(ports) > 1 {
