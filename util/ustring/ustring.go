@@ -90,3 +90,63 @@ func Int(s string) int {
 	}
 	return i
 }
+
+/** 驼峰转下划线 **/
+func SnakeString(s string) string {
+	num := len(s)
+	data := make([]byte, 0, num*2)
+	f := func(d byte) bool {
+		return d >= 65 && d <= 90
+	}
+	if f(s[0]) {
+		data = append(data, s[0]+32)
+	} else {
+		data = append(data, s[0])
+	}
+	for i := 1; i < num; i++ {
+		d := s[i]
+		if f(d) {
+			data = append(data, '_', d+32)
+		} else {
+			data = append(data, d)
+		}
+
+	}
+	return string(data[:])
+}
+
+// 下划线转驼峰
+func CamelString(s string, ugly ...bool) string {
+	l := len(s)
+	data := make([]byte, 0, l)
+
+	var conv = true
+	// var ug = false
+	// if len(ugly) > 0 {
+	// 	ug = true
+	// }
+	for i := 0; i < l; i++ {
+		d := s[i]
+		if conv && d >= 'a' && d <= 'z' {
+			d = d - 32
+		}
+		// else if d != '_' {
+		// 	//对于aXcd_edf_1这种奇葩的“X”，是否转小写的x
+		// 	// if d >= 65 && d <= 90 {
+		// 	// 	d = d + 32
+		// 	// }
+		// 	data = append(data, d)
+		// }
+
+		conv = d == '_'
+		if !conv {
+			//对于aXcd_edf_1这种奇葩的“X”，是否转小写的x
+			// if d >= 65 && d <= 90 && ug {
+			// 	d = d + 32
+			// }
+			data = append(data, d)
+		}
+
+	}
+	return string(data[:])
+}
