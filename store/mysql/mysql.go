@@ -26,21 +26,27 @@ type Mysql struct {
 
 // Connect 初始化MySQLme
 func Connect(config *config.Config) *Mysql {
-	c := config.Mysql
+
 	if config.Timezome != "" {
 		TIME_LOCATION = config.Timezome
 	}
 	if config.Timeformat != "" {
 		TFORMAT = config.Timeformat
 	}
+	c := config.Mysql
+	c.User = ustring.Or(c.User, os.Getenv("MYSQL_USER"))
+	c.Password = ustring.Or(c.Password, os.Getenv("MYSQL_PASSWD"))
+	c.Host = ustring.Or(c.Host, os.Getenv("MYSQL_HOST"))
+	c.Port = ustring.Or(c.Port, os.Getenv("MYSQL_PORT"))
+	c.Name = ustring.Or(c.Name, os.Getenv("MYSQL_DBNAME"))
 
 	var err error
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
-		ustring.Or(c.User, os.Getenv("MYSQL_USER")),
-		ustring.Or(c.Password, os.Getenv("MYSQL_PASSWD")),
-		ustring.Or(c.Host, os.Getenv("MYSQL_HOST")),
-		ustring.Or(c.Port, os.Getenv("MYSQL_PORT")),
-		ustring.Or(c.Name, os.Getenv("MYSQL_DBNAME")),
+		c.User,
+		c.Password,
+		c.Host,
+		c.Port,
+		c.Name,
 	)
 	//dsn = "root:@tcp(127.0.0.1:3306)/zome_ucenter?charset=utf8mb4&parseTime=True&loc=Local"
 	// dsn := c.User + ":" + c.Password + "@tcp(" +

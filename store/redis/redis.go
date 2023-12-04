@@ -16,10 +16,13 @@ type Redis struct {
 
 func Connect(config *config.Config) *Redis {
 	c := config.Redis
+	c.Addr = ustring.Or(c.Addr, os.Getenv("REDIS_ADDR"))
+	c.Auth = ustring.Or(c.Auth, os.Getenv("REDIS_AUTH"))
+	c.Num = ustring.Int(ustring.OrString(strconv.Itoa(c.Num), os.Getenv("REDIS_NUM")))
 	rdc := redis.NewClient(&redis.Options{
-		Addr:     ustring.Or(c.Addr, os.Getenv("REDIS_ADDR")),
-		DB:       ustring.Int(ustring.OrString(strconv.Itoa(c.Num), os.Getenv("REDIS_NUM"))),
-		Password: ustring.Or(c.Auth, os.Getenv("REDIS_AUTH")),
+		Addr:     c.Addr,
+		DB:       c.Num,
+		Password: c.Auth,
 	})
 
 	if _, err := rdc.Ping(context.Background()).Result(); err != nil {

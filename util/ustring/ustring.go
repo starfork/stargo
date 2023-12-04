@@ -79,6 +79,8 @@ func OrString(str1, str2 string) string {
 	}
 	return str1
 }
+
+// 如果str2不是空则返回str2，否则返回str1
 func Or(str1, str2 string) string {
 	return OrString(str1, str2)
 }

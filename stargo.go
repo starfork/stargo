@@ -99,7 +99,7 @@ func New(opt ...Option) *App {
 // Run   server
 func (s *App) Run() {
 
-	s.logger.Debugf("ServerPort%+v", s.conf.ServerPort)
+	//	s.logger.Debugf("ServerPort%+v", s.conf.ServerPort)
 	ports := strings.Split(s.conf.ServerPort, ":")
 	port := ports[0]
 	if len(ports) > 1 {
@@ -111,7 +111,7 @@ func (s *App) Run() {
 	if err != nil {
 		s.logger.Fatalf("failed to listen: %v", err)
 	}
-	s.logger.Debugf("Starting: gRPC Listener [%s]\n", port)
+	s.logger.Debugf("Starting: gRPC Listener [:%s]\n", port)
 
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGTERM, syscall.SIGINT, syscall.SIGHUP, syscall.SIGQUIT)
