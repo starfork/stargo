@@ -14,30 +14,23 @@ import (
 	"gorm.io/gorm"
 )
 
-type TagFile struct {
-	//file server config
+type Plugin struct {
 	fsc *config.FileServerConfig
-
-	//log *config.Config
 }
 
 func Register(db *gorm.DB, conf *config.Config) {
-
-	p := &TagFile{}
 	if conf.FileServer == nil {
-		p.fsc = conf.FileServer
+		return
+	}
+	p := &Plugin{
+		fsc: conf.FileServer,
 	}
 	db.Callback().Query().After("gorm:find").Register("tagfile:after_query", p.AfterQuery)
 	db.Callback().Update().Before("gorm:update").Register("tagfile:before_update", p.BeforeUpdate)
 
 }
 
-// 接口定义
-type Unmarshaler interface {
-	Unmarshal()
-}
-
-func (e *TagFile) Parse(str string) string {
+func (e *Plugin) Parse(str string) string {
 	if str == "" {
 		return ""
 	}
@@ -45,7 +38,7 @@ func (e *TagFile) Parse(str string) string {
 	str = strings.ReplaceAll(str, "public://", e.fsc.PublicUrl)
 	return str
 }
-func (e *TagFile) Rebuild(str string) string {
+func (e *Plugin) Rebuild(str string) string {
 	if str == "" {
 		return ""
 	}
@@ -54,10 +47,14 @@ func (e *TagFile) Rebuild(str string) string {
 	return str
 }
 
-func (e *TagFile) AfterQuery(db *gorm.DB) {
-	fmt.Println("sdfds")
+func (e *Plugin) AfterQuery(db *gorm.DB) {
 	value := db.Statement.ReflectValue
-	if value.Kind() == reflect.Int64 {
+	// if value.Kind() == reflect.Int64 {
+	// 	return
+	// }
+
+	kind := value.Kind()
+	if kind != reflect.Slice && kind != reflect.Struct {
 		return
 	}
 
@@ -73,36 +70,23 @@ func (e *TagFile) AfterQuery(db *gorm.DB) {
 		// 	moneyField = append(moneyField, ustring.ToCamel(f))
 		// }
 	}
-	if value.Kind() == reflect.Slice {
-
+	if kind == reflect.Slice {
 		for i := 0; i < value.Len(); i++ {
 			//非指针类型的不能设置这些东东
 			if reflect.Value(value.Index(i)).Kind() == reflect.Ptr {
 				item := reflect.Value(value.Index(i)).Elem()
-				e.unmarshal(item)
-				e.SetTagFile(item, tagFields)
+				e.SetPlugin(item, tagFields)
 			}
 
 		}
-	} else if value.Kind() == reflect.Struct {
+	} else if kind == reflect.Struct {
 		item := reflect.Value(value)
-
-		e.unmarshal(item)
-		e.SetTagFile(item, tagFields)
+		e.SetPlugin(item, tagFields)
 	}
 
 }
 
-func (e *TagFile) unmarshal(item reflect.Value) {
-	it := reflect.TypeOf((*interface{ Unmarshal() })(nil)).Elem()
-	addr := item.Addr()
-
-	if addr.Type().Implements(it) {
-		addr.MethodByName("Unmarshal").Call(nil)
-	}
-}
-
-func (e *TagFile) SetTagFile(item reflect.Value, parseField []string) {
+func (e *Plugin) SetPlugin(item reflect.Value, parseField []string) {
 
 	if len(parseField) == 0 {
 		return
@@ -127,7 +111,7 @@ func (e *TagFile) SetTagFile(item reflect.Value, parseField []string) {
 	}
 }
 
-func (e *TagFile) BeforeUpdate(db *gorm.DB) {
+func (e *Plugin) BeforeUpdate(db *gorm.DB) {
 	value := db.Statement.ReflectValue
 	//fmt.Println(value.Kind())
 	if value.Kind() != reflect.Struct {
