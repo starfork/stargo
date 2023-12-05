@@ -22,11 +22,10 @@ type TagFile struct {
 }
 
 func Register(db *gorm.DB, conf *config.Config) {
+
+	p := &TagFile{}
 	if conf.FileServer == nil {
-		return
-	}
-	p := &TagFile{
-		fsc: conf.FileServer,
+		p.fsc = conf.FileServer
 	}
 	db.Callback().Query().After("gorm:find").Register("tagfile:after_query", p.AfterQuery)
 	db.Callback().Update().Before("gorm:update").Register("tagfile:before_update", p.BeforeUpdate)
@@ -56,7 +55,7 @@ func (e *TagFile) Rebuild(str string) string {
 }
 
 func (e *TagFile) AfterQuery(db *gorm.DB) {
-
+	fmt.Println("sdfds")
 	value := db.Statement.ReflectValue
 	if value.Kind() == reflect.Int64 {
 		return
