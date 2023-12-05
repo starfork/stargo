@@ -87,9 +87,6 @@ func Connect(config *config.Config) *Mysql {
 		RegisterPlugins(db, config, c.Plugins)
 	}
 
-	//db.Callback().Query().After("gorm:find").Register("ossimage:after_query", p.AfterQuery)
-	//db.Callback().Update().Before("gorm:update").Register("ossimage:before_update", p.BeforeUpdate)
-
 	return &Mysql{
 		db:   db,
 		conn: sqlDB,
