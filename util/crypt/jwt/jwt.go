@@ -12,16 +12,7 @@ var (
 	JwtKey = "zomeisagoodguy"
 )
 
-const (
-	ETYPE_USER     = "user"     //用户，业主
-	ETYPE_ADMIN    = "admin"    //管理员
-	ETYPE_COBBER   = "cobber"   //合伙人
-	ETYPE_PARTNER  = "partner"  //代理
-	ETYPE_PROVIDER = "provider" //师傅
-	ETYPE_WORKER   = "worker"   //兼职者，帮手
-	ETYPE_PMO      = "pmo"      //物业
-	ETYPE_MERCHANT = "merchant" //商家
-)
+const ()
 
 const (
 	Ot_Owner  = "owner"  //所有人，主人，上级
@@ -32,7 +23,7 @@ const (
 
 type JwtNumber uint32
 
-//Options 统一的鉴权jwt数据
+// Options 统一的鉴权jwt数据
 type Options struct {
 	UID     uint32 `json:"uid"`       //鉴权用户的UID
 	Account string `json:"account"`   //登录用户名或者鉴权 Identifier
@@ -48,10 +39,10 @@ type Options struct {
 	jwt.RegisteredClaims
 }
 
-//Option Option
+// Option Option
 type Option func(o *Options)
 
-//UID set uid
+// UID set uid
 func UID(uid uint32) Option {
 	return func(o *Options) {
 		o.UID = uid
@@ -64,42 +55,42 @@ func (o JwtNumber) Uint32() uint32 {
 	return uint32(o)
 }
 
-//Account account
+// Account account
 func Account(account string) Option {
 	return func(o *Options) {
 		o.Account = account
 	}
 }
 
-//OwnType usertype
+// OwnType usertype
 func OwnType(usertype string) Option {
 	return func(o *Options) {
 		o.OwnType = usertype
 	}
 }
 
-//Pid group
+// Pid group
 func Pid(pid uint32) Option {
 	return func(o *Options) {
 		o.Pid = pid
 	}
 }
 
-//Pid group
+// Pid group
 func Org(org string) Option {
 	return func(o *Options) {
 		o.Org = org
 	}
 }
 
-//Rules rules
+// Rules rules
 func Rules(rules string) Option {
 	return func(o *Options) {
 		o.Rules = rules
 	}
 }
 
-//Role roles
+// Role roles
 func Role(role string) Option {
 	return func(o *Options) {
 		o.Role = role
@@ -114,7 +105,7 @@ func Expire(expire int64) Option {
 	}
 }
 
-//Issuer Issuer
+// Issuer Issuer
 func Issuer(issuer string) Option {
 	return func(o *Options) {
 		o.Issuer = issuer
@@ -127,7 +118,7 @@ func Issuer(issuer string) Option {
 // 	}
 // }
 
-//DefaultOptions default options
+// DefaultOptions default options
 func DefaultOptions() Options {
 	nowTime := time.Now()
 	expireTime := nowTime.Add(24 * 30 * time.Hour)
@@ -144,7 +135,7 @@ func DefaultOptions() Options {
 	return o
 }
 
-//DefaultOptions default options
+// DefaultOptions default options
 func TestOptions() Options {
 	nowTime := time.Now()
 	expireTime := nowTime.Add(24 * 30 * time.Hour)
@@ -162,7 +153,7 @@ func TestOptions() Options {
 	return o
 }
 
-//New 产生token
+// New 产生token
 func New(opts ...Option) (string, error) {
 	options := DefaultOptions()
 	for _, o := range opts {
@@ -174,7 +165,7 @@ func New(opts ...Option) (string, error) {
 
 }
 
-//Parse 分析token
+// Parse 分析token
 func Parse(token string) (*Options, error) {
 	tokenClaims, err := jwt.ParseWithClaims(token, &Options{}, func(token *jwt.Token) (interface{}, error) {
 		//返回秘钥
