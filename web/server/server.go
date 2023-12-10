@@ -1,12 +1,8 @@
 package server
 
 import (
-	"apps/spiderpool/funcs"
-	sf "apps/spiderpool/funcs/spiderpool"
 	"context"
-	"embed"
 	"fmt"
-	"html/template"
 	"net/http"
 	"strings"
 
@@ -35,33 +31,6 @@ func NewServer(conf map[string]*config.Config) (*Server, error) {
 
 	}
 	return s, nil
-}
-
-func (s *Server) Start(g *gin.Engine, efs embed.FS, viewPath string) {
-
-	s.ctx = context.Background()
-	fcs := &funcs.Funcs{
-		Sp: sf.NewFuncs(s.ctx, s.conn["spiderpool"]),
-	}
-
-	tpl := template.Must(template.New("").Funcs(funcs.Register(fcs)).
-		ParseFS(efs, "views/**/**/**/*"))
-	g.SetHTMLTemplate(tpl)
-
-	s.g = g
-	routers := make(map[string][][]any)
-	s.Register(routers)
-
-	// //handler 应该不会有很多才对
-	// sh := &sh.Handler{
-	// 	Tpl:  tpl,
-	// 	Ns:   "/go.park.spider.SpiderpoolHandler/",
-	// 	Conn: s.conn["spiderpool"],
-	// 	Ctx:  s.ctx,
-	// }
-
-	// s.g.Handle("GET", "/article/:name", sh.ReadArticle)
-
 }
 
 func (s *Server) Register(routers map[string][][]any) {
