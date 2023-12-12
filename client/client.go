@@ -2,12 +2,14 @@ package client
 
 import (
 	"context"
+	"errors"
+	"sync"
 	"time"
 
 	"github.com/starfork/stargo/config"
-	"github.com/starfork/stargo/naming"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/grpclog"
 )
 
 const (
@@ -42,28 +44,34 @@ const (
 )
 
 type Client struct {
-	conf    *config.Config
-	org     string
-	s       naming.Resolver
-	r       naming.Registry
+	org   string
+	confs map[string]*config.Server
+
 	dialOpt map[string][]grpc.DialOption
-	conns   map[string]*grpc.ClientConn
+	conns   map[string]grpc.ClientConnInterface
+
+	mu sync.Mutex
 }
 
-func NewClient(conf *config.Config, dialOpt ...map[string][]grpc.DialOption) *Client {
+func New(conf *config.Config, dialOpt ...map[string][]grpc.DialOption) *Client {
 
 	c := &Client{
-		conf:  conf,
-		org:   conf.Registry.Org,
-		s:     naming.NewResolver(conf.Registry),
-		r:     naming.NewRegistry(conf.Registry),
-		conns: make(map[string]*grpc.ClientConn),
+		//conf:  conf,
+		org: conf.Org,
+		//s:     naming.NewResolver(conf.Registry),
+		//r:     naming.NewRegistry(conf.Registry),
+		conns: make(map[string]grpc.ClientConnInterface),
+		confs: make(map[string]*config.Server),
 		//dialOpt: dialOpt,
-	}
 
+	}
 	if len(dialOpt) > 0 {
 		c.dialOpt = dialOpt[0]
 	}
+	for k, v := range conf.Server {
+		c.confs[k] = v
+	}
+
 	return c
 
 }
@@ -87,11 +95,15 @@ func DefaultOptions() []grpc.DialOption {
 	return opts
 }
 
-// 获取一个连接
-func (e *Client) Connection(app string, appendOpts ...[]grpc.DialOption) (conn *grpc.ClientConn, err error) {
+// // 获取一个连接
+func (e *Client) Connection(ctx context.Context, app string, appendOpts ...[]grpc.DialOption) (grpc.ClientConnInterface, error) {
 
-	var ok bool
-	conn, ok = e.conns[app]
+	endpoint, err := e.endpoint(app)
+	if err != nil {
+		return nil, err
+	}
+
+	conn, ok := e.conns[app]
 	if !ok {
 		opts := DefaultOptions()
 		if opt, ok := e.dialOpt[app]; ok {
@@ -101,14 +113,39 @@ func (e *Client) Connection(app string, appendOpts ...[]grpc.DialOption) (conn *
 		if len(appendOpts) > 0 {
 			opts = append(opts, appendOpts[0]...)
 		}
-		if conn, err = grpc.Dial(e.r.Scheme()+"://"+app, opts...); err != nil {
+		conn1, err := grpc.DialContext(ctx, endpoint, opts...)
+		if err != nil {
 			return nil, err
 		}
 		//defer conn.Close()
+		e.mu.Lock()
+		defer e.mu.Unlock()
+		e.conns[app] = conn1
 
-		e.conns[app] = conn
+		defer func() {
+			if err != nil {
+				if cerr := conn1.Close(); cerr != nil {
+					grpclog.Infof("Failed to close conn to %s: %v", endpoint, cerr)
+				}
+				return
+			}
+			go func() {
+				<-ctx.Done()
+				if cerr := conn1.Close(); cerr != nil {
+					grpclog.Infof("Failed to close conn to %s: %v", endpoint, cerr)
+				}
+			}()
+		}()
 	}
+
 	return conn, nil
+}
+func (e *Client) endpoint(app string) (string, error) {
+	conf, ok := e.confs[app]
+	if !ok {
+		return "", errors.New("unknow app")
+	}
+	return conf.Name + "://" + app, nil
 }
 
 // depreciated
@@ -116,6 +153,10 @@ func (e *Client) Connection(app string, appendOpts ...[]grpc.DialOption) (conn *
 // 没有对外的调用，目前只支持不带验证的
 // 默认执行
 func (e *Client) Invoke(ctx context.Context, app, method string, in, rs interface{}, h ...string) error {
+	endpoint, err := e.endpoint(app)
+	if err != nil {
+		return err
+	}
 
 	opts := DefaultOptions()
 	if opt, ok := e.dialOpt[app]; ok {
@@ -123,7 +164,7 @@ func (e *Client) Invoke(ctx context.Context, app, method string, in, rs interfac
 	}
 	//fmt.Println(e.r.Scheme() + "://" + target)
 	//似乎不用每次都Dial
-	conn, err := grpc.Dial(e.r.Scheme()+"://"+app, opts...)
+	conn, err := grpc.Dial(endpoint, opts...)
 
 	if err != nil {
 		return err
@@ -142,16 +183,16 @@ func (e *Client) Invoke(ctx context.Context, app, method string, in, rs interfac
 	return conn.Invoke(ctx, rpcMethod, in, rs)
 }
 
-func (e *Client) Close(app ...string) {
-	if len(app) > 0 {
-		if conn, ok := e.conns[app[0]]; ok {
-			conn.Close()
-		}
-	} else {
-		for _, v := range e.conns {
-			if v != nil {
-				v.Close()
-			}
-		}
-	}
-}
+// func (e *Client) Close(app ...string) {
+// 	if len(app) > 0 {
+// 		if conn, ok := e.conns[app[0]]; ok {
+// 			conn.Close()
+// 		}
+// 	} else {
+// 		for _, v := range e.conns {
+// 			if v != nil {
+// 				v.Close()
+// 			}
+// 		}
+// 	}
+// }

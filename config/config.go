@@ -15,9 +15,9 @@ var (
 // 公共配置模板
 type Config struct {
 	Environment string
-
+	Org         string
 	//ServerName string //服务名称--4-11改。通过app启动设置
-	ServerPort string //服务端口
+	Port string //服务端口
 	//ApiPort    string //api端口
 	Timezome   string //时区设置
 	Timeformat string
@@ -29,6 +29,7 @@ type Config struct {
 	Log        *LogConfig
 	Broker     *BrokerConfig
 	Registry   *Registry
+	Server     map[string]*Server //rpc server
 }
 
 // Mysql
@@ -91,4 +92,13 @@ type Registry struct {
 type BrokerConfig struct {
 	Name string
 	Host string //连接地址
+}
+
+//Rpc Server
+
+type Server struct {
+	Name string
+	Host string
+	Port string
+	Auth string //[keyfilepath]:[key]:
 }
