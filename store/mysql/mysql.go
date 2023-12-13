@@ -38,7 +38,7 @@ func Connect(config *config.Config) *Mysql {
 	c.Password = ustring.Or(c.Password, os.Getenv("MYSQL_PASSWD"))
 	c.Host = ustring.Or(c.Host, os.Getenv("MYSQL_HOST"))
 	c.Port = ustring.Or(c.Port, os.Getenv("MYSQL_PORT"))
-	c.Name = ustring.Or(c.Name, os.Getenv("MYSQL_DBNAME"))
+	c.Name = ustring.Or(c.Name, os.Getenv("MYSQL_NAME"))
 
 	var err error
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
@@ -94,6 +94,7 @@ func Connect(config *config.Config) *Mysql {
 }
 
 func (e *Mysql) GetInstance(conf ...*config.Config) *gorm.DB {
+
 	if len(conf) > 0 {
 		rs := Connect(conf[0])
 		return rs.db
