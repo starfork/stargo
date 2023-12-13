@@ -44,8 +44,8 @@ const (
 )
 
 type Client struct {
-	org   string
-	confs map[string]*config.Server
+	org      string
+	rpcConfs map[string]*config.Server
 
 	dialOpt map[string][]grpc.DialOption
 	conns   map[string]grpc.ClientConnInterface
@@ -60,16 +60,16 @@ func New(conf *config.Config, dialOpt ...map[string][]grpc.DialOption) *Client {
 		org: conf.Org,
 		//s:     naming.NewResolver(conf.Registry),
 		//r:     naming.NewRegistry(conf.Registry),
-		conns: make(map[string]grpc.ClientConnInterface),
-		confs: make(map[string]*config.Server),
+		conns:    make(map[string]grpc.ClientConnInterface),
+		rpcConfs: make(map[string]*config.Server),
 		//dialOpt: dialOpt,
 
 	}
 	if len(dialOpt) > 0 {
 		c.dialOpt = dialOpt[0]
 	}
-	for k, v := range conf.Server {
-		c.confs[k] = v
+	for k, v := range conf.RpcServer {
+		c.rpcConfs[k] = v
 	}
 
 	return c
@@ -141,7 +141,7 @@ func (e *Client) Connection(ctx context.Context, app string, appendOpts ...[]grp
 	return conn, nil
 }
 func (e *Client) endpoint(app string) (string, error) {
-	conf, ok := e.confs[app]
+	conf, ok := e.rpcConfs[app]
 	if !ok {
 		return "", errors.New("unknow app")
 	}

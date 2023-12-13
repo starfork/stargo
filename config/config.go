@@ -29,7 +29,7 @@ type Config struct {
 	Log        *LogConfig
 	Broker     *BrokerConfig
 	Registry   *Registry
-	Server     map[string]*Server //rpc server
+	RpcServer  map[string]*Server //rpc server
 }
 
 // Mysql
