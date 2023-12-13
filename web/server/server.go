@@ -25,7 +25,7 @@ func NewServer(conf map[string]*config.Config) (*Server, error) {
 	}
 
 	for k, v := range conf {
-		s.conn[k], _ = grpc.Dial(v.ServerPort,
+		s.conn[k], _ = grpc.Dial(v.Port,
 			grpc.WithTransportCredentials(insecure.NewCredentials()),
 		)
 
