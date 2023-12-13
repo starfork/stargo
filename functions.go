@@ -10,7 +10,6 @@ import (
 	"github.com/starfork/stargo/store/mysql"
 	"github.com/starfork/stargo/store/redis"
 	"go.uber.org/zap"
-	"google.golang.org/grpc"
 
 	sf "github.com/sony/sonyflake"
 )
@@ -19,7 +18,7 @@ import (
 func (s *App) Invoke(ctx context.Context, app, method string, in, rs interface{}, h ...string) error {
 
 	if s.client == nil {
-		s.client = client.NewClient(s.conf)
+		s.client = client.New(s.conf)
 	}
 	return s.client.Invoke(ctx, app, method, in, rs, h...)
 }
@@ -69,14 +68,14 @@ func (s *App) GetSfid(conf ...sf.Settings) *sf.Sonyflake {
 	return sf.NewSonyflake(st)
 }
 
-func (s *App) InitClient(dialOpt ...map[string][]grpc.DialOption) {
-	s.client = client.NewClient(s.conf, dialOpt...)
-}
+// func (s *App) InitClient(dialOpt ...map[string][]grpc.DialOption) {
+// 	s.client = client.New(s.conf, dialOpt...)
+// }
 
-func (s *App) GetClient(dialOpt ...map[string][]grpc.DialOption) *client.Client {
+// func (s *App) GetClient(dialOpt ...map[string][]grpc.DialOption) *client.Client {
 
-	if s.client == nil {
-		s.client = client.NewClient(s.conf, dialOpt...)
-	}
-	return s.client
-}
+// 	if s.client == nil {
+// 		s.client = client.New(s.conf, dialOpt...)
+// 	}
+// 	return s.client
+// }

@@ -100,7 +100,7 @@ func New(opt ...Option) *App {
 func (s *App) Run() {
 
 	//	s.logger.Debugf("ServerPort%+v", s.conf.ServerPort)
-	ports := strings.Split(s.conf.ServerPort, ":")
+	ports := strings.Split(s.conf.Port, ":")
 	port := ports[0]
 	if len(ports) > 1 {
 		port = ports[1] //centos docker 监听ip:port模式有问题
@@ -150,9 +150,9 @@ func (s *App) Stop() {
 	if s.mongo != nil {
 		s.mongo.Close()
 	}
-	if s.client != nil {
-		s.client.Close()
-	}
+	// if s.client != nil {
+	// 	s.client.Close()
+	// }
 	//s.GetMongo().Close()
 
 	s.server.Stop()
@@ -163,7 +163,7 @@ func (s *App) Service() service.Service {
 	return service.Service{
 		Org:  s.opts.Org,
 		Name: s.opts.Name,
-		Addr: s.conf.ServerPort,
+		Addr: s.conf.Port,
 	}
 }
 
