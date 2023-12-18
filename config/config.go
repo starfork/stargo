@@ -69,6 +69,8 @@ type LogConfig struct {
 }
 
 type Registry struct {
+	Environment string
+
 	Org  string
 	Name string
 	Host string //连接地址
