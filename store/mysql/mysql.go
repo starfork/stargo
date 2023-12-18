@@ -35,7 +35,7 @@ func Connect(config *config.Config) *Mysql {
 	}
 	c := config.Mysql
 	c.User = ustring.Or(c.User, os.Getenv("MYSQL_USER"))
-	c.Password = ustring.Or(c.Password, os.Getenv("MYSQL_PASSWD"))
+	c.Auth = ustring.Or(c.Auth, os.Getenv("MYSQL_PASSWD"))
 	c.Host = ustring.Or(c.Host, os.Getenv("MYSQL_HOST"))
 	c.Port = ustring.Or(c.Port, os.Getenv("MYSQL_PORT"))
 	c.Name = ustring.Or(c.Name, os.Getenv("MYSQL_NAME"))
@@ -43,7 +43,7 @@ func Connect(config *config.Config) *Mysql {
 	var err error
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
 		c.User,
-		c.Password,
+		c.Auth,
 		c.Host,
 		c.Port,
 		c.Name,
@@ -56,7 +56,7 @@ func Connect(config *config.Config) *Mysql {
 	conf := &gorm.Config{
 		NamingStrategy: schema.NamingStrategy{
 			SingularTable: true, //全局采用单表名
-			TablePrefix:   c.TablePrefix,
+			TablePrefix:   c.Prefix,
 		},
 	}
 	if c.Debug {

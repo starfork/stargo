@@ -19,7 +19,7 @@ func Connect(conf *config.Config) *Mongo {
 	auth := options.Credential{
 		//AuthSource: "<authenticationDb>",
 		Username: c.User,
-		Password: c.Password,
+		Password: c.Auth,
 	}
 	var client *mongo.Client
 	clientOptions := options.Client().ApplyURI("mongodb://" + c.Host).SetAuth(auth)

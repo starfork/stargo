@@ -22,9 +22,10 @@ type Config struct {
 	Timezome   string //时区设置
 	Timeformat string
 
-	Mysql      *MysqlConfig
-	Redis      *RedisConfig
-	MongoDb    *MongoDBConfig
+	Mysql      *StoreConfig
+	Redis      *StoreConfig
+	MongoDb    *StoreConfig
+	Sqlite     *StoreConfig
 	FileServer *FileServerConfig
 	Log        *LogConfig
 	Broker     *BrokerConfig
@@ -32,35 +33,22 @@ type Config struct {
 	RpcServer  map[string]*Server //rpc server
 }
 
-// Mysql
-type MysqlConfig struct {
-	Name        string //数据库名字
-	Host        string
-	User        string
-	Port        string
-	Password    string
-	Debug       bool //是否开启调试
-	MaxIdle     int
-	MaxOpen     int
-	TablePrefix string
-	Plugins     []string
-}
+type StoreConfig struct {
+	Host string //地址
+	Port string //端口
+	User string //账户
+	Name string //数据库名称，仓库名称，sqlite文件名等
+	Auth string //认证/密码
+	DSN  string //DSN连接
 
-// redis
-type RedisConfig struct {
-	Addr string //连接地址
-	Auth string //认证
-	Num  int    //库的数字
-}
+	Monitor bool //监控
 
-// Mongo
-type MongoDBConfig struct {
-	Host     string //地址
-	Port     string //端口
-	User     string //账户
-	Password string //
-	Monitor  bool   //监控
-	DbName   string //库名
+	Plugins []string
+	Debug   bool //是否开启调试
+	MaxIdle int
+	MaxOpen int
+	Prefix  string //表前缀什么的
+	Num     int    //连接标识数
 }
 
 // 文件服务器配置
@@ -81,12 +69,11 @@ type LogConfig struct {
 }
 
 type Registry struct {
-	Environment string
-	Org         string
-	Name        string
-	Addr        string //连接地址
-	Auth        string //认证
-	Num         int    //库的数字
+	Org  string
+	Name string
+	Host string //连接地址
+	Auth string //认证
+	Num  int    //库的数字
 }
 
 type BrokerConfig struct {

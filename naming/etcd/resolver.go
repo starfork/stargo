@@ -28,8 +28,8 @@ import (
 )
 
 type Resolver struct {
-	c      *clientv3.Client
-	target string
+	c *clientv3.Client
+	//target string
 	cc     resolver.ClientConn
 	wch    endpoints.WatchChannel
 	ctx    context.Context

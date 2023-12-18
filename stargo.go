@@ -144,7 +144,7 @@ func (s *App) Stop() {
 		s.mysql.Close()
 	}
 	if s.redis != nil {
-		s.logger.Debugf("Close Redis: [%s]\n", s.conf.Redis.Addr)
+		s.logger.Debugf("Close Redis: [%s]\n", s.conf.Redis.Host)
 		s.redis.Close()
 	}
 	if s.mongo != nil {
