@@ -80,6 +80,7 @@ func New(opt ...Option) *App {
 		server: s,
 		logger: logger.NewZapSugar(conf.Log),
 		conf:   conf,
+		store:  make(map[string]store.Store),
 		//config: opts.Config,
 	}
 
