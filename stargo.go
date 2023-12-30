@@ -17,9 +17,7 @@ import (
 	"github.com/starfork/stargo/logger"
 	"github.com/starfork/stargo/naming"
 	"github.com/starfork/stargo/service"
-	"github.com/starfork/stargo/store/mongo"
-	"github.com/starfork/stargo/store/mysql"
-	"github.com/starfork/stargo/store/redis"
+	"github.com/starfork/stargo/store"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -43,10 +41,12 @@ type App struct {
 
 	//config *config.Config
 
-	conf   *config.Config
-	mysql  *mysql.Mysql
-	redis  *redis.Redis
-	mongo  *mongo.Mongo
+	store map[string]store.Store
+
+	conf *config.Config
+	//mysql  *mysql.Mysql
+	//redis  *redis.Redis
+	//mongo  *mongo.Mongo
 	client *client.Client
 
 	registry naming.Registry
@@ -139,21 +139,10 @@ func (s *App) Stop() {
 		s.logger.Debugf("UnRegister: [%s]\n", s.opts.Name)
 		s.registry.UnRegister(s.Service())
 	}
-	if s.mysql != nil {
-		s.logger.Debugf("Close Mysql: [%s]\n", s.conf.Mysql.Host)
-		s.mysql.Close()
+
+	for _, st := range s.store {
+		st.Close()
 	}
-	if s.redis != nil {
-		s.logger.Debugf("Close Redis: [%s]\n", s.conf.Redis.Host)
-		s.redis.Close()
-	}
-	if s.mongo != nil {
-		s.mongo.Close()
-	}
-	// if s.client != nil {
-	// 	s.client.Close()
-	// }
-	//s.GetMongo().Close()
 
 	s.server.Stop()
 }

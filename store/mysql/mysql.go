@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/starfork/stargo/config"
+	"github.com/starfork/stargo/store"
 	"github.com/starfork/stargo/util/ustring"
 
 	"gorm.io/driver/mysql"
@@ -21,19 +22,29 @@ var TFORMAT = "2006-01-02T15:04:05+08:00"
 
 type Mysql struct {
 	db   *gorm.DB
+	c    *config.StoreConfig
 	conn *sql.DB
 }
 
-// Connect 初始化MySQLme
-func Connect(config *config.Config) *Mysql {
+func NewMysql(config *config.StoreConfig) store.Store {
+	return &Mysql{
+		c: config,
+	}
+}
 
-	if config.Timezome != "" {
-		TIME_LOCATION = config.Timezome
+// Connect 初始化MySQLme
+func (e *Mysql) Connect(confs ...*config.Config) {
+	c := e.c
+	if len(confs) > 0 {
+		c = confs[0].Mysql
 	}
-	if config.Timeformat != "" {
-		TFORMAT = config.Timeformat
-	}
-	c := config.Mysql
+
+	// if c.Timezome != "" {
+	// 	TIME_LOCATION = c.Timezome
+	// }
+	// if c.Timeformat != "" {
+	// 	TFORMAT = c.Timeformat
+	// }
 	c.User = ustring.Or(c.User, os.Getenv("MYSQL_USER"))
 	c.Auth = ustring.Or(c.Auth, os.Getenv("MYSQL_PASSWD"))
 	c.Host = ustring.Or(c.Host, os.Getenv("MYSQL_HOST"))
@@ -48,10 +59,6 @@ func Connect(config *config.Config) *Mysql {
 		c.Port,
 		c.Name,
 	)
-	//dsn = "root:@tcp(127.0.0.1:3306)/zome_ucenter?charset=utf8mb4&parseTime=True&loc=Local"
-	// dsn := c.User + ":" + c.Password + "@tcp(" +
-	// 	c.Host + ":" + c.Port + ")/" + c.Name +
-	// 	"?charset=utf8mb4&parseTime=True&loc=Local"
 
 	conf := &gorm.Config{
 		NamingStrategy: schema.NamingStrategy{
@@ -81,23 +88,20 @@ func Connect(config *config.Config) *Mysql {
 	if c.MaxOpen > 0 {
 		sqlDB.SetMaxOpenConns(c.MaxOpen)
 	}
-
+	//自己到项目里去注册
 	//p := plugin.New(config)
-	if len(c.Plugins) > 0 {
-		RegisterPlugins(db, config, c.Plugins)
-	}
-
-	return &Mysql{
-		db:   db,
-		conn: sqlDB,
-	}
+	// if len(c.Plugins) > 0 {
+	// 	RegisterPlugins(db, config, c.Plugins)
+	// }
+	e.db = db
+	e.conn = sqlDB
 }
 
 func (e *Mysql) GetInstance(conf ...*config.Config) *gorm.DB {
 
 	if len(conf) > 0 {
-		rs := Connect(conf[0])
-		return rs.db
+		e.Connect(conf...)
+		return e.db
 	}
 	return e.db
 }
@@ -108,10 +112,18 @@ func (e *Mysql) Close() {
 	}
 }
 
-func (e *Mysql) SetTablePrefix(prefix string) *gorm.DB {
+func (e *Mysql) Prefix(prefix string) string {
 
 	e.db.NamingStrategy = schema.NamingStrategy{
 		TablePrefix: prefix,
 	}
-	return e.db
+	return prefix
 }
+
+// func (e *Mysql) RegisterPlugins(prefix string) string {
+
+// 	e.db.NamingStrategy = schema.NamingStrategy{
+// 		TablePrefix: prefix,
+// 	}
+// 	return prefix
+// }

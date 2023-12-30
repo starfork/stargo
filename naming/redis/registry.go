@@ -17,16 +17,12 @@ type Registry struct {
 }
 
 func NewRegistry(conf *config.Registry) *Registry {
-
-	r := ssredis.Connect(&config.Config{
-		Redis: &config.StoreConfig{
-			Host: conf.Host,
-			Auth: conf.Auth,
-			//Num:  conf.Num,
-		},
-	})
+	rds := ssredis.NewRedis(&config.StoreConfig{
+		Host: conf.Host,
+		Auth: conf.Auth,
+	}).(*ssredis.Redis)
 	return &Registry{
-		rdc: r.GetInstance(),
+		rdc: rds.GetInstance(),
 		//rdc:  app.GetRedis().GetInstance(),
 		ctx:  context.Background(),
 		name: Scheme,

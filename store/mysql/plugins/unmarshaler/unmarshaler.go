@@ -23,7 +23,7 @@ import (
 type Plugin struct {
 }
 
-func Register(db *gorm.DB, conf *config.Config) {
+func Register(db *gorm.DB, conf *config.StoreConfig, fsc ...*config.FileServerConfig) {
 	p := &Plugin{}
 	db.Callback().Query().After("gorm:find").Register("unmarshaler_after_query", p.After)
 	//db.Callback().Create().Before("gorm:create").Register("unmarshaler_after_create", p.Before)

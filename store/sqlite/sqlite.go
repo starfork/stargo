@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/starfork/stargo/config"
+	"github.com/starfork/stargo/store"
 	"github.com/starfork/stargo/util/ustring"
 
 	"gorm.io/driver/mysql"
@@ -13,26 +14,34 @@ import (
 	"gorm.io/gorm/schema"
 )
 
-var TIME_LOCATION = "Asia/Shanghai" //上海
-var TFORMAT = "2006-01-02T15:04:05+08:00"
+// var TIME_LOCATION = "Asia/Shanghai" //上海
+// var TFORMAT = "2006-01-02T15:04:05+08:00"
 
 //var log logger.Interface
 
 type Sqlite struct {
 	db   *gorm.DB
 	conn *sql.DB
+	c    *config.StoreConfig
+}
+
+func NewSqlite(config *config.StoreConfig) store.Store {
+	// if config.Timezome != "" {
+	// 	TIME_LOCATION = config.Timezome
+	// }
+	// if config.Timeformat != "" {
+	// 	TFORMAT = config.Timeformat
+	// }
+
+	return &Sqlite{
+		c: config,
+	}
 }
 
 // Connect
-func Connect(config *config.Config) *Sqlite {
+func (e *Sqlite) Connect(confs ...*config.Config) {
 
-	if config.Timezome != "" {
-		TIME_LOCATION = config.Timezome
-	}
-	if config.Timeformat != "" {
-		TFORMAT = config.Timeformat
-	}
-	c := config.Sqlite
+	c := e.c
 	var err error
 
 	name := ustring.Or(c.Name, os.Getenv("SQLITE_NAME"))
@@ -65,18 +74,19 @@ func Connect(config *config.Config) *Sqlite {
 	// if len(c.Plugins) > 0 {
 	// 	RegisterPlugins(db, config, c.Plugins)
 	// }
-
-	return &Sqlite{
-		db:   db,
-		conn: sqlDB,
-	}
+	e.db = db
+	e.conn = sqlDB
+	// return &Sqlite{
+	// 	db:   db,
+	// 	conn: sqlDB,
+	// }
 }
 
 func (e *Sqlite) GetInstance(conf ...*config.Config) *gorm.DB {
 
 	if len(conf) > 0 {
-		rs := Connect(conf[0])
-		return rs.db
+		e.Connect()
+		return e.db
 	}
 	return e.db
 }
@@ -87,10 +97,10 @@ func (e *Sqlite) Close() {
 	}
 }
 
-func (e *Sqlite) SetTablePrefix(prefix string) *gorm.DB {
+func (e *Sqlite) Prefix(prefix string) string {
 
 	e.db.NamingStrategy = schema.NamingStrategy{
 		TablePrefix: prefix,
 	}
-	return e.db
+	return prefix
 }

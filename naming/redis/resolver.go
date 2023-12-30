@@ -23,13 +23,10 @@ type Resolver struct {
 }
 
 func NewResolver(conf *config.Registry) resolver.Builder {
-	rds := ssredis.Connect(&config.Config{
-		Redis: &config.StoreConfig{
-			Host: conf.Host,
-			//Auth: conf.Auth,
-			//Num:  conf.Num,
-		},
-	})
+	rds := ssredis.NewRedis(&config.StoreConfig{
+		Host: conf.Host,
+		Auth: conf.Auth,
+	}).(*ssredis.Redis)
 
 	r := &Resolver{
 		name: Scheme,

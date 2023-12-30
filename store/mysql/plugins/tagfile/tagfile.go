@@ -18,12 +18,12 @@ type Plugin struct {
 	fsc *config.FileServerConfig
 }
 
-func Register(db *gorm.DB, conf *config.Config) {
-	if conf.FileServer == nil {
-		return
-	}
-	p := &Plugin{
-		fsc: conf.FileServer,
+func Register(db *gorm.DB, conf *config.StoreConfig, fsc ...*config.FileServerConfig) {
+
+	p := &Plugin{}
+	//没有fsc可能插件不会正常工作
+	if len(fsc) > 0 {
+		p.fsc = fsc[0]
 	}
 	db.Callback().Query().After("gorm:find").Register("tagfile:after_query", p.AfterQuery)
 	db.Callback().Update().Before("gorm:update").Register("tagfile:before_update", p.BeforeUpdate)

@@ -49,6 +49,7 @@ type StoreConfig struct {
 	MaxOpen int
 	Prefix  string //表前缀什么的
 	Num     int    //连接标识数
+
 }
 
 // 文件服务器配置

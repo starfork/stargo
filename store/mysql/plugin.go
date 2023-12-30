@@ -7,7 +7,7 @@ import (
 	"gorm.io/gorm"
 )
 
-var PluginsMap = map[string]func(db *gorm.DB, config *config.Config){
+var PluginsMap = map[string]func(db *gorm.DB, config *config.StoreConfig, fsc ...*config.FileServerConfig){
 	"tagfile":     tagfile.Register,
 	"unmarshaler": unmarshaler.Register,
 }
@@ -16,7 +16,7 @@ func RegisterPlugins(db *gorm.DB, conf *config.Config, plugins []string) {
 
 	for _, name := range plugins {
 		if f, ok := PluginsMap[name]; ok {
-			f(db, conf)
+			f(db, conf.Mysql, conf.FileServer)
 		}
 	}
 }
