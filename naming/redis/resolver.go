@@ -7,7 +7,7 @@ import (
 
 	"github.com/redis/go-redis/v9"
 	"github.com/starfork/stargo/config"
-	"github.com/starfork/stargo/service"
+	"github.com/starfork/stargo/registry"
 	sredis "github.com/starfork/stargo/store/redis"
 	"google.golang.org/grpc/resolver"
 )
@@ -72,13 +72,13 @@ func (e *Resolver) Build(target resolver.Target, cc resolver.ClientConn, opts re
 	return &nopResolver{}, nil
 }
 
-func (e *Resolver) List(name string) []service.Service {
+func (e *Resolver) List(name string) []registry.Service {
 
 	key := e.key(name)
 	rs := e.rdc.SMembers(e.ctx, key)
-	data := []service.Service{}
+	data := []registry.Service{}
 	for _, v := range rs.Val() {
-		data = append(data, service.Service{
+		data = append(data, registry.Service{
 			Name: name,
 			Addr: v,
 		})

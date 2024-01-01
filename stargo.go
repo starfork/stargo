@@ -1,7 +1,6 @@
 package stargo
 
 import (
-	"log"
 	"net"
 	"os"
 	"os/signal"
@@ -20,8 +19,6 @@ import (
 	"github.com/starfork/stargo/store"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
-
-	sf "github.com/sony/sonyflake"
 )
 
 var (
@@ -36,19 +33,16 @@ type App struct {
 	server *grpc.Server
 	lis    net.Listener
 	logger logger.Logger
-	sfid   *sf.Sonyflake
+	//sfid   *sf.Sonyflake
 
 	//config *config.Config
 
-	store  map[string]store.Store
-	broker broker.Broker
-
-	conf *config.Config
-	//mysql  *mysql.Mysql
-	//redis  *redis.Redis
-	//mongo  *mongo.Mongo
-	client   *client.Client
+	store    map[string]store.Store
+	broker   broker.Broker
 	registry registry.Registry
+
+	conf   *config.Config
+	client *client.Client
 }
 
 func New(opt ...Option) *App {
@@ -112,9 +106,9 @@ func (s *App) Run() {
 	s.lis = lis
 
 	if err != nil {
-		s.logger.Fatalf("failed to listen: %v", err)
+		s.logger.Logf(logger.FatalLevel, "failed to listen: %v", err)
 	}
-	s.logger.Debugf("Starting: gRPC Listener [:%s]\n", port)
+	s.logger.Logf(logger.DebugLevel, "starting: gRPC Listener [:%s]\n", port)
 
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGTERM, syscall.SIGINT, syscall.SIGHUP, syscall.SIGQUIT)
@@ -130,7 +124,7 @@ func (s *App) Run() {
 	}()
 
 	if err := s.server.Serve(lis); err != nil {
-		log.Fatalf("failed to serve: %v", err)
+		s.logger.Logf(logger.FatalLevel, "failed to serve: %v", err)
 	}
 
 }
@@ -142,7 +136,7 @@ func (s *App) Stop() {
 }
 func (s *App) stopStargo() {
 	if s.registry != nil {
-		s.logger.Debugf("UnRegister: [%s]\n", s.opts.Name)
+		s.logger.Logf(logger.FatalLevel, "UnRegister: [%s]\n", s.opts.Name)
 		s.registry.UnRegister(s.Service())
 	}
 

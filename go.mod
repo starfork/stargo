@@ -15,7 +15,6 @@ require (
 	github.com/json-iterator/go v1.1.12
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/redis/go-redis/v9 v9.3.0
-	github.com/sony/sonyflake v1.2.0
 	github.com/twpayne/go-geom v1.5.3
 	github.com/uber/jaeger-client-go v2.30.0+incompatible
 	go.etcd.io/etcd/client/v3 v3.5.10
