@@ -72,6 +72,10 @@ func (l *defaultLogger) Debugf(format string, v ...interface{}) {
 	l.Logf(DebugLevel, format, v...)
 }
 
+func (l *defaultLogger) Infof(format string, v ...interface{}) {
+	l.Logf(InfoLevel, format, v...)
+}
+
 func (l *defaultLogger) Options() Options {
 	// not guard against options Context values
 	l.RLock()

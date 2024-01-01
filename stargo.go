@@ -108,7 +108,7 @@ func (s *App) Run() {
 	if err != nil {
 		s.logger.Logf(logger.FatalLevel, "failed to listen: %v", err)
 	}
-	s.logger.Logf(logger.DebugLevel, "starting: gRPC Listener [:%s]\n", port)
+	s.logger.Logf(logger.DebugLevel, "starting: gRPC Listener %s\n", port)
 
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGTERM, syscall.SIGINT, syscall.SIGHUP, syscall.SIGQUIT)

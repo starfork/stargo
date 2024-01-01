@@ -103,6 +103,9 @@ func (e *Mysql) GetInstance(conf ...*config.Config) *gorm.DB {
 		e.Connect(conf...)
 		return e.db
 	}
+	if e.db == nil {
+		e.Connect()
+	}
 	return e.db
 }
 
