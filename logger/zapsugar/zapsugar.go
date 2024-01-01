@@ -1,10 +1,11 @@
-package logger
+package zapsugar
 
 import (
 	"os"
 	"time"
 
 	"github.com/starfork/stargo/config"
+	"github.com/starfork/stargo/logger"
 	"github.com/starfork/stargo/util/ustring"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -35,7 +36,7 @@ func TimeEncoder(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
 }
 
 // Init Init
-func NewZapSugar(c ...*config.LogConfig) *zap.SugaredLogger {
+func NewZapSugar(c ...*config.LogConfig) logger.Logger {
 	var writeSyncer zapcore.WriteSyncer
 	level := zap.DebugLevel
 

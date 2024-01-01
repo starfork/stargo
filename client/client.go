@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/starfork/stargo/config"
+	"github.com/starfork/stargo/logger"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	"google.golang.org/grpc/grpclog"
 )
 
 const (
@@ -50,20 +50,17 @@ type Client struct {
 	dialOpt map[string][]grpc.DialOption
 	conns   map[string]grpc.ClientConnInterface
 
+	logger logger.Logger
+
 	mu sync.Mutex
 }
 
 func New(conf *config.Config, dialOpt ...map[string][]grpc.DialOption) *Client {
 
 	c := &Client{
-		//conf:  conf,
-		org: conf.Org,
-		//s:     naming.NewResolver(conf.Registry),
-		//r:     naming.NewRegistry(conf.Registry),
+		org:      conf.Org,
 		conns:    make(map[string]grpc.ClientConnInterface),
 		rpcConfs: make(map[string]*config.Server),
-		//dialOpt: dialOpt,
-
 	}
 	if len(dialOpt) > 0 {
 		c.dialOpt = dialOpt[0]
@@ -71,6 +68,7 @@ func New(conf *config.Config, dialOpt ...map[string][]grpc.DialOption) *Client {
 	for k, v := range conf.RpcServer {
 		c.rpcConfs[k] = v
 	}
+	c.logger = logger.DefaultLogger
 
 	return c
 
@@ -84,7 +82,7 @@ func DefaultOptions() []grpc.DialOption {
 		grpc.WithInitialConnWindowSize(InitialConnWindowSize),
 		grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(MaxSendMsgSize)),
 		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(MaxRecvMsgSize)),
-		//在stargo中，似乎可以使用“永久”连接，否则需要设置配置
+
 		//避免  ERROR: [transport] Client received GoAway with error code ENHANCE_YOUR_CALM 这个报错
 		// grpc.WithKeepaliveParams(keepalive.ClientParameters{
 		// 	Time:                KeepAliveTime,
@@ -96,49 +94,49 @@ func DefaultOptions() []grpc.DialOption {
 }
 
 // // 获取一个连接
-func (e *Client) Connection(ctx context.Context, app string, appendOpts ...[]grpc.DialOption) (grpc.ClientConnInterface, error) {
+func (e *Client) Connection(ctx context.Context, app string, appendOpts ...[]grpc.DialOption) (conn grpc.ClientConnInterface, err error) {
 
 	endpoint, err := e.endpoint(app)
 	if err != nil {
 		return nil, err
 	}
 
-	conn, ok := e.conns[app]
-	if !ok {
-		opts := DefaultOptions()
-		if opt, ok := e.dialOpt[app]; ok {
-			opts = append(opts, opt...)
-		}
-		//扩展的配置
-		if len(appendOpts) > 0 {
-			opts = append(opts, appendOpts[0]...)
-		}
-		conn1, err := grpc.DialContext(ctx, endpoint, opts...)
-		if err != nil {
-			return nil, err
-		}
-		//defer conn.Close()
-		e.mu.Lock()
-		defer e.mu.Unlock()
-		e.conns[app] = conn1
-
-		defer func() {
-			if err != nil {
-				if cerr := conn1.Close(); cerr != nil {
-					grpclog.Infof("Failed to close conn to %s: %v", endpoint, cerr)
-				}
-				return
-			}
-			go func() {
-				<-ctx.Done()
-				if cerr := conn1.Close(); cerr != nil {
-					grpclog.Infof("Failed to close conn to %s: %v", endpoint, cerr)
-				}
-			}()
-		}()
+	if conn, ok := e.conns[app]; ok {
+		return conn, nil
 	}
+	opts := DefaultOptions()
+	if opt, ok := e.dialOpt[app]; ok {
+		opts = append(opts, opt...)
+	}
+	//扩展的配置
+	if len(appendOpts) > 0 {
+		opts = append(opts, appendOpts[0]...)
+	}
+	conn1, err := grpc.DialContext(ctx, endpoint, opts...)
+	if err != nil {
+		return nil, err
+	}
+	//defer conn.Close()
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	e.conns[app] = conn1
 
-	return conn, nil
+	defer func() {
+		if err != nil {
+			if cerr := conn1.Close(); cerr != nil {
+				e.logger.Infof("Failed to close conn to %s: %v", endpoint, cerr)
+			}
+			return
+		}
+		go func() {
+			<-ctx.Done()
+			if cerr := conn1.Close(); cerr != nil {
+				e.logger.Infof("Failed to close conn to %s: %v", endpoint, cerr)
+			}
+		}()
+	}()
+
+	return conn1, nil
 }
 func (e *Client) endpoint(app string) (string, error) {
 	conf, ok := e.rpcConfs[app]

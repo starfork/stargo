@@ -139,7 +139,10 @@ func (s *App) Run() {
 
 // Stop server
 func (s *App) Stop() {
-
+	s.stopStargo()
+	s.server.Stop()
+}
+func (s *App) stopStargo() {
 	if s.registry != nil {
 		s.logger.Debugf("UnRegister: [%s]\n", s.opts.Name)
 		s.registry.UnRegister(s.Service())
@@ -148,8 +151,6 @@ func (s *App) Stop() {
 	for _, st := range s.store {
 		st.Close()
 	}
-
-	s.server.Stop()
 }
 
 // 返回标准服务格式
@@ -168,7 +169,7 @@ func (s *App) RegisterService(sd *grpc.ServiceDesc, ss any) *App {
 
 // Restart server
 func (s *App) Restart() {
-	//mysql 那些重连？
+	s.stopStargo()
 	s.server.GracefulStop()
 	s.server.Serve(s.lis)
 }
