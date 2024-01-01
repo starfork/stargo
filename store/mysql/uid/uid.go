@@ -4,6 +4,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/starfork/stargo/logger"
 	"gorm.io/gorm"
 )
 
@@ -82,7 +83,7 @@ func (e *UID) reLoad() error {
 
 		// 数据库发生异常，等待一秒之后再次进行尝试
 		if e.opt.logger != nil {
-			e.opt.logger.Error(err)
+			e.opt.logger.Log(logger.WarnLevel, err)
 		}
 		time.Sleep(time.Second)
 	}

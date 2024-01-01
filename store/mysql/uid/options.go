@@ -1,18 +1,16 @@
 package uid
 
-import "gorm.io/gorm"
-
-// 日志接口
-type Log interface {
-	Error(erargs ...interface{})
-}
+import (
+	"github.com/starfork/stargo/logger"
+	"gorm.io/gorm"
+)
 
 type CheckFunc func(num ...uint32) uint32
 
 type Options struct {
 	table  string //表名称
 	db     *gorm.DB
-	logger Log
+	logger logger.Logger
 	id     string //业务id
 	len    uint32
 
@@ -21,7 +19,7 @@ type Options struct {
 
 type Option func(o *Options)
 
-func Logger(c Log) Option {
+func Logger(c logger.Logger) Option {
 	return func(o *Options) {
 		o.logger = c
 	}

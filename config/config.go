@@ -30,7 +30,8 @@ type Config struct {
 	Log        *LogConfig
 	Broker     *BrokerConfig
 	Registry   *Registry
-	RpcServer  map[string]*Server //rpc server
+
+	RpcServer map[string]*Server //rpc server
 }
 
 type StoreConfig struct {

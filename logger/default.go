@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"strings"
 	"sync"
 )
 
@@ -49,11 +48,7 @@ func (l *defaultLogger) Fields(fields map[string]interface{}) Logger {
 	}
 
 	return &defaultLogger{opts: Options{
-		Level:           l.opts.Level,
-		Fields:          nfields,
-		Out:             l.opts.Out,
-		CallerSkipCount: l.opts.CallerSkipCount,
-		Context:         l.opts.Context,
+		Level: l.opts.Level,
 	}}
 }
 
@@ -66,115 +61,15 @@ func copyFields(src map[string]interface{}) map[string]interface{} {
 	return dst
 }
 
-// logCallerfilePath returns a package/file:line description of the caller,
-// preserving only the leaf directory name and file name.
-func logCallerfilePath(loggingFilePath string) string {
-	// To make sure we trim the path correctly on Windows too, we
-	// counter-intuitively need to use '/' and *not* os.PathSeparator here,
-	// because the path given originates from Go stdlib, specifically
-	// runtime.Caller() which (as of Mar/17) returns forward slashes even on
-	// Windows.
-	//
-	// See https://github.com/golang/go/issues/3335
-	// and https://github.com/golang/go/issues/18151
-	//
-	// for discussion on the issue on Go side.
-	idx := strings.LastIndexByte(loggingFilePath, '/')
-	if idx == -1 {
-		return loggingFilePath
-	}
-
-	idx = strings.LastIndexByte(loggingFilePath[:idx], '/')
-
-	if idx == -1 {
-		return loggingFilePath
-	}
-
-	return loggingFilePath[idx+1:]
-}
-
 func (l *defaultLogger) Log(level Level, v ...interface{}) {
-	// TODO decide does we need to write message if log level not used?
-	if !l.opts.Level.Enabled(level) {
-		return
-	}
-
-	l.RLock()
-	fields := copyFields(l.opts.Fields)
-	l.RUnlock()
-
-	fields["level"] = level.String()
-
-	// if _, file, line, ok := runtime.Caller(l.opts.CallerSkipCount); ok {
-	// 	fields["file"] = fmt.Sprintf("%s:%d", logCallerfilePath(file), line)
-	// }
-
-	// // rec := dlog.Record{
-	// // 	Timestamp: time.Now(),
-	// // 	Message:   fmt.Sprint(v...),
-	// // 	Metadata:  make(map[string]string, len(fields)),
-	// // }
-
-	// keys := make([]string, 0, len(fields))
-	// for k, v := range fields {
-	// 	keys = append(keys, k)
-	// 	rec.Metadata[k] = fmt.Sprintf("%v", v)
-	// }
-
-	// sort.Strings(keys)
-
-	// metadata := ""
-
-	// for _, k := range keys {
-	// 	metadata += fmt.Sprintf(" %s=%v", k, fields[k])
-	// }
-
-	//dlog.DefaultLog.Write(rec)
-
-	//t := rec.Timestamp.Format("2006-01-02 15:04:05")
 	fmt.Printf("  %v\n", v)
 }
 
 func (l *defaultLogger) Logf(level Level, format string, v ...interface{}) {
-	//	 TODO decide does we need to write message if log level not used?
-	if !l.opts.Level.Enabled(level) {
-		return
-	}
-
-	//l.RLock()
-	//fields := copyFields(l.opts.Fields)
-	//l.RUnlock()
-
-	// fields["level"] = level.String()
-
-	// if _, file, line, ok := runtime.Caller(l.opts.CallerSkipCount); ok {
-	// 	fields["file"] = fmt.Sprintf("%s:%d", logCallerfilePath(file), line)
-	// }
-
-	// // rec := dlog.Record{
-	// // 	Timestamp: time.Now(),
-	// // 	Message:   fmt.Sprintf(format, v...),
-	// // 	Metadata:  make(map[string]string, len(fields)),
-	// // }
-
-	// keys := make([]string, 0, len(fields))
-	// for k, v := range fields {
-	// 	keys = append(keys, k)
-	// 	//	rec.Metadata[k] = fmt.Sprintf("%v", v)
-	// }
-
-	// sort.Strings(keys)
-
-	// metadata := ""
-
-	// for _, k := range keys {
-	// 	metadata += fmt.Sprintf(" %s=%v", k, fields[k])
-	// }
-
-	// //dlog.DefaultLog.Write(rec)
-
-	// t := rec.Timestamp.Format("2006-01-02 15:04:05")
 	fmt.Printf(format, v)
+}
+func (l *defaultLogger) Debugf(format string, v ...interface{}) {
+	l.Logf(DebugLevel, format, v...)
 }
 
 func (l *defaultLogger) Options() Options {
