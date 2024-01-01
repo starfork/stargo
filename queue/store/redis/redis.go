@@ -9,6 +9,8 @@ import (
 	"github.com/starfork/stargo"
 	"github.com/starfork/stargo/queue"
 	"go.uber.org/zap"
+
+	sredis "github.com/starfork/stargo/store/redis"
 )
 
 /**
@@ -29,7 +31,7 @@ type RedisConfig struct {
 func New(name string, app *stargo.App) queue.Store {
 
 	s := &Redis{
-		rdc:    app.GetRedis().GetInstance(),
+		rdc:    app.Store("redis").(*sredis.Redis).GetInstance(),
 		name:   name,
 		logger: app.GetLogger(),
 		ctx:    context.Background(),

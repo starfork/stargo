@@ -7,6 +7,7 @@ import (
 	"github.com/redis/go-redis/v9"
 	"github.com/starfork/stargo"
 	"github.com/starfork/stargo/cache"
+	sredis "github.com/starfork/stargo/store/redis"
 )
 
 type Redis struct {
@@ -16,7 +17,7 @@ type Redis struct {
 func New(app *stargo.App) cache.Cache {
 
 	c := &Redis{
-		rdc: app.GetRedis().GetInstance(),
+		rdc: app.Store("redis").(*sredis.Redis).GetInstance(),
 	}
 
 	return c

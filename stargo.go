@@ -10,6 +10,7 @@ import (
 	"time"
 
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
+	"github.com/starfork/stargo/broker"
 	"github.com/starfork/stargo/client"
 	"github.com/starfork/stargo/config"
 	"github.com/starfork/stargo/interceptor/recovery"
@@ -41,14 +42,14 @@ type App struct {
 
 	//config *config.Config
 
-	store map[string]store.Store
+	store  map[string]store.Store
+	broker broker.Broker
 
 	conf *config.Config
 	//mysql  *mysql.Mysql
 	//redis  *redis.Redis
 	//mongo  *mongo.Mongo
-	client *client.Client
-
+	client   *client.Client
 	registry naming.Registry
 }
 
@@ -92,6 +93,9 @@ func New(opt ...Option) *App {
 			panic(err)
 		}
 		app.registry = r
+	}
+	if conf.Broker != nil {
+		//app.broker=
 	}
 
 	return app

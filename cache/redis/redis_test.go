@@ -8,18 +8,15 @@ import (
 	"time"
 
 	jsoniter "github.com/json-iterator/go"
-	"github.com/redis/go-redis/v9"
 	"github.com/starfork/stargo/config"
 	sredis "github.com/starfork/stargo/store/redis"
 )
 
-var rdc *redis.Client
-
-var test_conf = &config.Config{
-	Redis: &config.RedisConfig{
-		Addr: "127.0.0.1:6379",
-	},
+var test_conf = &config.StoreConfig{
+	Host: "127.0.0.1:6379",
 }
+
+var rdc = sredis.NewRedis(test_conf).(*sredis.Redis).GetInstance()
 
 type TestStat struct {
 	Total  uint32  `json:"total"`
@@ -39,9 +36,6 @@ func (e *TestStat) UnmarshalBinary(data []byte) error {
 
 func TestGet(t *testing.T) {
 
-	r := sredis.Connect(test_conf)
-	rdc = r.GetInstance()
-
 	stat := &TestStat{
 		Total:  1000,
 		Amount: 93.25,
@@ -59,9 +53,6 @@ func TestGet(t *testing.T) {
 }
 
 func TestSadd(t *testing.T) {
-
-	r := sredis.Connect(test_conf)
-	rdc = r.GetInstance()
 
 	rdc.SAdd(context.Background(), "abc", "sdfdsfsd")
 
