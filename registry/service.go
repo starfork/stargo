@@ -1,4 +1,4 @@
-package naming
+package registry
 
 type Service struct {
 	Org     string `json:"org"`

@@ -2,7 +2,7 @@ package etcd
 
 import (
 	"github.com/starfork/stargo/config"
-	"github.com/starfork/stargo/service"
+	"github.com/starfork/stargo/registry"
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"go.etcd.io/etcd/client/v3/naming/endpoints"
 )
@@ -16,7 +16,7 @@ type Registry struct {
 
 	em   endpoints.Manager
 	conf *config.Registry
-	//services []service.Service
+	//services []registry.Service
 }
 
 func NewRegistry(conf *config.Registry) *Registry {
@@ -40,7 +40,7 @@ func (e *Registry) key(name string) string {
 	return e.conf.Org + "/" + name
 }
 
-func (e *Registry) Register(svc service.Service) error {
+func (e *Registry) Register(svc registry.Service) error {
 
 	p := endpoints.Endpoint{
 		Addr: svc.Addr,
@@ -49,12 +49,12 @@ func (e *Registry) Register(svc service.Service) error {
 	return e.em.AddEndpoint(e.cli.Ctx(), key, p)
 }
 
-func (e *Registry) UnRegister(svc service.Service) error {
+func (e *Registry) UnRegister(svc registry.Service) error {
 	key := e.key(svc.Name)
 	return e.em.DeleteEndpoint(e.cli.Ctx(), key)
 }
 
-func (e *Registry) List(name string) []service.Service {
+func (e *Registry) List(name string) []registry.Service {
 
 	return nil
 }

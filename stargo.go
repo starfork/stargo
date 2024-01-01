@@ -16,10 +16,8 @@ import (
 	"github.com/starfork/stargo/interceptor/recovery"
 	"github.com/starfork/stargo/interceptor/validator"
 	"github.com/starfork/stargo/logger"
-	"github.com/starfork/stargo/naming"
-	"github.com/starfork/stargo/service"
+	"github.com/starfork/stargo/registry"
 	"github.com/starfork/stargo/store"
-	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
@@ -37,7 +35,7 @@ type App struct {
 	opts   Options
 	server *grpc.Server
 	lis    net.Listener
-	logger *zap.SugaredLogger
+	logger logger.Logger
 	sfid   *sf.Sonyflake
 
 	//config *config.Config
@@ -50,7 +48,7 @@ type App struct {
 	//redis  *redis.Redis
 	//mongo  *mongo.Mongo
 	client   *client.Client
-	registry naming.Registry
+	registry registry.Registry
 }
 
 func New(opt ...Option) *App {
@@ -79,21 +77,21 @@ func New(opt ...Option) *App {
 	app := &App{
 		opts:   opts,
 		server: s,
-		logger: logger.NewZapSugar(conf.Log),
+		logger: logger.DefaultLogger,
 		conf:   conf,
 		store:  make(map[string]store.Store),
 		//config: opts.Config,
 	}
 
 	//注册registry
-	if conf.Registry != nil {
-		app.conf.Registry.Org = opts.Org
-		r := naming.NewRegistry(conf.Registry)
-		if err := r.Register(app.Service()); err != nil {
-			panic(err)
-		}
-		app.registry = r
-	}
+	// if conf.Registry != nil {
+	// 	app.conf.Registry.Org = opts.Org
+	// 	r := registry.NewRegistry(conf.Registry)
+	// 	if err := r.Register(app.Service()); err != nil {
+	// 		panic(err)
+	// 	}
+	// 	app.registry = r
+	// }
 	if conf.Broker != nil {
 		//app.broker=
 	}
@@ -154,8 +152,8 @@ func (s *App) stopStargo() {
 }
 
 // 返回标准服务格式
-func (s *App) Service() service.Service {
-	return service.Service{
+func (s *App) Service() registry.Service {
+	return registry.Service{
 		Org:  s.opts.Org,
 		Name: s.opts.Name,
 		Addr: s.conf.Port,

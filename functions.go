@@ -6,8 +6,8 @@ import (
 
 	"github.com/starfork/stargo/client"
 	"github.com/starfork/stargo/config"
+	"github.com/starfork/stargo/logger"
 	"github.com/starfork/stargo/store"
-	"go.uber.org/zap"
 
 	sf "github.com/sony/sonyflake"
 )
@@ -21,7 +21,7 @@ func (s *App) Invoke(ctx context.Context, app, method string, in, rs interface{}
 	return s.client.Invoke(ctx, app, method, in, rs, h...)
 }
 
-func (s *App) GetLogger() *zap.SugaredLogger {
+func (s *App) GetLogger() logger.Logger {
 	return s.logger
 }
 

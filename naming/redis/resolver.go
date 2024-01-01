@@ -8,7 +8,7 @@ import (
 	"github.com/redis/go-redis/v9"
 	"github.com/starfork/stargo/config"
 	"github.com/starfork/stargo/service"
-	ssredis "github.com/starfork/stargo/store/redis"
+	sredis "github.com/starfork/stargo/store/redis"
 	"google.golang.org/grpc/resolver"
 )
 
@@ -23,10 +23,10 @@ type Resolver struct {
 }
 
 func NewResolver(conf *config.Registry) resolver.Builder {
-	rds := ssredis.NewRedis(&config.StoreConfig{
+	rds := sredis.NewRedis(&config.StoreConfig{
 		Host: conf.Host,
 		Auth: conf.Auth,
-	}).(*ssredis.Redis)
+	}).(*sredis.Redis)
 
 	r := &Resolver{
 		name: Scheme,
@@ -41,7 +41,7 @@ func NewResolver(conf *config.Registry) resolver.Builder {
 
 // /"stargo_registry_[or]_[service]"
 func (e *Resolver) key(name string) string {
-	return KeyPrefix + "_" + e.conf.Org + "_" + name
+	return Scheme + "_" + e.conf.Org + "_" + name
 }
 func (e *Resolver) Build(target resolver.Target, cc resolver.ClientConn, opts resolver.BuildOptions) (resolver.Resolver, error) {
 	var address []resolver.Address
