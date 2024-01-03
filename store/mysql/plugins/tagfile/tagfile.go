@@ -9,16 +9,17 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/starfork/stargo/config"
+	"github.com/starfork/stargo/fileserver"
+	"github.com/starfork/stargo/store"
 	"github.com/starfork/stargo/util/ustring"
 	"gorm.io/gorm"
 )
 
 type Plugin struct {
-	fsc *config.FileServerConfig
+	fsc *fileserver.Config
 }
 
-func Register(db *gorm.DB, conf *config.StoreConfig, fsc ...*config.FileServerConfig) {
+func Register(db *gorm.DB, conf *store.Config, fsc ...*fileserver.Config) {
 
 	p := &Plugin{}
 	//没有fsc可能插件不会正常工作

@@ -13,20 +13,20 @@ import (
 
 type Redis struct {
 	rdc *redis.Client
-	c   *config.StoreConfig
+	c   *store.Config
 }
 
-func NewRedis(config *config.StoreConfig) store.Store {
+func NewRedis(config *store.Config) store.Store {
 
 	return &Redis{
 		c: config,
 	}
 }
 
-func (e *Redis) Connect(conf ...*config.Config) {
+func (e *Redis) Connect(conf ...*store.Config) {
 	c := e.c
-	if len(conf) > 0 && conf[0].Redis != nil {
-		c = conf[0].Redis
+	if len(conf) > 0 {
+		c = conf[0]
 	}
 	c.Host = ustring.Or(c.Host, os.Getenv("REDIS_HOST"))
 	c.Auth = ustring.Or(c.Auth, os.Getenv("REDIS_AUTH"))

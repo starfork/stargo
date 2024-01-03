@@ -3,6 +3,7 @@ package broker
 type Broker interface {
 	Public()
 	Subscribe()
+	UnSubscribe()
 }
 
 type Message struct {

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/starfork/stargo/config"
 	"github.com/starfork/stargo/store"
 	"github.com/starfork/stargo/util/ustring"
 
@@ -22,21 +21,21 @@ var TFORMAT = "2006-01-02T15:04:05+08:00"
 
 type Mysql struct {
 	db   *gorm.DB
-	c    *config.StoreConfig
+	c    *store.Config
 	conn *sql.DB
 }
 
-func NewMysql(config *config.StoreConfig) store.Store {
+func NewMysql(config *store.Config) store.Store {
 	return &Mysql{
 		c: config,
 	}
 }
 
 // Connect 初始化MySQLme
-func (e *Mysql) Connect(confs ...*config.Config) {
+func (e *Mysql) Connect(confs ...*store.Config) {
 	c := e.c
 	if len(confs) > 0 {
-		c = confs[0].Mysql
+		c = confs[0]
 	}
 
 	// if c.Timezome != "" {
@@ -97,7 +96,7 @@ func (e *Mysql) Connect(confs ...*config.Config) {
 	e.conn = sqlDB
 }
 
-func (e *Mysql) GetInstance(conf ...*config.Config) *gorm.DB {
+func (e *Mysql) GetInstance(conf ...*store.Config) *gorm.DB {
 
 	if len(conf) > 0 {
 		e.Connect(conf...)

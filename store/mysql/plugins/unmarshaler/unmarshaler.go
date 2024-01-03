@@ -16,14 +16,15 @@ func (p *Addon) Unmarshal() {
 import (
 	"reflect"
 
-	"github.com/starfork/stargo/config"
+	"github.com/starfork/stargo/fileserver"
+	"github.com/starfork/stargo/store"
 	"gorm.io/gorm"
 )
 
 type Plugin struct {
 }
 
-func Register(db *gorm.DB, conf *config.StoreConfig, fsc ...*config.FileServerConfig) {
+func Register(db *gorm.DB, conf *store.Config, fsc ...*fileserver.Config) {
 	p := &Plugin{}
 	db.Callback().Query().After("gorm:find").Register("unmarshaler_after_query", p.After)
 	//db.Callback().Create().Before("gorm:create").Register("unmarshaler_after_create", p.Before)

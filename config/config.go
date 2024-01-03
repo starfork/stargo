@@ -1,5 +1,13 @@
 package config
 
+import (
+	"github.com/starfork/stargo/broker"
+	"github.com/starfork/stargo/fileserver"
+	"github.com/starfork/stargo/logger"
+	"github.com/starfork/stargo/naming"
+	"github.com/starfork/stargo/store"
+)
+
 var (
 	ENV_DEBUG      = "debug"
 	ENV_PRODUCTION = "production"
@@ -22,68 +30,20 @@ type Config struct {
 	Timezome   string //时区设置
 	Timeformat string
 
-	Mysql      *StoreConfig
-	Redis      *StoreConfig
-	MongoDb    *StoreConfig
-	Sqlite     *StoreConfig
-	FileServer *FileServerConfig
-	Log        *LogConfig
-	Broker     *BrokerConfig
-	Registry   *Registry
+	Mysql  *store.Config
+	Redis  *store.Config
+	Mongo  *store.Config
+	Sqlite *store.Config
+
+	FileServer *fileserver.Config
+	Log        *logger.Config
+	Broker     *broker.Config
+	Registry   *naming.Config
 
 	RpcServer map[string]*Server //rpc server
 }
 
-type StoreConfig struct {
-	Host string //地址
-	Port string //端口
-	User string //账户
-	Name string //数据库名称，仓库名称，sqlite文件名等
-	Auth string //认证/密码
-	DSN  string //DSN连接
-
-	Monitor bool //监控
-
-	Plugins []string
-	Debug   bool //是否开启调试
-	MaxIdle int
-	MaxOpen int
-	Prefix  string //表前缀什么的
-	Num     int    //连接标识数
-
-}
-
-// 文件服务器配置
-type FileServerConfig struct {
-	PublicUrl  string //公共文件URL
-	PrivateUrl string //私有文件URL
-}
-
 // log
-
-type LogConfig struct {
-	Target     string //日志输出目标。一般是console或者file
-	LogFile    string //日志输出文件
-	MaxSize    int    //日志文件最大尺寸
-	MaxBackups int    //最大备份数
-	MaxAge     int    //最大停留
-	Level      int
-}
-
-type Registry struct {
-	Environment string
-
-	Org  string
-	Name string
-	Host string //连接地址
-	Auth string //认证
-	Num  int    //库的数字
-}
-
-type BrokerConfig struct {
-	Name string
-	Host string //连接地址
-}
 
 //Rpc Server
 

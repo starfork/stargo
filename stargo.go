@@ -9,16 +9,14 @@ import (
 	"time"
 
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
+
 	"github.com/starfork/stargo/broker"
 	"github.com/starfork/stargo/client"
 	"github.com/starfork/stargo/config"
-	"github.com/starfork/stargo/interceptor/recovery"
-	"github.com/starfork/stargo/interceptor/validator"
 	"github.com/starfork/stargo/logger"
-	"github.com/starfork/stargo/registry"
+	"github.com/starfork/stargo/naming"
 	"github.com/starfork/stargo/store"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/reflection"
 )
 
 var (
@@ -39,7 +37,7 @@ type App struct {
 
 	store    map[string]store.Store
 	broker   broker.Broker
-	registry registry.Registry
+	registry naming.Registry
 
 	conf   *config.Config
 	client *client.Client
@@ -53,20 +51,19 @@ func New(opt ...Option) *App {
 	}
 
 	conf := opts.Config
-
+	tz := "Asia/Shanghai"
 	if conf.Timezome != "" {
-		time.LoadLocation(conf.Timezome)
-	} else {
-		time.LoadLocation("Asia/Shanghai")
+		tz = conf.Timezome
 	}
+	time.LoadLocation(tz)
 
 	s := newServer(opts)
 
 	//注册reflection
-	if conf.Environment != ENV_PRODUCTION {
-		//app.logger.Debug("env:" + conf.Environment)
-		reflection.Register(s)
-	}
+	// if conf.Environment != ENV_PRODUCTION {
+	// 	//app.logger.Debug("env:" + conf.Environment)
+	// 	reflection.Register(s)
+	// }
 
 	app := &App{
 		opts:   opts,
@@ -86,9 +83,9 @@ func New(opt ...Option) *App {
 	// 	}
 	// 	app.registry = r
 	// }
-	if conf.Broker != nil {
-		//app.broker=
-	}
+	// if conf.Broker != nil {
+	// 	//app.broker=
+	// }
 
 	return app
 }
@@ -143,11 +140,15 @@ func (s *App) stopStargo() {
 	for _, st := range s.store {
 		st.Close()
 	}
+
+	if s.broker != nil {
+		s.broker.UnSubscribe()
+	}
 }
 
 // 返回标准服务格式
-func (s *App) Service() registry.Service {
-	return registry.Service{
+func (s *App) Service() naming.Service {
+	return naming.Service{
 		Org:  s.opts.Org,
 		Name: s.opts.Name,
 		Addr: s.conf.Port,
@@ -175,24 +176,11 @@ func (s *App) Server() *grpc.Server {
 func newServer(options Options) *grpc.Server {
 	//var opt []grpc.ServerOption
 	//目前只测试了unaryserver
-	opt := append(options.Server, interceptors(options.UnaryInterceptor...))
-
-	//grpc.StatsHandler()
-	s := grpc.NewServer(opt...)
-
-	return s
-}
-
-func interceptors(interceptor ...grpc.UnaryServerInterceptor) grpc.ServerOption {
-	interceptor = append(interceptor,
-		validator.Unary(),
-		//zap.Unary(),
-		recovery.Unary(),
-	)
-	opt := grpc.UnaryInterceptor(
+	opt := append(options.Server, grpc.UnaryInterceptor(
 		grpc_middleware.ChainUnaryServer(
-			interceptor...,
+			options.UnaryInterceptor...,
 		),
-	)
-	return opt
+	))
+	s := grpc.NewServer(opt...)
+	return s
 }

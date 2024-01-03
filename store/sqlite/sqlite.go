@@ -22,10 +22,10 @@ import (
 type Sqlite struct {
 	db   *gorm.DB
 	conn *sql.DB
-	c    *config.StoreConfig
+	c    *store.Config
 }
 
-func NewSqlite(config *config.StoreConfig) store.Store {
+func NewSqlite(config *store.Config) store.Store {
 	// if config.Timezome != "" {
 	// 	TIME_LOCATION = config.Timezome
 	// }
@@ -39,7 +39,7 @@ func NewSqlite(config *config.StoreConfig) store.Store {
 }
 
 // Connect
-func (e *Sqlite) Connect(confs ...*config.Config) {
+func (e *Sqlite) Connect(confs ...*store.Config) {
 
 	c := e.c
 	var err error

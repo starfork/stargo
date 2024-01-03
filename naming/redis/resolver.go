@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	"github.com/redis/go-redis/v9"
-	"github.com/starfork/stargo/config"
-	"github.com/starfork/stargo/registry"
+	"github.com/starfork/stargo/naming"
+	"github.com/starfork/stargo/store"
 	sredis "github.com/starfork/stargo/store/redis"
 	"google.golang.org/grpc/resolver"
 )
@@ -19,11 +19,11 @@ type Resolver struct {
 	rdc  *redis.Client
 	name string
 	ctx  context.Context
-	conf *config.Registry
+	conf *naming.Config
 }
 
-func NewResolver(conf *config.Registry) resolver.Builder {
-	rds := sredis.NewRedis(&config.StoreConfig{
+func NewResolver(conf *naming.Config) resolver.Builder {
+	rds := sredis.NewRedis(&store.Config{
 		Host: conf.Host,
 		Auth: conf.Auth,
 	}).(*sredis.Redis)
@@ -72,13 +72,13 @@ func (e *Resolver) Build(target resolver.Target, cc resolver.ClientConn, opts re
 	return &nopResolver{}, nil
 }
 
-func (e *Resolver) List(name string) []registry.Service {
+func (e *Resolver) List(name string) []naming.Service {
 
 	key := e.key(name)
 	rs := e.rdc.SMembers(e.ctx, key)
-	data := []registry.Service{}
+	data := []naming.Service{}
 	for _, v := range rs.Val() {
-		data = append(data, registry.Service{
+		data = append(data, naming.Service{
 			Name: name,
 			Addr: v,
 		})

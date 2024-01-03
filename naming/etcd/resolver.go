@@ -18,7 +18,7 @@ import (
 	"context"
 	"sync"
 
-	"github.com/starfork/stargo/config"
+	"github.com/starfork/stargo/naming"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/resolver"
 	"google.golang.org/grpc/status"
@@ -35,7 +35,7 @@ type Resolver struct {
 	ctx    context.Context
 	cancel context.CancelFunc
 
-	conf *config.Registry
+	conf *naming.Config
 	wg   sync.WaitGroup
 }
 
@@ -44,7 +44,7 @@ type Resolver struct {
 // }
 
 // NewResolver creates a resolver builder.
-func NewResolver(conf *config.Registry) resolver.Builder {
+func NewResolver(conf *naming.Config) resolver.Builder {
 	client := newClient(conf)
 	r := &Resolver{c: client, conf: conf}
 

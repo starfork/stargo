@@ -4,11 +4,11 @@ import (
 	"context"
 	"time"
 
-	"github.com/starfork/stargo/config"
+	"github.com/starfork/stargo/naming"
 	clientv3 "go.etcd.io/etcd/client/v3"
 )
 
-func newClient(conf *config.Registry) (cli *clientv3.Client) {
+func newClient(conf *naming.Config) (cli *clientv3.Client) {
 	var err error
 	config := clientv3.Config{
 		Endpoints:   []string{conf.Host},

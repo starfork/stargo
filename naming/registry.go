@@ -1,4 +1,4 @@
-package registry
+package naming
 
 type Registry interface {
 	Scheme() string

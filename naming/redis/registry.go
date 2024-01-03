@@ -4,23 +4,20 @@ import (
 	"context"
 
 	"github.com/redis/go-redis/v9"
-	"github.com/starfork/stargo/config"
-	"github.com/starfork/stargo/registry"
+	"github.com/starfork/stargo/naming"
+	"github.com/starfork/stargo/store"
 	ssredis "github.com/starfork/stargo/store/redis"
 )
-
-const KeyPrefix = "stargo_registry"
-const Scheme = "redis"
 
 type Registry struct {
 	rdc  *redis.Client
 	name string
 	ctx  context.Context
-	conf *config.Registry
+	conf *naming.Config
 }
 
-func NewRegistry(conf *config.Registry) *Registry {
-	rds := ssredis.NewRedis(&config.StoreConfig{
+func NewRegistry(conf *naming.Config) *Registry {
+	rds := ssredis.NewRedis(&store.Config{
 		Host: conf.Host,
 		Auth: conf.Auth,
 	}).(*ssredis.Redis)
@@ -37,26 +34,26 @@ func NewRegistry(conf *config.Registry) *Registry {
 func (e *Registry) key(name string) string {
 	return KeyPrefix + "_" + e.conf.Org + "_" + name
 }
-func (e *Registry) Register(svc registry.Service) error {
+func (e *Registry) Register(svc naming.Service) error {
 	key := e.key(svc.Name)
 	err := e.rdc.SAdd(context.TODO(), key, svc.Addr).Err()
 	return err
 }
 
-func (e *Registry) UnRegister(svc registry.Service) error {
+func (e *Registry) UnRegister(svc naming.Service) error {
 
 	key := e.key(svc.Name)
 	err := e.rdc.SRem(e.ctx, key, svc.Addr).Err()
 	return err
 }
 
-func (e *Registry) List(name string) []registry.Service {
+func (e *Registry) List(name string) []naming.Service {
 	key := e.key(name)
 
 	rs := e.rdc.SMembers(e.ctx, key)
-	data := []registry.Service{}
+	data := []naming.Service{}
 	for _, v := range rs.Val() {
-		data = append(data, registry.Service{
+		data = append(data, naming.Service{
 			Name: name,
 			Addr: v,
 		})

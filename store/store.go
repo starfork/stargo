@@ -1,9 +1,7 @@
 package store
 
-import "github.com/starfork/stargo/config"
-
 type Store interface {
-	Connect(conf ...*config.Config)
+	Connect(conf ...*Config)
 	//GetInstance(conf ...*config.Config) any
 	Close() //关闭连接
 }
