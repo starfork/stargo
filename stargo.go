@@ -168,14 +168,8 @@ func (s *App) Server() *grpc.Server {
 
 // newServer return new server
 func newServer(options Options) *grpc.Server {
-	//var opt []grpc.ServerOption
-	//目前只测试了unaryserver
-	opt := options.Server
-	// opt := append(options.Server, grpc.UnaryInterceptor(
-	// 	grpc_middleware.ChainUnaryServer(
-	// 		options.UnaryInterceptor...,
-	// 	),
-	// ))
+
+	opt := append(options.Server, grpc.UnaryInterceptor(options.UnaryInterceptor))
 	s := grpc.NewServer(opt...)
 	return s
 }

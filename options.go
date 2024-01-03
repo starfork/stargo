@@ -10,7 +10,7 @@ import (
 type Options struct {
 	Org, Name, Addr  string
 	Config           *config.Config
-	UnaryInterceptor []grpc.UnaryServerInterceptor
+	UnaryInterceptor grpc.UnaryServerInterceptor
 
 	Server []grpc.ServerOption
 	//Registry naming.Registry
@@ -45,9 +45,10 @@ func Config(c *config.Config) Option {
 }
 
 // UnaryInterceptor Unary server interceptor
-func UnaryInterceptor(opt ...grpc.UnaryServerInterceptor) Option {
+func UnaryInterceptor(opt grpc.UnaryServerInterceptor) Option {
 	return func(o *Options) {
-		o.UnaryInterceptor = append(o.UnaryInterceptor, opt...)
+		//o.UnaryInterceptor = append(o.UnaryInterceptor, opt...)
+		o.UnaryInterceptor = opt
 	}
 }
 
