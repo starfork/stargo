@@ -5,10 +5,10 @@ import (
 	"strings"
 )
 
-//I2i 遍历对接rpc拿过来的数据。附加source的数据到target的对应字段里
-//target 需要遍历的数据，source rpc过来的数据
-//目前仅支持string,uint类型
-//(rs.Data, suser.Data, "Avatar,NickName", "", "UserId,Uid")
+// I2i 遍历对接rpc拿过来的数据。附加source的数据到target的对应字段里
+// target 需要遍历的数据，source rpc过来的数据
+// 目前仅支持string,uint类型
+// (rs.Data, suser.Data, "Avatar,NickName", "", "UserId,Uid")
 func I2i(target, source, targetKey, sourceKey, compareKey interface{}) {
 	tKey := getTargetKey(targetKey)
 	sKey := getSourceKey(tKey, sourceKey)
@@ -42,13 +42,13 @@ func I2i(target, source, targetKey, sourceKey, compareKey interface{}) {
 	}
 }
 
-//I2i 遍历对接rpc拿过来的数据。附加source的数据到target的对应字段里
-//target 需要遍历的数据，source rpc过来的数据
-//目前仅支持string,uint类型
-//targetKey 目标key，sourceKey 资源key。如果sourceKey为空，则使用targetKey。
-//compareKey对比key
-//subkey二级struct名字
-//urange.I2iKey(data, suser.Data, "Avatar,NickName", "", "FriendId,Uid", "worker")
+// I2i 遍历对接rpc拿过来的数据。附加source的数据到target的对应字段里
+// target 需要遍历的数据，source rpc过来的数据
+// 目前仅支持string,uint类型
+// targetKey 目标key，sourceKey 资源key。如果sourceKey为空，则使用targetKey。
+// compareKey对比key
+// subkey二级struct名字
+// urange.I2iKey(data, suser.Data, "Avatar,NickName", "", "FriendId,Uid", "worker")
 func I2iKey(target, source, targetKey, sourceKey, compareKey interface{}, subkey string) {
 	tKey := getTargetKey(targetKey)
 	sKey := getSourceKey(tKey, sourceKey)
@@ -91,7 +91,7 @@ func I2iKey(target, source, targetKey, sourceKey, compareKey interface{}, subkey
 	}
 }
 
-//getTargetKey 获取target 的key。估计后面都不会用string的slice了。
+// getTargetKey 获取target 的key。估计后面都不会用string的slice了。
 func getTargetKey(key interface{}) []string {
 	if op, ok := key.(string); ok {
 		return strings.Split(op, ",")
@@ -99,7 +99,7 @@ func getTargetKey(key interface{}) []string {
 	return key.([]string)
 }
 
-//getSourceKey 获取Source的key
+// getSourceKey 获取Source的key
 func getSourceKey(targetKey []string, key interface{}) []string {
 	if op, ok := key.(string); ok {
 		if op == "" {
@@ -114,9 +114,9 @@ func getSourceKey(targetKey []string, key interface{}) []string {
 	return key.([]string)
 }
 
-//getCompareKey 解析对比Key。
-//如果没逗号，表示两个key相同
-//如果有逗号。第一个表示target的key，第二个是source key
+// getCompareKey 解析对比Key。
+// 如果没逗号，表示两个key相同
+// 如果有逗号。第一个表示target的key，第二个是source key
 func getCompareKey(key interface{}) []string {
 	if op, ok := key.(string); ok {
 		tmp := strings.Split(op, ",")
