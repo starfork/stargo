@@ -6,20 +6,7 @@ import (
 )
 
 type Options struct {
-	//Codec codec.Marshaler
-
-	// Logger is the underlying logger
-	//Logger logger.Logger
-
-	// Registry used for clustering
-	//Registry registry.Registry
-	// Other options for implementations of the interface
-	// can be stored in a context
 	Context context.Context
-
-	// Handler executed when error happens in broker mesage
-	// processing
-	//ErrorHandler Handler
 
 	TLSConfig *tls.Config
 	Addrs     []string
@@ -92,14 +79,6 @@ func Addrs(addrs ...string) Option {
 	}
 }
 
-// Codec sets the codec used for encoding/decoding used where
-// a broker does not support headers.
-// func Codec(c codec.Marshaler) Option {
-// 	return func(o *Options) {
-// 		o.Codec = c
-// 	}
-// }
-
 // DisableAutoAck will disable auto acking of messages
 // after they have been handled.
 func DisableAutoAck() SubscribeOption {
@@ -122,12 +101,6 @@ func Queue(name string) SubscribeOption {
 		o.Queue = name
 	}
 }
-
-// func Registry(r registry.Registry) Option {
-// 	return func(o *Options) {
-// 		o.Registry = r
-// 	}
-// }
 
 // Secure communication with the broker.
 func Secure(b bool) Option {

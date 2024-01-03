@@ -152,3 +152,7 @@ func (s Slice[T]) Union(b Slice[T]) Slice[T] {
 
 	return union
 }
+
+func (s Slice[T]) IsEmpty() bool {
+	return s == nil
+}

@@ -8,10 +8,7 @@ import (
 	"syscall"
 	"time"
 
-	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
-
 	"github.com/starfork/stargo/broker"
-	"github.com/starfork/stargo/client"
 	"github.com/starfork/stargo/config"
 	"github.com/starfork/stargo/logger"
 	"github.com/starfork/stargo/naming"
@@ -31,16 +28,13 @@ type App struct {
 	server *grpc.Server
 	lis    net.Listener
 	logger logger.Logger
-	//sfid   *sf.Sonyflake
-
-	//config *config.Config
 
 	store    map[string]store.Store
 	broker   broker.Broker
 	registry naming.Registry
 
-	conf   *config.Config
-	client *client.Client
+	conf *config.Config
+	//client *client.Client
 }
 
 func New(opt ...Option) *App {
@@ -176,11 +170,12 @@ func (s *App) Server() *grpc.Server {
 func newServer(options Options) *grpc.Server {
 	//var opt []grpc.ServerOption
 	//目前只测试了unaryserver
-	opt := append(options.Server, grpc.UnaryInterceptor(
-		grpc_middleware.ChainUnaryServer(
-			options.UnaryInterceptor...,
-		),
-	))
+	opt := options.Server
+	// opt := append(options.Server, grpc.UnaryInterceptor(
+	// 	grpc_middleware.ChainUnaryServer(
+	// 		options.UnaryInterceptor...,
+	// 	),
+	// ))
 	s := grpc.NewServer(opt...)
 	return s
 }

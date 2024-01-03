@@ -1,10 +1,7 @@
 package stargo
 
 import (
-	"github.com/starfork/stargo/cache"
 	"github.com/starfork/stargo/config"
-	"github.com/starfork/stargo/debug/tracer"
-	"github.com/starfork/stargo/logger"
 
 	"google.golang.org/grpc"
 )
@@ -17,9 +14,9 @@ type Options struct {
 
 	Server []grpc.ServerOption
 	//Registry naming.Registry
-	Tracer tracer.Tracer
-	Logger logger.Logger
-	Cache  cache.Cache
+	//Tracer tracer.Tracer
+	//Logger logger.Logger
+	//Cache  cache.Cache
 }
 
 // Option Option

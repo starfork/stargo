@@ -2,7 +2,7 @@ package slice
 
 // 数字类型特有的
 type Number interface {
-	int | float32 | float64 | string | uint32 | uint64
+	int | float32 | float64 | uint32 | uint64
 }
 
 type SliceNumber[T Number] []T
