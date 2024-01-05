@@ -1,24 +1,22 @@
 package mysql
 
 import (
-	"github.com/starfork/stargo/config"
-	"github.com/starfork/stargo/fileserver"
 	"github.com/starfork/stargo/store"
 	"github.com/starfork/stargo/store/mysql/plugins/tagfile"
 	"github.com/starfork/stargo/store/mysql/plugins/unmarshaler"
 	"gorm.io/gorm"
 )
 
-var PluginsMap = map[string]func(db *gorm.DB, config *store.Config, fsc ...*fileserver.Config){
+var PluginsMap = map[string]func(db *gorm.DB, config *store.Config){
 	"tagfile":     tagfile.Register,
 	"unmarshaler": unmarshaler.Register,
 }
 
-func RegisterPlugins(db *gorm.DB, conf *config.Config, plugins []string) {
+func RegisterPlugins(db *gorm.DB, conf *store.Config, plugins []string) {
 
 	for _, name := range plugins {
 		if f, ok := PluginsMap[name]; ok {
-			f(db, conf.Mysql, conf.FileServer)
+			f(db, conf)
 		}
 	}
 }

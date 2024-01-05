@@ -1,5 +1,7 @@
 package store
 
+import "github.com/starfork/stargo/fileserver"
+
 type Config struct {
 	Host string //地址
 	Port string //端口
@@ -17,4 +19,5 @@ type Config struct {
 	Prefix  string //表前缀什么的
 	Num     int    //连接标识数
 
+	FileServer *fileserver.Config
 }

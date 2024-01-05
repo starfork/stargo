@@ -16,7 +16,6 @@ func (p *Addon) Unmarshal() {
 import (
 	"reflect"
 
-	"github.com/starfork/stargo/fileserver"
 	"github.com/starfork/stargo/store"
 	"gorm.io/gorm"
 )
@@ -24,7 +23,7 @@ import (
 type Plugin struct {
 }
 
-func Register(db *gorm.DB, conf *store.Config, fsc ...*fileserver.Config) {
+func Register(db *gorm.DB, conf *store.Config) {
 	p := &Plugin{}
 	db.Callback().Query().After("gorm:find").Register("unmarshaler_after_query", p.After)
 	//db.Callback().Create().Before("gorm:create").Register("unmarshaler_after_create", p.Before)
@@ -37,6 +36,7 @@ func Register(db *gorm.DB, conf *store.Config, fsc ...*fileserver.Config) {
 // }
 
 func (e *Plugin) After(db *gorm.DB) {
+
 	value := db.Statement.ReflectValue
 	kind := value.Kind()
 	if kind != reflect.Slice && kind != reflect.Struct {

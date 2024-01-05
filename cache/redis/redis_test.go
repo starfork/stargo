@@ -8,11 +8,11 @@ import (
 	"time"
 
 	jsoniter "github.com/json-iterator/go"
-	"github.com/starfork/stargo/config"
+	"github.com/starfork/stargo/store"
 	sredis "github.com/starfork/stargo/store/redis"
 )
 
-var test_conf = &config.StoreConfig{
+var test_conf = &store.Config{
 	Host: "127.0.0.1:6379",
 }
 

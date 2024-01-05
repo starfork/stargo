@@ -93,7 +93,7 @@ func DefaultOptions() []grpc.DialOption {
 	return opts
 }
 
-// // 获取一个连接
+// 获取一个连接
 func (e *Client) Connection(ctx context.Context, app string, appendOpts ...[]grpc.DialOption) (conn grpc.ClientConnInterface, err error) {
 
 	endpoint, err := e.endpoint(app)

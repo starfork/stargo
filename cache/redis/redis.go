@@ -5,19 +5,17 @@ import (
 	"time"
 
 	"github.com/redis/go-redis/v9"
-	"github.com/starfork/stargo"
 	"github.com/starfork/stargo/cache"
-	sredis "github.com/starfork/stargo/store/redis"
 )
 
 type Redis struct {
 	rdc *redis.Client
 }
 
-func New(app *stargo.App) cache.Cache {
+func New(rdc *redis.Client) cache.Cache {
 
 	c := &Redis{
-		rdc: app.Store("redis").(*sredis.Redis).GetInstance(),
+		rdc: rdc,
 	}
 
 	return c
