@@ -4,7 +4,7 @@ import (
 	"flag"
 	"os"
 
-	jsoniter "github.com/json-iterator/go"
+	"gopkg.in/yaml.v3"
 )
 
 // LoadConfig config
@@ -13,7 +13,7 @@ func LoadConfig(config_file ...string) (*Config, error) {
 	if len(config_file) > 0 {
 		configFile = &config_file[0]
 	} else {
-		configFile = flag.String("c", "../config/debug.json", "config file path")
+		configFile = flag.String("c", "../config/debug.yaml", "config file path")
 	}
 	flag.Parse()
 	return ParseConfig(*configFile)
@@ -29,7 +29,7 @@ func ParseConfig(f string) (*Config, error) {
 	}
 	defer file.Close()
 
-	decoder := jsoniter.NewDecoder(file)
+	decoder := yaml.NewDecoder(file)
 	err = decoder.Decode(&conf)
 
 	return conf, err
