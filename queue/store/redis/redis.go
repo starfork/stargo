@@ -6,11 +6,9 @@ import (
 	"time"
 
 	"github.com/redis/go-redis/v9"
-	"github.com/starfork/stargo"
-	"github.com/starfork/stargo/queue"
-	"go.uber.org/zap"
-
-	sredis "github.com/starfork/stargo/store/redis"
+	"github.com/starfork/stargo/logger"
+	"github.com/starfork/stargo/queue/store"
+	"github.com/starfork/stargo/queue/task"
 )
 
 /**
@@ -20,20 +18,24 @@ import (
 type Redis struct {
 	rdc    *redis.Client
 	name   string
-	logger *zap.SugaredLogger
-	ctx    context.Context
+	logger logger.Logger
+
+	ctx context.Context
 }
 
 // 预留redis的配置
 type RedisConfig struct {
 }
 
-func New(name string, app *stargo.App) queue.Store {
-
+func New(rdc *redis.Client, opts ...store.Option) store.Store {
+	options := store.DefaultOptions()
+	for _, o := range opts {
+		o(&options)
+	}
 	s := &Redis{
-		rdc:    app.Store("redis").(*sredis.Redis).GetInstance(),
-		name:   name,
-		logger: app.GetLogger(),
+		rdc:    rdc,
+		name:   options.Name,
+		logger: options.Logger,
 		ctx:    context.Background(),
 	}
 
@@ -41,7 +43,7 @@ func New(name string, app *stargo.App) queue.Store {
 }
 
 // 添加任务
-func (e *Redis) Push(t *queue.Task) error {
+func (e *Redis) Push(t *task.Task) error {
 	value := t.MarshalJson()
 	interval := time.Now().Unix() + t.Delay
 	member := redis.Z{
@@ -58,7 +60,7 @@ func (e *Redis) Push(t *queue.Task) error {
 
 }
 
-func (e *Redis) Pop(t *queue.Task) error {
+func (e *Redis) Pop(t *task.Task) error {
 	//e.logger.Debug("RemoveTask:", subkey)
 	if rs := e.rdc.ZRem(e.ctx, e.name, t.Subkey()); rs.Err() != nil {
 		return rs.Err()
@@ -70,7 +72,7 @@ func (e *Redis) Pop(t *queue.Task) error {
 }
 
 // redis里面，有序集合新增，即可实现update
-func (e *Redis) Update(t *queue.Task) error {
+func (e *Redis) Update(t *task.Task) error {
 	return e.Push(t)
 }
 
@@ -87,12 +89,12 @@ func (e *Redis) FetchJob(step int64) ([]string, error) {
 	return rs.Val(), rs.Err()
 
 }
-func (e *Redis) ReadTask(key string) (*queue.Task, error) {
+func (e *Redis) ReadTask(key string) (*task.Task, error) {
 	rs := e.rdc.Get(e.ctx, e.name+"."+key)
 	if rs.Err() != nil {
 		return nil, rs.Err()
 	}
-	task, err := queue.UnmarshalJson(rs.Val())
+	task, err := task.UnmarshalJson(rs.Val())
 	if err != nil {
 		return nil, err
 	}
