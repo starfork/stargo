@@ -7,6 +7,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// 一般的，都会实现自己的config，这里当作参考
 // LoadConfig config
 func LoadConfig(config_file ...string) (*Config, error) {
 	var configFile *string
@@ -30,7 +31,7 @@ func ParseConfig(f string) (*Config, error) {
 	defer file.Close()
 
 	decoder := yaml.NewDecoder(file)
-	err = decoder.Decode(&conf)
 
+	err = decoder.Decode(&conf)
 	return conf, err
 }
