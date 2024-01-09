@@ -47,7 +47,6 @@ func Config(c *config.Config) Option {
 // UnaryInterceptor Unary server interceptor
 func UnaryInterceptor(opt grpc.UnaryServerInterceptor) Option {
 	return func(o *Options) {
-		//o.UnaryInterceptor = append(o.UnaryInterceptor, opt...)
 		o.UnaryInterceptor = opt
 	}
 }

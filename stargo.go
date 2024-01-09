@@ -14,6 +14,7 @@ import (
 	"github.com/starfork/stargo/naming"
 	"github.com/starfork/stargo/store"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/xds"
 )
 
 var (
@@ -51,7 +52,7 @@ func New(opt ...Option) *App {
 	}
 	time.LoadLocation(tz)
 
-	s := newServer(opts)
+	s := newServer(opts, conf)
 
 	//注册reflection
 	// if conf.Environment != ENV_PRODUCTION {
@@ -61,7 +62,7 @@ func New(opt ...Option) *App {
 
 	app := &App{
 		opts:   opts,
-		server: s,
+		server: s.(*grpc.Server),
 		logger: logger.DefaultLogger,
 		conf:   conf,
 		store:  make(map[string]store.Store),
@@ -167,9 +168,19 @@ func (s *App) Server() *grpc.Server {
 }
 
 // newServer return new server
-func newServer(options Options) *grpc.Server {
+func newServer(options Options, conf *config.Config) (s grpc.ServiceRegistrar) {
 
 	opt := append(options.Server, grpc.UnaryInterceptor(options.UnaryInterceptor))
-	s := grpc.NewServer(opt...)
+
+	if conf.Xds {
+		var err error
+		if s, err = xds.NewGRPCServer(opt...); err != nil {
+			panic(err)
+		}
+
+	} else {
+		s = grpc.NewServer(opt...)
+	}
+
 	return s
 }
