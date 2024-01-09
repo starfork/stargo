@@ -87,14 +87,6 @@ func DisableAutoAck() SubscribeOption {
 	}
 }
 
-// ErrorHandler will catch all broker errors that cant be handled
-// in normal way, for example Codec errors.
-// func ErrorHandler(h Handler) Option {
-// 	return func(o *Options) {
-// 		o.ErrorHandler = h
-// 	}
-// }
-
 // Queue sets the name of the queue to share messages on.
 func Queue(name string) SubscribeOption {
 	return func(o *SubscribeOptions) {
