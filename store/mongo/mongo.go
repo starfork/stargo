@@ -4,7 +4,7 @@ import (
 	"context"
 	"log"
 
-	"github.com/starfork/stargo/config"
+	"github.com/starfork/stargo/store"
 	"go.mongodb.org/mongo-driver/event"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -12,10 +12,19 @@ import (
 
 type Mongo struct {
 	client *mongo.Client
+	c      *store.Config
+	ctx    context.Context
 }
 
-func Connect(conf *config.Config) *Mongo {
-	c := conf.MongoDb
+func NewMongo(config *store.Config) store.Store {
+	return &Mongo{
+		c:   config,
+		ctx: context.Background(),
+	}
+}
+
+func (e *Mongo) Connect(conf ...*store.Config) {
+	c := e.c
 	auth := options.Credential{
 		//AuthSource: "<authenticationDb>",
 		Username: c.User,
@@ -27,36 +36,34 @@ func Connect(conf *config.Config) *Mongo {
 	if c.Monitor {
 		cmdMonitor := &event.CommandMonitor{
 			Started: func(_ context.Context, evt *event.CommandStartedEvent) {
-				log.Println(evt.Command.String())
-				log.Println(evt.CommandName)
+				//log.Println(evt.Command.String())
+				//log.Println(evt.CommandName)
 			},
 		}
 		clientOptions.SetMonitor(cmdMonitor)
 	}
 	var err error
-	client, err = mongo.Connect(context.TODO(), clientOptions)
+	client, err = mongo.Connect(e.ctx, clientOptions)
 	if err != nil {
 		log.Fatal(err)
 	}
 	// 检查连接
-	err = client.Ping(context.TODO(), nil)
+	err = client.Ping(e.ctx, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
-	return &Mongo{
-		client: client,
-	}
-	//fmt.Println("Connected to MongoDB!")
+	e.client = client
+
 }
 
-func (e *Mongo) GetInstance(conf ...*config.Config) *mongo.Client {
+func (e *Mongo) GetInstance(conf ...*store.Config) *mongo.Client {
 	if len(conf) > 0 {
-		rs := Connect(conf[0])
-		return rs.client
+		e.Connect(conf...)
+		return e.client
 	}
 	return e.client
 }
 
 func (e *Mongo) Close() {
-
+	e.client.Disconnect(e.ctx)
 }
