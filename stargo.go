@@ -14,7 +14,6 @@ import (
 	"github.com/starfork/stargo/naming"
 	"github.com/starfork/stargo/store"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/xds"
 )
 
 var (
@@ -172,15 +171,15 @@ func newServer(options Options, conf *config.Config) (s grpc.ServiceRegistrar) {
 
 	opt := append(options.Server, grpc.UnaryInterceptor(options.UnaryInterceptor))
 
-	if conf.Xds {
-		var err error
-		if s, err = xds.NewGRPCServer(opt...); err != nil {
-			panic(err)
-		}
+	// if conf.Xds {
+	// 	var err error
+	// 	if s, err = xds.NewGRPCServer(opt...); err != nil {
+	// 		panic(err)
+	// 	}
 
-	} else {
-		s = grpc.NewServer(opt...)
-	}
+	// } else {
+	s = grpc.NewServer(opt...)
+	//}
 
 	return s
 }
