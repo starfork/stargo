@@ -4,7 +4,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/starfork/stargo/config"
 	"github.com/starfork/stargo/logger"
 	"github.com/starfork/stargo/util/ustring"
 	"go.uber.org/zap"
@@ -12,8 +11,13 @@ import (
 	lumberjackv2 "gopkg.in/natefinch/lumberjack.v2"
 )
 
+type ZapSugar struct {
+	opts  logger.Options
+	sugar *zap.SugaredLogger
+}
+
 // NewEncoderConfig new
-func NewEncoderConfig() zapcore.EncoderConfig {
+func encoderConfig() zapcore.EncoderConfig {
 	return zapcore.EncoderConfig{
 		// Keys can be anything except the empty string.
 		TimeKey:        "T",
@@ -36,11 +40,11 @@ func TimeEncoder(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
 }
 
 // Init Init
-func NewZapSugar(c ...*config.LogConfig) logger.Logger {
+func NewZapSugar(c ...*logger.Config) logger.Logger {
 	var writeSyncer zapcore.WriteSyncer
 	level := zap.DebugLevel
 
-	conf := &config.LogConfig{
+	conf := &logger.Config{
 		Target:  "console",
 		LogFile: "debug.log",
 	}
@@ -68,10 +72,35 @@ func NewZapSugar(c ...*config.LogConfig) logger.Logger {
 	}
 	//fmt.Println(level)
 	core := zapcore.NewCore(
-		zapcore.NewConsoleEncoder(NewEncoderConfig()),
+		zapcore.NewConsoleEncoder(encoderConfig()),
 		writeSyncer,
 		//zap.DebugLevel,
 		level,
 	)
-	return zap.New(core, zap.AddCaller()).Sugar()
+	return &ZapSugar{
+		sugar: zap.New(core, zap.AddCaller()).Sugar(),
+	}
+}
+
+func (e *ZapSugar) Log(level logger.Level, v ...interface{}) {
+	e.sugar.Info(v...)
+}
+
+// Logf writes a formatted log entry
+func (e *ZapSugar) Logf(level logger.Level, format string, v ...interface{}) {
+	e.sugar.Infof(format, v...)
+}
+
+func (e *ZapSugar) Debugf(format string, v ...interface{}) {
+	e.sugar.Debugf(format, v...)
+}
+func (e *ZapSugar) Infof(format string, v ...interface{}) {}
+
+// String returns the name of logger
+func (e *ZapSugar) String() string {
+	return "zapsugar"
+}
+
+func (e *ZapSugar) Options() logger.Options {
+	return e.opts
 }

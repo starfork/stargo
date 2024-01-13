@@ -66,7 +66,7 @@ func (l *defaultLogger) Log(level Level, v ...interface{}) {
 }
 
 func (l *defaultLogger) Logf(level Level, format string, v ...interface{}) {
-	fmt.Printf(format, v)
+	fmt.Printf(format, v...)
 }
 func (l *defaultLogger) Debugf(format string, v ...interface{}) {
 	l.Logf(DebugLevel, format, v...)
