@@ -169,14 +169,16 @@ func (s *App) Server() *grpc.Server {
 // newServer return new server
 func newServer(options Options, conf *config.Config) (s grpc.ServiceRegistrar) {
 
-	opt := append(options.Server, grpc.UnaryInterceptor(options.UnaryInterceptor))
+	opt := append(options.Server,
+		grpc.ChainUnaryInterceptor(options.UnaryInterceptor...),
+		grpc.ChainStreamInterceptor(options.StreamInterceptor...),
+	)
 
 	// if conf.Xds {
 	// 	var err error
 	// 	if s, err = xds.NewGRPCServer(opt...); err != nil {
 	// 		panic(err)
 	// 	}
-
 	// } else {
 	s = grpc.NewServer(opt...)
 	//}

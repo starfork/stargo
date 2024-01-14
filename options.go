@@ -8,9 +8,10 @@ import (
 
 // Options 参数
 type Options struct {
-	Org, Name, Addr  string
-	Config           *config.Config
-	UnaryInterceptor grpc.UnaryServerInterceptor
+	Org, Name, Addr   string
+	Config            *config.Config
+	UnaryInterceptor  []grpc.UnaryServerInterceptor
+	StreamInterceptor []grpc.StreamServerInterceptor
 
 	Server []grpc.ServerOption
 	//Registry naming.Registry
@@ -47,7 +48,14 @@ func Config(c *config.Config) Option {
 // UnaryInterceptor Unary server interceptor
 func UnaryInterceptor(opt grpc.UnaryServerInterceptor) Option {
 	return func(o *Options) {
-		o.UnaryInterceptor = opt
+		o.UnaryInterceptor = append(o.UnaryInterceptor, opt)
+	}
+}
+
+// StreamInterceptor Stream server interceptor
+func StreamnIterceptor(opt grpc.StreamServerInterceptor) Option {
+	return func(o *Options) {
+		o.StreamInterceptor = append(o.StreamInterceptor, opt)
 	}
 }
 
