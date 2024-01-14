@@ -52,6 +52,11 @@ func (e *Redis) GetInstance(conf ...*config.Config) *redis.Client {
 	return e.rdc
 }
 
+// 集群client
+func (e *Redis) GetCluster(conf ...*config.Config) *redis.ClusterClient {
+	return nil
+}
+
 func (e *Redis) Close() {
 	if e.rdc != nil {
 		e.rdc.Close()
