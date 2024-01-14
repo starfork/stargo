@@ -18,13 +18,15 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+var (
+	validate = validator.New()
+	uni      = ut.New(zh.New())
+	trans, _ = uni.GetTranslator("zh") //i18n.LangKey ?
+)
+
 // Unary Interceptor
 func Unary() grpc.UnaryServerInterceptor {
-	var (
-		validate = validator.New()
-		uni      = ut.New(zh.New())
-		trans, _ = uni.GetTranslator("zh")
-	)
+
 	validate.RegisterTagNameFunc(tagNameFunc_vLabel)
 	///validate.RegisterTagNameFunc(tagNameFunc_vFor)
 	validate.RegisterTranslation("money", trans, registerFn_Money, translationFn_Money)
