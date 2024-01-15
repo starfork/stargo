@@ -76,6 +76,21 @@ func (e *Redis) Update(t *task.Task) error {
 	return e.Push(t)
 }
 
+// redis里面，有序集合新增，即可实现update
+func (e *Redis) Clear(key string) error {
+	rs := e.rdc.ZRange(e.ctx, e.name, 0, -1)
+	if rs.Err() != nil {
+		return rs.Err()
+	}
+	for _, v := range rs.Val() {
+		e.Pop(&task.Task{
+			Tag: v,
+			Key: key,
+		})
+	}
+	return nil
+}
+
 func (e *Redis) FetchJob(step int64) ([]string, error) {
 	now := time.Now().Unix()
 	s_unix := strconv.FormatInt(now-step, 10)
