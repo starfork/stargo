@@ -94,6 +94,10 @@ func (e *ZapSugar) Logf(level logger.Level, format string, v ...interface{}) {
 func (e *ZapSugar) Debugf(format string, v ...interface{}) {
 	e.sugar.Debugf(format, v...)
 }
+func (e *ZapSugar) Fatalf(format string, v ...interface{}) {
+	e.sugar.Debugf(format, v...)
+	os.Exit(1)
+}
 func (e *ZapSugar) Infof(format string, v ...interface{}) {}
 
 // String returns the name of logger

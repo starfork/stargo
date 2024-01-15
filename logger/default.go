@@ -71,7 +71,10 @@ func (l *defaultLogger) Logf(level Level, format string, v ...interface{}) {
 func (l *defaultLogger) Debugf(format string, v ...interface{}) {
 	l.Logf(DebugLevel, format, v...)
 }
-
+func (l *defaultLogger) Fatalf(format string, v ...interface{}) {
+	l.Logf(DebugLevel, format, v...)
+	os.Exit(1)
+}
 func (l *defaultLogger) Infof(format string, v ...interface{}) {
 	l.Logf(InfoLevel, format, v...)
 }
