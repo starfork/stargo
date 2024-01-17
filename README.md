@@ -1,6 +1,6 @@
-### Usage
+## Usage
 
-#### main.go
+### main.go
 
 ```
 import (
@@ -37,7 +37,7 @@ func main() {
 }
 ```
 
-#### server/handler.go
+### server/handler.go
 
 ```
 type handler struct {
@@ -59,9 +59,9 @@ func New(app *stargo.App) *handler {
 
 [更多参考 stargo-examples](https://github.com/starfork/stargo-examples)
 
-### 环境、工具
+## 环境、工具
 
-##### protobuf 安装
+### protobuf 安装
 
 ```
 
@@ -90,7 +90,7 @@ apt-get install protobuf-compiler
 docker run cmd.cat/protoc protoc
 ```
 
-##### 环境相关
+### 环境相关
 
 ``` 
 go install google.golang.org/protobuf/cmd/protoc-gen-go@latest 
@@ -102,32 +102,32 @@ go install golang.org/x/tools/cmd/stringer@latest
 
 ```
 
-##### 工具相关
+### 工具相关
 
-grpc-client-cli 命令行调试工具
+#### grpc-client-cli 命令行调试工具
 
 ```
 go install github.com/vadimi/grpc-client-cli/cmd/grpc-client-cli@latest
 
 ```
-vscocde 插件
+#### vscocde 插件
 ```
 go install github.com/yoheimuta/protolint/cmd/protolint@latest
 ```
 
-gostar 项目生成工具 
+#### gostar 项目生成工具 
 ```
 go install  github.com/starfork/gostar@latest
 ```
 
 
-##### 相关库
+#### 相关库
 
-slice操作相关
+#### slice操作相关
 
 https://github.com/starfork/go-slice
 
-加密
+#### 加密
 
 https://github.com/starfork/go-crypto 
 
