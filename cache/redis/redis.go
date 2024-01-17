@@ -22,11 +22,12 @@ func New(rdc *redis.Client) cache.Cache {
 }
 
 func (e *Redis) Get(ctx context.Context, key string) (any, error) {
-	_, err := e.rdc.Get(ctx, key).Result()
+
+	rs, err := e.rdc.Get(ctx, key).Result()
 	if err != nil {
 		return nil, err
 	}
-	return nil, nil
+	return rs, nil
 }
 
 // Batch of get
@@ -35,7 +36,8 @@ func (e *Redis) Fetch(ctx context.Context, key []string) ([]any, error) {
 }
 
 func (e *Redis) Put(ctx context.Context, key string, value any, timeout ...time.Duration) error {
-	return nil
+	rs := e.rdc.Set(ctx, key, value, time.Hour)
+	return rs.Err()
 }
 
 // Delete removes a key from cache.

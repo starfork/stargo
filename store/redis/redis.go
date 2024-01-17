@@ -6,7 +6,6 @@ import (
 	"strconv"
 
 	"github.com/redis/go-redis/v9"
-	"github.com/starfork/stargo/config"
 	"github.com/starfork/stargo/store"
 	"github.com/starfork/stargo/util/ustring"
 )
@@ -17,13 +16,13 @@ type Redis struct {
 }
 
 func NewRedis(config *store.Config) store.Store {
-
 	return &Redis{
 		c: config,
 	}
 }
 
 func (e *Redis) Connect(conf ...*store.Config) {
+
 	c := e.c
 	if len(conf) > 0 {
 		c = conf[0]
@@ -33,7 +32,7 @@ func (e *Redis) Connect(conf ...*store.Config) {
 	c.Num = ustring.Int(ustring.OrString(strconv.Itoa(c.Num), os.Getenv("REDIS_NUM")))
 
 	rdc := redis.NewClient(&redis.Options{
-		Addr:     c.Host,
+		Addr:     c.Host + ":" + c.Port,
 		DB:       c.Num,
 		Password: c.Auth,
 	})
@@ -44,16 +43,19 @@ func (e *Redis) Connect(conf ...*store.Config) {
 	e.rdc = rdc
 }
 
-func (e *Redis) GetInstance(conf ...*config.Config) *redis.Client {
+func (e *Redis) GetInstance(conf ...*store.Config) *redis.Client {
 	if len(conf) > 0 {
-		e.Connect()
+		e.Connect(conf...)
 		return e.rdc
+	}
+	if e.rdc == nil {
+		e.Connect()
 	}
 	return e.rdc
 }
 
 // 集群client
-func (e *Redis) GetCluster(conf ...*config.Config) *redis.ClusterClient {
+func (e *Redis) GetCluster(conf ...*store.Config) *redis.ClusterClient {
 	return nil
 }
 
