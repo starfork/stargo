@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"os"
 
-	"github.com/starfork/stargo/config"
 	"github.com/starfork/stargo/store"
 	"github.com/starfork/stargo/util/ustring"
 
@@ -82,7 +81,7 @@ func (e *Sqlite) Connect(confs ...*store.Config) {
 	// }
 }
 
-func (e *Sqlite) GetInstance(conf ...*config.Config) *gorm.DB {
+func (e *Sqlite) GetInstance(conf ...*store.Config) *gorm.DB {
 
 	if len(conf) > 0 {
 		e.Connect()

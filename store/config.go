@@ -19,5 +19,7 @@ type Config struct {
 	Prefix  string //表前缀什么的
 	Num     int    //连接标识数
 
+	Level string //级别
+
 	FileServer *fileserver.Config
 }
