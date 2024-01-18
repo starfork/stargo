@@ -114,12 +114,16 @@ func (e *Mysql) Close() {
 	}
 }
 
-func (e *Mysql) Prefix(prefix string) string {
+func (e *Mysql) Prefix(prefix ...string) string {
 
-	e.db.NamingStrategy = schema.NamingStrategy{
-		TablePrefix: prefix,
+	if len(prefix) > 0 {
+		e.db.NamingStrategy = schema.NamingStrategy{
+			TablePrefix: prefix[0],
+		}
+		return prefix[0]
 	}
-	return prefix
+
+	return e.c.Prefix
 }
 
 // func (e *Mysql) RegisterPlugins(prefix string) string {
