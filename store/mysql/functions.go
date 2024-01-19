@@ -91,3 +91,10 @@ func Distance(point string, dist uint32) func(db *gorm.DB) *gorm.DB {
 		return db.Where("ST_Distance_Sphere(ST_GeomFromText(\"POINT("+l+")\"),location) < ?", dist)
 	}
 }
+
+// Like("field","value%")==> Where field LIKE value%
+func Like(column, pattern string) func(*gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		return db.Where("? LIKE ?", column, pattern)
+	}
+}

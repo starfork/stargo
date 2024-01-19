@@ -2,7 +2,6 @@ package number
 
 import (
 	"crypto/rand"
-	"errors"
 	"math"
 	"math/big"
 )
@@ -10,7 +9,8 @@ import (
 // 返回一个指定范围的随机数
 func RangeRand(min, max int64) (int64, error) {
 	if min > max {
-		return 0, errors.New("the min is greater than max")
+		//return 0, errors.New("the min is greater than max")
+		min, max = max, min
 	}
 
 	if min < 0 {
