@@ -94,7 +94,7 @@ func DefaultOptions() []grpc.DialOption {
 }
 
 // 获取一个连接
-func (e *Client) Connection(ctx context.Context, app string, appendOpts ...[]grpc.DialOption) (conn grpc.ClientConnInterface, err error) {
+func (e *Client) Connection(ctx context.Context, app string, options ...grpc.DialOption) (conn grpc.ClientConnInterface, err error) {
 
 	endpoint, err := e.endpoint(app)
 	if err != nil {
@@ -109,9 +109,9 @@ func (e *Client) Connection(ctx context.Context, app string, appendOpts ...[]grp
 		opts = append(opts, opt...)
 	}
 	//扩展的配置
-	if len(appendOpts) > 0 {
-		opts = append(opts, appendOpts[0]...)
-	}
+
+	opts = append(opts, options...)
+
 	conn1, err := grpc.DialContext(ctx, endpoint, opts...)
 	if err != nil {
 		return nil, err
