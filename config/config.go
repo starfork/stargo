@@ -41,7 +41,7 @@ type Config struct {
 	Broker     *broker.Config
 	Registry   *naming.Config
 
-	RpcServer map[string]*Server //rpc server
+	//RpcServer map[string]*Server //rpc server
 }
 
 // log
@@ -49,8 +49,9 @@ type Config struct {
 //Rpc Server
 
 type Server struct {
-	Name string
-	Host string
-	Port string
-	Auth string //[keyfilepath]:[key]:
+	Entry string
+	Name  string
+	Host  string
+	Port  string
+	Auth  string //[keyfilepath]:[key]:
 }

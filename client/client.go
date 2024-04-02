@@ -65,9 +65,9 @@ func New(conf *config.Config, dialOpt ...map[string][]grpc.DialOption) *Client {
 	if len(dialOpt) > 0 {
 		c.dialOpt = dialOpt[0]
 	}
-	for k, v := range conf.RpcServer {
-		c.rpcConfs[k] = v
-	}
+	// for k, v := range conf.RpcServer {
+	// 	c.rpcConfs[k] = v
+	// }
 	c.logger = logger.DefaultLogger
 
 	return c
