@@ -24,7 +24,7 @@ var (
 
 // App App
 type App struct {
-	opts   Options
+	opts   *Options
 	server *grpc.Server
 	lis    net.Listener
 	logger logger.Logger
@@ -41,7 +41,7 @@ func New(opt ...Option) *App {
 
 	opts := DefaultOptions()
 	for _, o := range opt {
-		o(&opts)
+		o(opts)
 	}
 
 	conf := opts.Config
@@ -167,7 +167,7 @@ func (s *App) Server() *grpc.Server {
 }
 
 // newServer return new server
-func newServer(options Options, conf *config.Config) (s grpc.ServiceRegistrar) {
+func newServer(options *Options, conf *config.Config) (s grpc.ServiceRegistrar) {
 
 	opt := append(options.Server,
 		grpc.ChainUnaryInterceptor(options.UnaryInterceptor...),

@@ -67,8 +67,8 @@ func Server(opt ...grpc.ServerOption) Option {
 }
 
 // DefaultOptions default options
-func DefaultOptions() Options {
-	o := Options{
+func DefaultOptions() *Options {
+	o := &Options{
 		Org:  "stargo", //与proto文件对称即可。比如stargo.service.ServiceHandler
 		Name: "service",
 	}
