@@ -12,14 +12,17 @@ type Config struct {
 
 	Monitor bool //监控
 
-	Plugins []string
-	Debug   bool //是否开启调试
+	Plugins []string //插件
+	Debug   bool     //是否开启调试
 	MaxIdle int
 	MaxOpen int
 	Prefix  string //表前缀什么的
 	Num     int    //连接标识数
 
 	Level string //级别
+
+	TimeLocation string //时区
+	TimeFormat   string //时间格式化
 
 	FileServer *fileserver.Config
 }

@@ -5,6 +5,8 @@ import (
 	"time"
 
 	"gorm.io/gorm"
+
+	"github.com/starfork/stargo/store"
 )
 
 // Page fenye
@@ -36,7 +38,7 @@ func Page(page, lmt uint32) func(db *gorm.DB) *gorm.DB {
 }
 
 func int2time(stamp int64, format ...string) string {
-	f := TFORMAT
+	f := store.TFORMAT
 	if len(format) > 0 {
 		f = format[0]
 	}

@@ -46,14 +46,12 @@ func (e *Limiter) getLimier() ratelimit.Limiter {
 	return limiter.(ratelimit.Limiter)
 }
 
-func (e *Limiter) getToken() (string, error) {
+func (e *Limiter) getToken() (tk string, err error) {
 
 	if e.p.Tk != "" {
 		return e.p.Tk, nil
 	}
 
-	var tk string
-	var err error
 	t := strings.ToLower(e.p.Type)
 	if t == "both" || t == "" {
 		if tk, err = request.GetToken(e.p.Req); err != nil {
@@ -66,6 +64,6 @@ func (e *Limiter) getToken() (string, error) {
 		tk, err = request.GetToken(e.p.Req)
 	}
 
-	return tk, err
+	return
 
 }

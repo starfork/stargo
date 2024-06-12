@@ -62,7 +62,7 @@ func GetLevel(levelStr string) (Level, error) {
 	case FatalLevel.String():
 		return FatalLevel, nil
 	}
-	return InfoLevel, fmt.Errorf("Unknown Level String: '%s', defaulting to InfoLevel", levelStr)
+	return InfoLevel, fmt.Errorf("unknown level string: '%s', defaulting to InfoLevel", levelStr)
 }
 
 // Returns true if the given level is at or lower the current logger level.

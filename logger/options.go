@@ -48,7 +48,8 @@ func WithCallerSkipCount(c int) Option {
 	}
 }
 
-func SetOption(k, v interface{}) Option {
+// WithContext set Context
+func WithContext(k, v interface{}) Option {
 	return func(o *Options) {
 		if o.Context == nil {
 			o.Context = context.Background()

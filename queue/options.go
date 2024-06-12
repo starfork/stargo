@@ -22,19 +22,19 @@ type Options struct {
 // Option Option
 type Option func(o *Options)
 
-func Step(s int64) Option {
+func WithStep(s int64) Option {
 	return func(o *Options) {
 		o.step = s
 	}
 }
 
-func Interval(s int64) Option {
+func WithInterval(s int64) Option {
 	return func(o *Options) {
 		o.interval = s
 	}
 }
 
-func Logger(s logger.Logger) Option {
+func WithLogger(s logger.Logger) Option {
 	return func(o *Options) {
 		o.logger = s
 	}

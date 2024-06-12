@@ -21,7 +21,7 @@ func (loc Location) GormDataType() string {
 }
 
 // Scan implements the sql.Scanner interface
-func (loc *Location) Scan(v interface{}) error {
+func (loc *Location) Scan(v any) error {
 
 	if v == nil {
 		return nil
@@ -46,6 +46,6 @@ func (loc Location) GormValue(ctx context.Context, db *gorm.DB) clause.Expr {
 	l = strings.Replace(l, ")", "", -1)
 	return clause.Expr{
 		SQL:  "ST_GeomFromText(?)",
-		Vars: []interface{}{"POINT(" + l + ")"},
+		Vars: []any{"POINT(" + l + ")"},
 	}
 }

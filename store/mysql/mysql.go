@@ -14,9 +14,6 @@ import (
 	"gorm.io/gorm/schema"
 )
 
-var TIME_LOCATION = "Asia/Shanghai" //上海
-var TFORMAT = "2006-01-02T15:04:05+08:00"
-
 //var log logger.Interface
 
 type Mysql struct {

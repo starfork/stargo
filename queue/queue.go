@@ -56,7 +56,7 @@ func (q *Queue) Push(t *task.Task) error {
 //		return q.store.Update(t)
 //	}
 func (q *Queue) run() {
-	t := time.NewTicker(time.Second * time.Duration(q.opts.interval)) //TODO，传入配置，interval
+	t := time.NewTicker(time.Second * time.Duration(q.opts.interval))
 	defer t.Stop()
 	for {
 		<-t.C
@@ -67,7 +67,7 @@ func (q *Queue) exec() {
 	rs, err := q.store.FetchJob(q.opts.step)
 
 	if err != nil {
-		q.log("任务队列获取失败%+v", err)
+		q.log(ErrFailGetTask, err)
 	}
 
 	for _, v := range rs {
@@ -78,7 +78,7 @@ func (q *Queue) exec() {
 		q.store.Pop(t)
 		hander, ok := q.handlers.Load(t.Tag)
 		if !ok {
-			q.log("任务获取失败%+v", t.Tag)
+			q.log(ErrFailGetTask, t.Tag)
 			//log
 			continue
 		}
@@ -88,7 +88,7 @@ func (q *Queue) exec() {
 			//执行成功则删除任务，否则如果设置了
 			//fmt.Println(task)
 			if err := hander.(task.Handler)(t); err != nil {
-				q.log("执行失败%+v", err)
+				q.log(ErrFailGetTask, err)
 				//如果有循环条件设置。则循环加入
 				t.Retry++
 				if t.TTL > 0 && t.Retry <= t.RetryMax {

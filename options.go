@@ -23,44 +23,44 @@ type Options struct {
 // Option Option
 type Option func(o *Options)
 
-func Org(c string) Option {
+func WithOrg(c string) Option {
 	return func(o *Options) {
 		o.Org = c
 	}
 }
-func Name(c string) Option {
+func WithName(c string) Option {
 	return func(o *Options) {
 		o.Name = c
 	}
 }
 
-func Addr(c string) Option {
+func WithAddr(c string) Option {
 	return func(o *Options) {
 		o.Addr = c
 	}
 }
-func Config(c *config.Config) Option {
+func WithConfig(c *config.Config) Option {
 	return func(o *Options) {
 		o.Config = c
 	}
 }
 
 // UnaryInterceptor Unary server interceptor
-func UnaryInterceptor(opt grpc.UnaryServerInterceptor) Option {
+func WithUnaryInterceptor(opt grpc.UnaryServerInterceptor) Option {
 	return func(o *Options) {
 		o.UnaryInterceptor = append(o.UnaryInterceptor, opt)
 	}
 }
 
 // StreamInterceptor Stream server interceptor
-func StreamnIterceptor(opt grpc.StreamServerInterceptor) Option {
+func WithStreamnIterceptor(opt grpc.StreamServerInterceptor) Option {
 	return func(o *Options) {
 		o.StreamInterceptor = append(o.StreamInterceptor, opt)
 	}
 }
 
 // Server option
-func Server(opt ...grpc.ServerOption) Option {
+func WithServer(opt ...grpc.ServerOption) Option {
 	return func(o *Options) {
 		o.Server = append(o.Server, opt...)
 	}

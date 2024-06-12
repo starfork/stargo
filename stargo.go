@@ -14,6 +14,7 @@ import (
 	"github.com/starfork/stargo/naming"
 	"github.com/starfork/stargo/store"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 )
 
 var (
@@ -51,13 +52,7 @@ func New(opt ...Option) *App {
 	}
 	time.LoadLocation(tz)
 
-	s := newServer(opts, conf)
-
-	//注册reflection
-	// if conf.Environment != ENV_PRODUCTION {
-	// 	//app.logger.Debug("env:" + conf.Environment)
-	// 	reflection.Register(s)
-	// }
+	s := newServer(opts)
 
 	app := &App{
 		opts:   opts,
@@ -65,21 +60,13 @@ func New(opt ...Option) *App {
 		logger: logger.DefaultLogger,
 		conf:   conf,
 		store:  make(map[string]store.Store),
-		//config: opts.Config,
 	}
 
-	//注册registry
-	// if conf.Registry != nil {
-	// 	app.conf.Registry.Org = opts.Org
-	// 	r := registry.NewRegistry(conf.Registry)
-	// 	if err := r.Register(app.Service()); err != nil {
-	// 		panic(err)
-	// 	}
-	// 	app.registry = r
-	// }
-	// if conf.Broker != nil {
-	// 	//app.broker=
-	// }
+	//注册reflection
+	if conf.Environment != ENV_PRODUCTION {
+		app.logger.Debugf("env:" + conf.Environment)
+		reflection.Register(app.server)
+	}
 
 	return app
 }
@@ -106,12 +93,12 @@ func (s *App) Run() {
 	go func() {
 		sg := <-ch
 		s.Stop()
+
 		if i, ok := sg.(syscall.Signal); ok {
 			os.Exit(int(i))
 		} else {
 			os.Exit(0)
 		}
-
 	}()
 
 	if err := s.server.Serve(lis); err != nil {
@@ -167,7 +154,7 @@ func (s *App) Server() *grpc.Server {
 }
 
 // newServer return new server
-func newServer(options *Options, conf *config.Config) (s grpc.ServiceRegistrar) {
+func newServer(options *Options) (s grpc.ServiceRegistrar) {
 
 	opt := append(options.Server,
 		grpc.ChainUnaryInterceptor(options.UnaryInterceptor...),
