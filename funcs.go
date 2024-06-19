@@ -1,21 +1,33 @@
 package stargo
 
 import (
+	"github.com/starfork/stargo/broker"
 	"github.com/starfork/stargo/config"
 	"github.com/starfork/stargo/logger"
+	"github.com/starfork/stargo/naming"
 	"github.com/starfork/stargo/store"
+	"google.golang.org/grpc"
 )
 
-// 执行方法，按照规则制定 namespace.[service].XxxHandler
-// func (s *App) Invoke(ctx context.Context, app, method string, in, rs interface{}, h ...string) error {
+// Server
+func (s *App) Server() *grpc.Server {
+	return s.server
+}
 
-// 	if s.client == nil {
-// 		s.client = client.New(s.conf)
-// 	}
-// 	return s.client.Invoke(ctx, app, method, in, rs, h...)
-// }
+// 返回标准服务格式
+func (s *App) Service() naming.Service {
+	return naming.Service{
+		Org:  s.opts.Org,
+		Name: s.opts.Name,
+		Addr: s.conf.Port,
+	}
+}
 
-func (s *App) GetLogger() logger.Logger {
+func (s *App) Registry() naming.Registry {
+	return s.registry
+}
+
+func (s *App) Logger(conf ...logger.Config) logger.Logger {
 	return s.logger
 }
 
@@ -33,6 +45,17 @@ func (s *App) Store(name string, st ...store.Store) store.Store {
 	return nil
 }
 
-func (s *App) GetConfig() *config.Config {
+func (s *App) Mysql() store.Store {
+	return s.Store("mysql")
+}
+func (s *App) Redis() store.Store {
+	return s.Store("redis")
+}
+
+func (s *App) Config() *config.Config {
 	return s.conf
+}
+
+func (s *App) Broker() broker.Broker {
+	return s.broker
 }

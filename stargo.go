@@ -127,15 +127,6 @@ func (s *App) stopStargo() {
 	}
 }
 
-// 返回标准服务格式
-func (s *App) Service() naming.Service {
-	return naming.Service{
-		Org:  s.opts.Org,
-		Name: s.opts.Name,
-		Addr: s.conf.Port,
-	}
-}
-
 func (s *App) RegisterService(sd *grpc.ServiceDesc, ss any) *App {
 	s.server.RegisterService(sd, ss)
 	return s
@@ -146,11 +137,6 @@ func (s *App) Restart() {
 	s.stopStargo()
 	s.server.GracefulStop()
 	s.server.Serve(s.lis)
-}
-
-// Server
-func (s *App) Server() *grpc.Server {
-	return s.server
 }
 
 // newServer return new server
