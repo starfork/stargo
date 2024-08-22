@@ -2,10 +2,9 @@ package request
 
 import (
 	"errors"
+	"log"
 	"net/http"
 	"strings"
-
-	"github.com/golang/glog"
 )
 
 func GetToken(req *http.Request) (string, error) {
@@ -20,7 +19,7 @@ func GetToken(req *http.Request) (string, error) {
 	} else if token, ok := req.URL.Query()["oss-token"]; ok && len(token) > 0 {
 		// todo oss临时访问token。
 		// access-token过长。 go的 http.get 会出问题
-		glog.Infof("oss-token: %s ", token)
+		log.Printf("oss-token: %s \n", token)
 	}
 	if tk == "" {
 		return "", errors.New("token or authorization required")
