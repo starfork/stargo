@@ -10,16 +10,20 @@ import (
 )
 
 // Server
-func (s *App) Server() *grpc.Server {
-	return s.server
+func (s *App) RpcServer() *grpc.Server {
+	return s.rpcServer
 }
 
+// Server
+func (s *App) HttpServer() *grpc.Server {
+	return s.rpcServer
+}
 // 返回标准服务格式
 func (s *App) Service() naming.Service {
 	return naming.Service{
 		Org:  s.opts.Org,
 		Name: s.opts.Name,
-		Addr: s.conf.Port,
+		Addr: s.conf.RpcServer.Host,
 	}
 }
 

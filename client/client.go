@@ -1,7 +1,6 @@
 package client
 
 import (
-	"context"
 	"errors"
 	"sync"
 	"time"
@@ -45,7 +44,7 @@ const (
 
 type Client struct {
 	org      string
-	rpcConfs map[string]*config.Server
+	rpcConfs map[string]*config.RpcServer
 
 	dialOpt map[string][]grpc.DialOption
 	conns   map[string]grpc.ClientConnInterface
@@ -60,7 +59,7 @@ func New(conf *config.Config, dialOpt ...map[string][]grpc.DialOption) *Client {
 	c := &Client{
 		org:      conf.Org,
 		conns:    make(map[string]grpc.ClientConnInterface),
-		rpcConfs: make(map[string]*config.Server),
+		rpcConfs: make(map[string]*config.RpcServer),
 	}
 	if len(dialOpt) > 0 {
 		c.dialOpt = dialOpt[0]
@@ -94,7 +93,7 @@ func DefaultOptions() []grpc.DialOption {
 }
 
 // 获取一个连接
-func (e *Client) Connection(ctx context.Context, app string, options ...grpc.DialOption) (conn grpc.ClientConnInterface, err error) {
+func (e *Client) Connection(app string, options ...grpc.DialOption) (conn grpc.ClientConnInterface, err error) {
 
 	endpoint, err := e.endpoint(app)
 	if err != nil {
@@ -112,29 +111,15 @@ func (e *Client) Connection(ctx context.Context, app string, options ...grpc.Dia
 
 	opts = append(opts, options...)
 
-	conn1, err := grpc.DialContext(ctx, endpoint, opts...)
+	conn1, err := grpc.NewClient(endpoint, opts...)
 	if err != nil {
 		return nil, err
 	}
 	//defer conn.Close()
 	e.mu.Lock()
 	defer e.mu.Unlock()
+	defer conn1.Close()
 	e.conns[app] = conn1
-
-	defer func() {
-		if err != nil {
-			if cerr := conn1.Close(); cerr != nil {
-				e.logger.Infof("Failed to close conn to %s: %v", endpoint, cerr)
-			}
-			return
-		}
-		go func() {
-			<-ctx.Done()
-			if cerr := conn1.Close(); cerr != nil {
-				e.logger.Infof("Failed to close conn to %s: %v", endpoint, cerr)
-			}
-		}()
-	}()
 
 	return conn1, nil
 }

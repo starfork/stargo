@@ -9,22 +9,26 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/starfork/stargo/fileserver"
-	"github.com/starfork/stargo/store"
+	"github.com/starfork/stargo/store/mysql/plugins"
 	"github.com/starfork/stargo/util/ustring"
 	"gorm.io/gorm"
 )
 
 type Plugin struct {
-	fsc *fileserver.Config
+	PrivateUrl string
+	PublicUrl  string
 }
 
-func Register(db *gorm.DB, conf *store.Config) {
+func Register(db *gorm.DB, config plugins.Config) {
 
-	p := &Plugin{
-		fsc: conf.FileServer,
+	p := &Plugin{}
+	if url, ok := config["public_url"]; ok {
+		p.PublicUrl = url.(string)
 	}
 
+	if url, ok := config["private_url"]; ok {
+		p.PrivateUrl = url.(string)
+	}
 	db.Callback().Query().After("gorm:find").Register("tagfile:after_query", p.AfterQuery)
 	db.Callback().Update().Before("gorm:update").Register("tagfile:before_update", p.BeforeUpdate)
 
@@ -34,16 +38,16 @@ func (e *Plugin) Parse(str string) string {
 	if str == "" {
 		return ""
 	}
-	str = strings.ReplaceAll(str, "private://", e.fsc.PrivateUrl)
-	str = strings.ReplaceAll(str, "public://", e.fsc.PublicUrl)
+	str = strings.ReplaceAll(str, "private://", e.PrivateUrl)
+	str = strings.ReplaceAll(str, "public://", e.PublicUrl)
 	return str
 }
 func (e *Plugin) Rebuild(str string) string {
 	if str == "" {
 		return ""
 	}
-	str = strings.ReplaceAll(str, e.fsc.PrivateUrl, "private://")
-	str = strings.ReplaceAll(str, e.fsc.PublicUrl, "public://")
+	str = strings.ReplaceAll(str, e.PrivateUrl, "private://")
+	str = strings.ReplaceAll(str, e.PublicUrl, "public://")
 	return str
 }
 

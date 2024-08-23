@@ -14,6 +14,8 @@ type Options struct {
 	StreamInterceptor []grpc.StreamServerInterceptor
 
 	Server []grpc.ServerOption
+
+	Timezone string
 	//Registry naming.Registry
 	//Tracer tracer.Tracer
 	//Logger logger.Logger
@@ -31,6 +33,11 @@ func WithOrg(c string) Option {
 func WithName(c string) Option {
 	return func(o *Options) {
 		o.Name = c
+	}
+}
+func WithTimezome(c string) Option {
+	return func(o *Options) {
+		o.Timezone = c
 	}
 }
 
@@ -71,6 +78,7 @@ func DefaultOptions() *Options {
 	o := &Options{
 		Org:  "stargo", //与proto文件对称即可。比如stargo.service.ServiceHandler
 		Name: "service",
+		Timezone: "Asia/Shanghai",
 	}
 	return o
 }

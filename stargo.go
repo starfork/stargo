@@ -25,10 +25,10 @@ var (
 
 // App App
 type App struct {
-	opts   *Options
-	server *grpc.Server
-	lis    net.Listener
-	logger logger.Logger
+	opts      *Options
+	rpcServer *grpc.Server
+	lis       net.Listener
+	logger    logger.Logger
 
 	store    map[string]store.Store
 	broker   broker.Broker
@@ -46,26 +46,23 @@ func New(opt ...Option) *App {
 	}
 
 	conf := opts.Config
-	tz := "Asia/Shanghai"
-	if conf.Timezome != "" {
-		tz = conf.Timezome
-	}
-	time.LoadLocation(tz)
+	time.LoadLocation(opts.Timezone)
+	conf.Timezome = opts.Timezone
 
-	s := newServer(opts)
+	s := newRpcServer(opts)
 
 	app := &App{
-		opts:   opts,
-		server: s.(*grpc.Server),
-		logger: logger.DefaultLogger,
-		conf:   conf,
-		store:  make(map[string]store.Store),
+		opts:      opts,
+		rpcServer: s.(*grpc.Server),
+		logger:    logger.DefaultLogger,
+		conf:      conf,
+		store:     make(map[string]store.Store),
 	}
 
 	//注册reflection
-	if conf.Environment != ENV_PRODUCTION {
-		app.logger.Debugf("env:" + conf.Environment)
-		reflection.Register(app.server)
+	if conf.Env != ENV_PRODUCTION {
+		app.logger.Debugf("env:" + conf.Env)
+		reflection.Register(app.rpcServer)
 	}
 
 	return app
@@ -75,7 +72,7 @@ func New(opt ...Option) *App {
 func (s *App) Run() {
 
 	//	s.logger.Debugf("ServerPort%+v", s.conf.ServerPort)
-	ports := strings.Split(s.conf.Port, ":")
+	ports := strings.Split(s.conf.RpcServer.Host, ":")
 	port := ports[0]
 	if len(ports) > 1 {
 		port = ports[1] //centos docker 监听ip:port模式有问题
@@ -101,7 +98,7 @@ func (s *App) Run() {
 		}
 	}()
 
-	if err := s.server.Serve(lis); err != nil {
+	if err := s.rpcServer.Serve(lis); err != nil {
 		s.logger.Logf(logger.FatalLevel, "failed to serve: %v", err)
 	}
 
@@ -110,7 +107,7 @@ func (s *App) Run() {
 // Stop server
 func (s *App) Stop() {
 	s.stopStargo()
-	s.server.Stop()
+	s.rpcServer.Stop()
 }
 func (s *App) stopStargo() {
 	if s.registry != nil {
@@ -128,19 +125,19 @@ func (s *App) stopStargo() {
 }
 
 func (s *App) RegisterService(sd *grpc.ServiceDesc, ss any) *App {
-	s.server.RegisterService(sd, ss)
+	s.rpcServer.RegisterService(sd, ss)
 	return s
 }
 
 // Restart server
 func (s *App) Restart() {
 	s.stopStargo()
-	s.server.GracefulStop()
-	s.server.Serve(s.lis)
+	s.rpcServer.GracefulStop()
+	s.rpcServer.Serve(s.lis)
 }
 
 // newServer return new server
-func newServer(options *Options) (s grpc.ServiceRegistrar) {
+func newRpcServer(options *Options) (s grpc.ServiceRegistrar) {
 
 	opt := append(options.Server,
 		grpc.ChainUnaryInterceptor(options.UnaryInterceptor...),

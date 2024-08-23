@@ -1,6 +1,6 @@
 package store
 
-import "github.com/starfork/stargo/fileserver"
+import "github.com/starfork/stargo/store/mysql/plugins"
 
 type Config struct {
 	Host string //地址
@@ -12,8 +12,8 @@ type Config struct {
 
 	Monitor bool //监控
 
-	Plugins []string //插件
-	Debug   bool     //是否开启调试
+	Plugins map[string]plugins.Config //插件
+	Debug   bool                      //是否开启调试
 	MaxIdle int
 	MaxOpen int
 	Prefix  string //表前缀什么的
@@ -24,5 +24,4 @@ type Config struct {
 	TimeLocation string //时区
 	TimeFormat   string //时间格式化
 
-	FileServer *fileserver.Config
 }

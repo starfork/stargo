@@ -87,7 +87,7 @@ func (e *Mysql) Connect(confs ...*store.Config) {
 	//自己到项目里去注册
 	//p := plugin.New(config)
 	if len(c.Plugins) > 0 {
-		RegisterPlugins(db, c, c.Plugins)
+		RegisterPlugins(db, c.Plugins)
 	}
 	e.db = db
 	e.conn = sqlDB
