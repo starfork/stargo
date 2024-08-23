@@ -124,11 +124,6 @@ func (s *App) stopStargo() {
 	}
 }
 
-func (s *App) RegisterService(sd *grpc.ServiceDesc, ss any) *App {
-	s.rpcServer.RegisterService(sd, ss)
-	return s
-}
-
 // Restart server
 func (s *App) Restart() {
 	s.stopStargo()
@@ -155,3 +150,5 @@ func newRpcServer(options *Options) (s grpc.ServiceRegistrar) {
 
 	return s
 }
+
+ 
