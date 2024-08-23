@@ -65,6 +65,10 @@ func New(opt ...Option) *App {
 		reflection.Register(app.rpcServer)
 	}
 
+	for k, v := range conf.Store {
+		app.Store(k, v)
+	}
+
 	return app
 }
 
@@ -150,5 +154,3 @@ func newRpcServer(options *Options) (s grpc.ServiceRegistrar) {
 
 	return s
 }
-
- 

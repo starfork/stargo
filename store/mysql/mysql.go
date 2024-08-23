@@ -27,6 +27,9 @@ func NewMysql(config *store.Config) store.Store {
 		c: config,
 	}
 }
+func (e *Mysql) Instance() *Mysql {
+	return e
+}
 
 // Connect 初始化MySQLme
 func (e *Mysql) Connect(confs ...*store.Config) {

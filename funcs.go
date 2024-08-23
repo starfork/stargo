@@ -6,6 +6,8 @@ import (
 	"github.com/starfork/stargo/logger"
 	"github.com/starfork/stargo/naming"
 	"github.com/starfork/stargo/store"
+	"github.com/starfork/stargo/store/mysql"
+	"github.com/starfork/stargo/store/redis"
 	"google.golang.org/grpc"
 )
 
@@ -18,6 +20,7 @@ func (s *App) RpcServer() *grpc.Server {
 func (s *App) HttpServer() *grpc.Server {
 	return s.rpcServer
 }
+
 // 返回标准服务格式
 func (s *App) Service() naming.Service {
 	return naming.Service{
@@ -36,11 +39,18 @@ func (s *App) Logger(conf ...logger.Config) logger.Logger {
 }
 
 // 获取或者创建一个store
-func (s *App) Store(name string, st ...store.Store) store.Store {
+func (s *App) Store(name string, st ...*store.Config) store.Store {
 	if len(st) > 0 {
-		sto := st[0]
-		s.store[name] = sto
-		return sto
+		maker := map[string]func(*store.Config) store.Store{
+			"redis": redis.NewRedis,
+			"mysql": mysql.NewMysql,
+		}
+
+		if f, ok := maker[name]; ok {
+			s.store[name] = f(st[0])
+			return s.store[name]
+		}
+
 	} else {
 		if store, ok := s.store[name]; ok {
 			return store
