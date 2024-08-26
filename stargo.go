@@ -75,7 +75,6 @@ func New(opt ...Option) *App {
 // Run   server
 func (s *App) Run() {
 
-	//	s.logger.Debugf("ServerPort%+v", s.conf.ServerPort)
 	ports := strings.Split(s.conf.RpcServer.Host, ":")
 	port := ports[0]
 	if len(ports) > 1 {
@@ -85,9 +84,9 @@ func (s *App) Run() {
 	s.lis = lis
 
 	if err != nil {
-		s.logger.Logf(logger.FatalLevel, "failed to listen: %v", err)
+		s.logger.Fatalf("failed to listen: %v", err)
 	}
-	s.logger.Logf(logger.DebugLevel, "starting: gRPC Listener %s\n", port)
+	s.logger.Infof("starting: gRPC Listener %s\n", port)
 
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGTERM, syscall.SIGINT, syscall.SIGHUP, syscall.SIGQUIT)
@@ -103,7 +102,7 @@ func (s *App) Run() {
 	}()
 
 	if err := s.rpcServer.Serve(lis); err != nil {
-		s.logger.Logf(logger.FatalLevel, "failed to serve: %v", err)
+		s.logger.Fatalf("failed to serve: %v", err)
 	}
 
 }
@@ -115,7 +114,7 @@ func (s *App) Stop() {
 }
 func (s *App) stopStargo() {
 	if s.registry != nil {
-		s.logger.Logf(logger.FatalLevel, "UnRegister: [%s]\n", s.opts.Name)
+		s.logger.Fatalf("UnRegister: [%s]\n", s.opts.Name)
 		s.registry.UnRegister(s.Service())
 	}
 

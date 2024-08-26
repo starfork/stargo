@@ -12,8 +12,8 @@ import (
 )
 
 type ZapSugar struct {
-	opts  logger.Options
-	sugar *zap.SugaredLogger
+	*zap.SugaredLogger
+	opts logger.Options
 }
 
 // NewEncoderConfig new
@@ -78,27 +78,9 @@ func NewZapSugar(c ...*logger.Config) logger.Logger {
 		level,
 	)
 	return &ZapSugar{
-		sugar: zap.New(core, zap.AddCaller()).Sugar(),
+		SugaredLogger: zap.New(core, zap.AddCaller()).Sugar(),
 	}
 }
-
-func (e *ZapSugar) Log(level logger.Level, v ...interface{}) {
-	e.sugar.Info(v...)
-}
-
-// Logf writes a formatted log entry
-func (e *ZapSugar) Logf(level logger.Level, format string, v ...interface{}) {
-	e.sugar.Infof(format, v...)
-}
-
-func (e *ZapSugar) Debugf(format string, v ...interface{}) {
-	e.sugar.Debugf(format, v...)
-}
-func (e *ZapSugar) Fatalf(format string, v ...interface{}) {
-	e.sugar.Debugf(format, v...)
-	os.Exit(1)
-}
-func (e *ZapSugar) Infof(format string, v ...interface{}) {}
 
 // String returns the name of logger
 func (e *ZapSugar) String() string {

@@ -1,6 +1,7 @@
 package client
 
 import (
+	"context"
 	"errors"
 	"sync"
 	"time"
@@ -93,7 +94,7 @@ func DefaultOptions() []grpc.DialOption {
 }
 
 // 获取一个连接
-func (e *Client) Connection(app string, options ...grpc.DialOption) (conn grpc.ClientConnInterface, err error) {
+func (e *Client) Connection(ctx context.Context, app string, options ...grpc.DialOption) (conn grpc.ClientConnInterface, err error) {
 
 	endpoint, err := e.endpoint(app)
 	if err != nil {
@@ -115,6 +116,21 @@ func (e *Client) Connection(app string, options ...grpc.DialOption) (conn grpc.C
 	if err != nil {
 		return nil, err
 	}
+
+	defer func() {
+		if err != nil {
+			if cerr := conn1.Close(); cerr != nil {
+				e.logger.Errorf("Failed to close conn to %s: %v", endpoint, cerr)
+			}
+			return
+		}
+		go func() {
+			<-ctx.Done()
+			if cerr := conn1.Close(); cerr != nil {
+				e.logger.Errorf("Failed to close conn to %s: %v", endpoint, cerr)
+			}
+		}()
+	}()
 	//defer conn.Close()
 	e.mu.Lock()
 	defer e.mu.Unlock()

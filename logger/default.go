@@ -61,18 +61,21 @@ func copyFields(src map[string]interface{}) map[string]interface{} {
 	return dst
 }
 
-func (l *defaultLogger) Log(level Level, v ...interface{}) {
-	fmt.Printf("  %v\n", v)
-}
-
 func (l *defaultLogger) Logf(level Level, format string, v ...interface{}) {
 	fmt.Printf(format, v...)
+}
+
+func (l *defaultLogger) Warnf(format string, v ...interface{}) {
+	l.Logf(WarnLevel, format, v...)
 }
 func (l *defaultLogger) Debugf(format string, v ...interface{}) {
 	l.Logf(DebugLevel, format, v...)
 }
+func (l *defaultLogger) Errorf(format string, v ...interface{}) {
+	l.Logf(ErrorLevel, format, v...)
+}
 func (l *defaultLogger) Fatalf(format string, v ...interface{}) {
-	l.Logf(DebugLevel, format, v...)
+	l.Logf(FatalLevel, format, v...)
 	os.Exit(1)
 }
 func (l *defaultLogger) Infof(format string, v ...interface{}) {
@@ -103,7 +106,7 @@ func NewLogger(opts ...Option) Logger {
 
 	l := &defaultLogger{opts: options}
 	if err := l.Init(opts...); err != nil {
-		l.Log(FatalLevel, err)
+		l.Logf(FatalLevel, "init logger fail %s", err.Error())
 	}
 
 	return l
