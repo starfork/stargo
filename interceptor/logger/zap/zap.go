@@ -73,7 +73,7 @@ func ExampleInterceptorLogger() {
 	// ...user server.
 
 	// Similarly you can create client that will log for the unary and stream client started or finished calls.
-	_, _ = grpc.Dial(
+	_, _ = grpc.NewClient(
 		"some-target",
 		grpc.WithChainUnaryInterceptor(
 			logging.UnaryClientInterceptor(InterceptorLogger(logger), opts...),

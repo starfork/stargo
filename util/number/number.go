@@ -19,8 +19,9 @@ func RangeRand(min, max int64) (int64, error) {
 		result, _ := rand.Int(rand.Reader, big.NewInt(max+1+i64Min))
 
 		return result.Int64() - i64Min, nil
-	} else {
-		result, _ := rand.Int(rand.Reader, big.NewInt(max-min+1))
-		return min + result.Int64(), nil
 	}
+
+	result, _ := rand.Int(rand.Reader, big.NewInt(max-min+1))
+	return min + result.Int64(), nil
+
 }

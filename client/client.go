@@ -58,7 +58,7 @@ type Client struct {
 func New(conf *config.Config, dialOpt ...map[string][]grpc.DialOption) *Client {
 
 	c := &Client{
-		org:      conf.Org,
+		//org:      conf.Org,
 		conns:    make(map[string]grpc.ClientConnInterface),
 		rpcConfs: make(map[string]*config.RpcServer),
 	}

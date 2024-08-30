@@ -1,10 +1,9 @@
-package config
+package server
 
 import (
 	"github.com/starfork/stargo/broker"
 	"github.com/starfork/stargo/logger"
 	"github.com/starfork/stargo/naming"
-	"github.com/starfork/stargo/server"
 	"github.com/starfork/stargo/store"
 )
 
@@ -15,11 +14,11 @@ var (
 
 // 公共配置模板
 type Config struct {
-	server *server.Config
+	Env string
+	Org string
 	//ServerName string //服务名称--4-11改。通过app启动设置
-	RpcServer  *RpcServer
-	Rpc        map[string]*RpcServer
-	HttpServer *HttpServer
+	RpcServer *RpcServer
+	Rpc       map[string]*RpcServer
 
 	Timezome   string //时区设置
 	Timeformat string
@@ -37,9 +36,4 @@ type RpcServer struct {
 	Host  string
 	Port  string
 	Auth  string //[keyfilepath]:[key]:
-}
-
-type HttpServer struct {
-	Host string
-	Port string
 }
