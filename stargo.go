@@ -1,7 +1,6 @@
 package stargo
 
 import (
-	"net"
 	"sync"
 	"time"
 
@@ -16,7 +15,6 @@ import (
 type App struct {
 	opts   *Options
 	server *server.Server
-	lis    net.Listener
 	logger logger.Logger
 
 	store    map[string]store.Store
