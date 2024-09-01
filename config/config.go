@@ -9,8 +9,9 @@ import (
 )
 
 var (
-	ENV_DEBUG      = "debug"
-	ENV_PRODUCTION = "production"
+	ENV_DEV        = "dev"        //本地测试环境
+	ENV_DOCKER     = "docker"     //docker模式
+	ENV_PRODUCTION = "production" //正式环境
 )
 
 // 公共配置模板

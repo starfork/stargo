@@ -8,10 +8,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/starfork/stargo/broker"
 	"github.com/starfork/stargo/logger"
 	"github.com/starfork/stargo/naming"
-	"github.com/starfork/stargo/store"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
@@ -23,9 +21,9 @@ type Server struct {
 	lis       net.Listener
 	logger    logger.Logger
 
-	store    map[string]store.Store
-	broker   broker.Broker
-	registry naming.Registry
+	//store    map[string]store.Store
+	//broker   broker.Broker
+	//registry naming.Registry
 
 	conf *Config
 	//client *client.Client
@@ -47,9 +45,9 @@ func New(opt ...Option) *Server {
 	app := &Server{
 		opts:      opts,
 		rpcServer: s.(*grpc.Server),
-		logger:    logger.DefaultLogger,
-		conf:      conf,
-		store:     make(map[string]store.Store),
+		//logger:    logger.DefaultLogger,
+		conf: conf,
+		//store: make(map[string]store.Store),
 	}
 
 	//注册reflection
@@ -102,27 +100,12 @@ func (s *Server) Run() {
 
 // Stop server
 func (s *Server) Stop() {
-	s.stopStargo()
 	s.rpcServer.Stop()
-}
-func (s *Server) stopStargo() {
-	if s.registry != nil {
-		s.logger.Fatalf("UnRegister: [%s]\n", s.opts.Name)
-		//s.registry.UnRegister(s.Service())
-	}
-
-	for _, st := range s.store {
-		st.Close()
-	}
-
-	if s.broker != nil {
-		s.broker.UnSubscribe()
-	}
 }
 
 // Restart server
 func (s *Server) Restart() {
-	s.stopStargo()
+
 	s.rpcServer.GracefulStop()
 	s.rpcServer.Serve(s.lis)
 }
@@ -145,4 +128,12 @@ func newRpcServer(options *Options) (s grpc.ServiceRegistrar) {
 	//}
 
 	return s
+}
+
+func (s *Server) Service() naming.Service {
+	return naming.Service{
+		Org:  s.opts.Org,
+		Name: s.opts.Name,
+		Addr: s.opts.Addr,
+	}
 }
