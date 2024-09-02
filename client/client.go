@@ -2,27 +2,21 @@ package client
 
 import (
 	"context"
-	"errors"
-	"sync"
 	"time"
 
-	"github.com/starfork/stargo/config"
 	"github.com/starfork/stargo/logger"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/resolver"
 )
 
 const (
 	// DialTimeout the timeout of create connection
 	DialTimeout = 5 * time.Second
-
 	// BackoffMaxDelay provided maximum delay when backing off after failed connection attempts.
 	BackoffMaxDelay = 3 * time.Second
-
 	// KeepAliveTime is the duration of time after which if the client doesn't see
 	// any activity it pings the server to see if the transport is still alive.
 	KeepAliveTime = time.Duration(10) * time.Second
-
 	// KeepAliveTimeout is the duration of time for which the client waits after having
 	// pinged for keepalive check and if no activity is seen even after that the connection
 	// is closed.
@@ -44,31 +38,20 @@ const (
 )
 
 type Client struct {
-	org      string
-	rpcConfs map[string]*config.RpcServer
-
-	dialOpt map[string][]grpc.DialOption
-	conns   map[string]grpc.ClientConnInterface
+	ctx      context.Context
+	resolver resolver.Builder
+	//rpcConfs map[string]*config.RpcServer
 
 	logger logger.Logger
-
-	mu sync.Mutex
 }
 
-func New(conf *config.Config, dialOpt ...map[string][]grpc.DialOption) *Client {
+func New(ctx context.Context, resolver resolver.Builder, logger logger.Logger) *Client {
 
 	c := &Client{
-		//org:      conf.Org,
-		conns:    make(map[string]grpc.ClientConnInterface),
-		rpcConfs: make(map[string]*config.RpcServer),
+		ctx:      ctx,
+		resolver: resolver,
+		logger:   logger,
 	}
-	if len(dialOpt) > 0 {
-		c.dialOpt = dialOpt[0]
-	}
-	// for k, v := range conf.RpcServer {
-	// 	c.rpcConfs[k] = v
-	// }
-	c.logger = logger.DefaultLogger
 
 	return c
 
@@ -76,73 +59,21 @@ func New(conf *config.Config, dialOpt ...map[string][]grpc.DialOption) *Client {
 
 func DefaultOptions() []grpc.DialOption {
 	opts := []grpc.DialOption{
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		//grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithDefaultServiceConfig(`{"loadBalancingConfig": [{"round_robin":{}}]}`),
 		grpc.WithInitialWindowSize(InitialWindowSize),
 		grpc.WithInitialConnWindowSize(InitialConnWindowSize),
 		grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(MaxSendMsgSize)),
 		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(MaxRecvMsgSize)),
-
-		//避免  ERROR: [transport] Client received GoAway with error code ENHANCE_YOUR_CALM 这个报错
-		// grpc.WithKeepaliveParams(keepalive.ClientParameters{
-		// 	Time:                KeepAliveTime,
-		// 	Timeout:             KeepAliveTimeout,
-		// 	PermitWithoutStream: true,
-		// }),
 	}
 	return opts
 }
 
 // 获取一个连接
-func (e *Client) Connection(ctx context.Context, app string, options ...grpc.DialOption) (conn grpc.ClientConnInterface, err error) {
+func (e *Client) NewClient(app string, options ...grpc.DialOption) (conn grpc.ClientConnInterface, err error) {
 
-	endpoint, err := e.endpoint(app)
-	if err != nil {
-		return nil, err
-	}
-
-	if conn, ok := e.conns[app]; ok {
-		return conn, nil
-	}
 	opts := DefaultOptions()
-	if opt, ok := e.dialOpt[app]; ok {
-		opts = append(opts, opt...)
-	}
-	//扩展的配置
-
 	opts = append(opts, options...)
 
-	conn1, err := grpc.NewClient(endpoint, opts...)
-	if err != nil {
-		return nil, err
-	}
-
-	defer func() {
-		if err != nil {
-			if cerr := conn1.Close(); cerr != nil {
-				e.logger.Errorf("Failed to close conn to %s: %v", endpoint, cerr)
-			}
-			return
-		}
-		go func() {
-			<-ctx.Done()
-			if cerr := conn1.Close(); cerr != nil {
-				e.logger.Errorf("Failed to close conn to %s: %v", endpoint, cerr)
-			}
-		}()
-	}()
-	//defer conn.Close()
-	e.mu.Lock()
-	defer e.mu.Unlock()
-	defer conn1.Close()
-	e.conns[app] = conn1
-
-	return conn1, nil
-}
-func (e *Client) endpoint(app string) (string, error) {
-	conf, ok := e.rpcConfs[app]
-	if !ok {
-		return "", errors.New("unknow app")
-	}
-	return conf.Name + "://" + app, nil
+	return grpc.NewClient(e.resolver.Scheme()+"://"+app, opts...)
 }

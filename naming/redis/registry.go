@@ -16,7 +16,7 @@ type Registry struct {
 	conf *naming.Config
 }
 
-func NewRegistry(conf *naming.Config) *Registry {
+func NewRegistry(conf *naming.Config) naming.Registry {
 	rds := ssredis.NewRedis(&store.Config{
 		Host: conf.Host,
 		Auth: conf.Auth,
@@ -40,7 +40,7 @@ func (e *Registry) Register(svc naming.Service) error {
 	return err
 }
 
-func (e *Registry) UnRegister(svc naming.Service) error {
+func (e *Registry) Deregister(svc naming.Service) error {
 
 	key := e.key(svc.Name)
 	err := e.rdc.SRem(e.ctx, key, svc.Addr).Err()

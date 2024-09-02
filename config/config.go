@@ -16,14 +16,13 @@ var (
 
 // 公共配置模板
 type Config struct {
-	server *server.Config
-	//ServerName string //服务名称--4-11改。通过app启动设置
-	RpcServer  *RpcServer
-	Rpc        map[string]*RpcServer
-	HttpServer *HttpServer
-
+	Env        string
 	Timezome   string //时区设置
 	Timeformat string
+
+	Server *server.Config
+
+	ApiServer *ApiServer
 
 	Store map[string]*store.Config
 
@@ -32,15 +31,7 @@ type Config struct {
 	Registry *naming.Config
 }
 
-type RpcServer struct {
-	Entry string
-	Name  string
-	Host  string
-	Port  string
-	Auth  string //[keyfilepath]:[key]:
-}
-
-type HttpServer struct {
+type ApiServer struct {
 	Host string
 	Port string
 }

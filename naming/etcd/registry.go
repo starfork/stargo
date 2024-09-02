@@ -18,7 +18,7 @@ type Registry struct {
 	//services []registry.Service
 }
 
-func NewRegistry(conf *naming.Config) *Registry {
+func NewRegistry(conf *naming.Config) naming.Registry {
 	cli := newClient(conf)
 
 	//defer cli.Close()
@@ -48,7 +48,7 @@ func (e *Registry) Register(svc naming.Service) error {
 	return e.em.AddEndpoint(e.cli.Ctx(), key, p)
 }
 
-func (e *Registry) UnRegister(svc naming.Service) error {
+func (e *Registry) Deregister(svc naming.Service) error {
 	key := e.key(svc.Name)
 	return e.em.DeleteEndpoint(e.cli.Ctx(), key)
 }
