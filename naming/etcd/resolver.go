@@ -44,7 +44,7 @@ type Resolver struct {
 // }
 
 // NewResolver creates a resolver builder.
-func NewResolver(conf *naming.Config) resolver.Builder {
+func NewResolver(conf *naming.Config) naming.Resolver {
 	client := newClient(conf)
 	r := &Resolver{c: client, conf: conf}
 

@@ -22,7 +22,7 @@ type Resolver struct {
 	conf *naming.Config
 }
 
-func NewResolver(conf *naming.Config) resolver.Builder {
+func NewResolver(conf *naming.Config) naming.Resolver {
 	rds := sredis.NewRedis(&store.Config{
 		Host: conf.Host,
 		Auth: conf.Auth,

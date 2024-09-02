@@ -137,3 +137,7 @@ func (s *Server) Service() naming.Service {
 		Addr: s.opts.Addr,
 	}
 }
+
+func (s *Server) Server() *grpc.Server {
+	return s.rpcServer
+}
