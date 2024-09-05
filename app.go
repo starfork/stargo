@@ -29,6 +29,8 @@ type App struct {
 	registry naming.Registry
 	resolver naming.Resolver
 
+	Tz *time.Location
+
 	once sync.Once
 	//client *client.Client
 }
@@ -51,8 +53,10 @@ func New(opt ...Option) *App {
 }
 func (s *App) Init() {
 	conf := s.opts.Config
-	time.LoadLocation(s.opts.Timezone)
-	conf.Timezome = s.opts.Timezone
+	if tz, err := time.LoadLocation(s.opts.Timezone); err == nil {
+		s.Tz = tz
+		conf.Timezome = s.opts.Timezone
+	}
 	s.once.Do(func() {
 		s.logger = logger.DefaultLogger
 
