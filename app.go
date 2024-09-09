@@ -13,6 +13,8 @@ import (
 	"github.com/starfork/stargo/naming/redis"
 	"github.com/starfork/stargo/server"
 	"github.com/starfork/stargo/store"
+	smysql "github.com/starfork/stargo/store/mysql"
+	sredis "github.com/starfork/stargo/store/redis"
 	"google.golang.org/grpc/reflection"
 )
 
@@ -41,13 +43,13 @@ func New(opt ...Option) *App {
 	for _, o := range opt {
 		o(opts)
 	}
-
 	app := &App{
 		ctx:   context.Background(),
 		opts:  opts,
 		store: make(map[string]store.Store),
 	}
-	app.server = server.New()
+
+	app.server = server.New(opts.Config.Server)
 	app.Init()
 	return app
 }
@@ -81,9 +83,15 @@ func (s *App) Init() {
 			reflection.Register(s.server.Server())
 		}
 
-		// for k, v := range conf.Store {
-		// 	app.Store(k, v)
-		// }
+		for k, v := range conf.Store {
+			if k == "mysql" {
+				s.Store(k, smysql.NewMysql(v))
+			}
+			if k == "redis" {
+				s.Store(k, sredis.NewRedis(v))
+			}
+
+		}
 
 	})
 }

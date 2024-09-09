@@ -22,8 +22,6 @@ type Config struct {
 
 	Server *server.Config
 
-	ApiServer *ApiServer
-
 	Store map[string]*store.Config
 
 	Log      *logger.Config
@@ -31,7 +29,10 @@ type Config struct {
 	Registry *naming.Config
 }
 
-type ApiServer struct {
-	Host string
-	Port string
+var DefaultConfig = &Config{
+	Server:   server.DefaultConfig,
+	Store:    make(map[string]*store.Config),
+	Log:      &logger.Config{},
+	Broker:   &broker.Config{},
+	Registry: &naming.Config{},
 }

@@ -1,10 +1,7 @@
 package server
 
 import (
-	"github.com/starfork/stargo/broker"
-	"github.com/starfork/stargo/logger"
-	"github.com/starfork/stargo/naming"
-	"github.com/starfork/stargo/store"
+	"google.golang.org/grpc"
 )
 
 var (
@@ -14,20 +11,17 @@ var (
 
 // 公共配置模板
 type Config struct {
-	Env string
-	Org string
+	Env  string
+	Org  string
+	Name string
+	Addr string
 	//ServerName string //服务名称--4-11改。通过app启动设置
-	RpcServer *RpcServer
-	Rpc       map[string]*RpcServer
+	//RpcServer *RpcServer
 
-	Timezome   string //时区设置
-	Timeformat string
+	UnaryInterceptor  []grpc.UnaryServerInterceptor
+	StreamInterceptor []grpc.StreamServerInterceptor
 
-	Store map[string]*store.Config
-
-	Log      *logger.Config
-	Broker   *broker.Config
-	Registry *naming.Config
+	Server []grpc.ServerOption
 }
 
 type RpcServer struct {
@@ -36,4 +30,11 @@ type RpcServer struct {
 	Host  string
 	Port  string
 	Auth  string //[keyfilepath]:[key]:
+}
+
+var DefaultConfig = &Config{
+	//RpcServer:         &RpcServer{},
+	UnaryInterceptor:  []grpc.UnaryServerInterceptor{},
+	StreamInterceptor: []grpc.StreamServerInterceptor{},
+	Server:            []grpc.ServerOption{},
 }
