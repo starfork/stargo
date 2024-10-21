@@ -23,7 +23,7 @@ func NewRegistry(conf *naming.Config) naming.Registry {
 
 	//defer cli.Close()
 
-	em, err := endpoints.NewManager(cli, conf.Org)
+	em, err := endpoints.NewManager(cli, conf.Host)
 	if err != nil {
 		panic(err)
 	}

@@ -1,6 +1,7 @@
 package config
 
 import (
+	"github.com/starfork/stargo/api"
 	"github.com/starfork/stargo/broker"
 	"github.com/starfork/stargo/logger"
 	"github.com/starfork/stargo/naming"
@@ -21,6 +22,7 @@ type Config struct {
 	Timeformat string
 
 	Server *server.Config
+	Api    *api.Config
 
 	Store map[string]*store.Config
 
