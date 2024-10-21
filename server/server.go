@@ -62,7 +62,7 @@ func (e *Server) Run() {
 		e.logger.Fatalf("failed to listen: %v", err)
 	}
 
-	e.logger.Infof("starting: gRPC Listener %s\n", port)
+	e.logger.Infof("starting: gRPC Listener %s\n", e.conf.Addr)
 
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGTERM, syscall.SIGINT, syscall.SIGHUP, syscall.SIGQUIT)

@@ -2,11 +2,12 @@ package client
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/starfork/stargo/logger"
+	"github.com/starfork/stargo/naming"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/resolver"
 )
 
 const (
@@ -39,13 +40,13 @@ const (
 
 type Client struct {
 	ctx      context.Context
-	resolver resolver.Builder
+	resolver naming.Resolver
 	//rpcConfs map[string]*config.RpcServer
 
 	logger logger.Logger
 }
 
-func New(ctx context.Context, resolver resolver.Builder, logger logger.Logger) *Client {
+func New(ctx context.Context, resolver naming.Resolver, logger logger.Logger) *Client {
 
 	c := &Client{
 		ctx:      ctx,
@@ -70,10 +71,11 @@ func DefaultOptions() []grpc.DialOption {
 }
 
 // 获取一个连接
-func (e *Client) NewClient(app string, options ...grpc.DialOption) (conn grpc.ClientConnInterface, err error) {
+func (e *Client) NewClient(service string, options ...grpc.DialOption) (conn *grpc.ClientConn, err error) {
 
 	opts := DefaultOptions()
+	opts = append(opts, grpc.WithResolvers(e.resolver))
 	opts = append(opts, options...)
-
-	return grpc.NewClient(e.resolver.Scheme()+"://"+app, opts...)
+	target := fmt.Sprintf("%s:///%s", e.resolver.Scheme(), service)
+	return grpc.NewClient(target, opts...)
 }

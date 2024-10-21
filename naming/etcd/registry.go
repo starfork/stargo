@@ -18,14 +18,15 @@ type Registry struct {
 	//services []registry.Service
 }
 
-func NewRegistry(conf *naming.Config) naming.Registry {
-	cli := newClient(conf)
-
-	//defer cli.Close()
-
-	em, err := endpoints.NewManager(cli, conf.Host)
+func NewRegistry(conf *naming.Config) (naming.Registry, error) {
+	cli, err := newClient(conf)
 	if err != nil {
-		panic(err)
+		return nil, err
+	}
+
+	em, err := endpoints.NewManager(cli, conf.Org)
+	if err != nil {
+		return nil, err
 	}
 
 	return &Registry{
@@ -33,24 +34,24 @@ func NewRegistry(conf *naming.Config) naming.Registry {
 		name: Scheme,
 		em:   em,
 		conf: conf,
-	}
+	}, nil
 }
-func (e *Registry) key(name string) string {
-	return e.conf.Org + "/" + name
+func (e *Registry) key(svc naming.Service) string {
+
+	return e.conf.Org + "/" + svc.Name + "/" + svc.Addr
 }
 
 func (e *Registry) Register(svc naming.Service) error {
-
+	lease, _ := e.cli.Grant(e.cli.Ctx(), e.conf.Ttl)
 	p := endpoints.Endpoint{
 		Addr: svc.Addr,
 	}
-	key := e.key(svc.Name)
-	return e.em.AddEndpoint(e.cli.Ctx(), key, p)
+	return e.em.AddEndpoint(e.cli.Ctx(), e.key(svc), p, clientv3.WithLease(lease.ID))
 }
 
 func (e *Registry) Deregister(svc naming.Service) error {
-	key := e.key(svc.Name)
-	return e.em.DeleteEndpoint(e.cli.Ctx(), key)
+
+	return e.em.DeleteEndpoint(e.cli.Ctx(), e.key(svc))
 }
 
 func (e *Registry) List(name string) []naming.Service {

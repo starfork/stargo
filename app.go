@@ -64,22 +64,30 @@ func (s *App) Init() {
 
 		r := conf.Registry
 		if r != nil {
-			r.Environment = conf.Env
-			r.Org = conf.Server.Org
-			if r.Name == "etcd" {
-				s.registry = etcd.NewRegistry(r)
-				s.resolver = etcd.NewResolver(r)
-			} else if r.Name == "redis" {
+			if r.Scheme == "etcd" {
+				rg, err := etcd.NewRegistry(r)
+				if err != nil {
+					s.logger.Fatalf("unknow registry")
+				}
+				s.registry = rg
+				rs, err := etcd.NewResolver(r)
+				if err != nil {
+					s.logger.Fatalf("unknow registry")
+				}
+				s.resolver = rs
+			} else if r.Scheme == "redis" {
 				s.registry = redis.NewRegistry(r)
 				s.resolver = redis.NewResolver(r)
 			} else {
 				s.logger.Fatalf("unknow registry")
 			}
-			s.registry.Register(s.server.Service())
+			err := s.registry.Register(s.server.Service())
+			if err != nil {
+				s.logger.Fatalf("registry err %+v", err)
+			}
 		}
 		//注册reflection
 		if conf.Env != config.ENV_PRODUCTION {
-			s.logger.Debugf("env:" + conf.Env)
 			reflection.Register(s.server.Server())
 		}
 
