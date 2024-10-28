@@ -12,7 +12,6 @@ var (
 // 公共配置模板
 type Config struct {
 	Env  string
-	Org  string
 	Name string
 	Addr string
 	//ServerName string //服务名称--4-11改。通过app启动设置

@@ -117,7 +117,6 @@ func newRpcServer(conf *Config) (s grpc.ServiceRegistrar) {
 
 func (e *Server) Service() naming.Service {
 	return naming.Service{
-		Org:  e.conf.Org,
 		Name: e.conf.Name,
 		Addr: e.conf.Addr,
 	}

@@ -12,14 +12,8 @@ type Options struct {
 	Config            *config.Config
 	UnaryInterceptor  []grpc.UnaryServerInterceptor
 	StreamInterceptor []grpc.StreamServerInterceptor
-
-	Server []grpc.ServerOption
-
-	Timezone string
-	//Registry naming.Registry
-	//Tracer tracer.Tracer
-	//Logger logger.Logger
-	//Cache  cache.Cache
+	Server            []grpc.ServerOption
+	Timezone          string
 }
 
 // Option Option
@@ -27,7 +21,7 @@ type Option func(o *Options)
 
 func WithOrg(c string) Option {
 	return func(o *Options) {
-		o.Config.Server.Org = c
+		o.Config.Registry.Org = c
 	}
 }
 func WithName(c string) Option {

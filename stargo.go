@@ -51,18 +51,3 @@ func (s *App) Store(name string, st ...store.Store) store.Store {
 	}
 	return nil
 }
-
-// func (s *App) Mysql() store.Store {
-// 	return s.Store("mysql")
-// }
-// func (s *App) Redis() store.Store {
-// 	return s.Store("redis")
-// }
-
-// func (s *App) Config() *config.Config {
-// 	return s.conf
-// }
-
-// func (s *App) Broker() broker.Broker {
-// 	return s.broker
-// }

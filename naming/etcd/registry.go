@@ -1,6 +1,9 @@
 package etcd
 
 import (
+	"fmt"
+
+	"github.com/starfork/stargo/logger"
 	"github.com/starfork/stargo/naming"
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"go.etcd.io/etcd/client/v3/naming/endpoints"
@@ -37,16 +40,26 @@ func NewRegistry(conf *naming.Config) (naming.Registry, error) {
 	}, nil
 }
 func (e *Registry) key(svc naming.Service) string {
-
-	return e.conf.Org + "/" + svc.Name + "/" + svc.Addr
+	key := e.conf.Org + "/" + svc.Name + "/" + svc.Addr
+	fmt.Println(key)
+	return key
 }
 
 func (e *Registry) Register(svc naming.Service) error {
-	lease, _ := e.cli.Grant(e.cli.Ctx(), e.conf.Ttl)
+
 	p := endpoints.Endpoint{
 		Addr: svc.Addr,
 	}
-	return e.em.AddEndpoint(e.cli.Ctx(), e.key(svc), p, clientv3.WithLease(lease.ID))
+	opts := []clientv3.OpOption{}
+	if e.conf.Ttl > 0 {
+		lease, err := e.cli.Grant(e.cli.Ctx(), e.conf.Ttl)
+		if err != nil {
+			logger.DefaultLogger.Debugf("waring ttl zero")
+		} else {
+			opts = append(opts, clientv3.WithLease(lease.ID))
+		}
+	}
+	return e.em.AddEndpoint(e.cli.Ctx(), e.key(svc), p, opts...)
 }
 
 func (e *Registry) Deregister(svc naming.Service) error {

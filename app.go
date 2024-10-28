@@ -81,7 +81,9 @@ func (s *App) Init() {
 			} else {
 				s.logger.Fatalf("unknow registry")
 			}
-			err := s.registry.Register(s.server.Service())
+			service := s.server.Service()
+			service.Org = r.Org
+			err := s.registry.Register(service)
 			if err != nil {
 				s.logger.Fatalf("registry err %+v", err)
 			}
