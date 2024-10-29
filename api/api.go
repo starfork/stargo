@@ -43,7 +43,10 @@ func (e *Api) Run() {
 	WrapperSwagger(mux, e.conf.SwgFs)
 	// start a standard HTTP server with the router
 	log.Println("start listen " + e.conf.Port)
-	if err := http.ListenAndServe(e.conf.Port, mux); err != nil {
+	// if e.conf.Wrapper != nil {
+	// 	e.conf.Wrapper(mux)
+	// }
+	if err := http.ListenAndServe(e.conf.Port, e.conf.Wrapper(mux)); err != nil {
 		log.Fatal(err)
 	}
 }

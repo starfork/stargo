@@ -2,6 +2,7 @@ package stargo
 
 import (
 	"github.com/starfork/stargo/client"
+	"github.com/starfork/stargo/config"
 	"github.com/starfork/stargo/logger"
 	"github.com/starfork/stargo/naming"
 	"github.com/starfork/stargo/store"
@@ -11,6 +12,9 @@ import (
 // // Server
 func (s *App) RpcServer() *grpc.Server {
 	return s.server.Server()
+}
+func (s *App) Config() *config.Config {
+	return s.opts.Config
 }
 
 func (s *App) Client() *client.Client {
