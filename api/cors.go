@@ -1,7 +1,6 @@
 package api
 
 import (
-	"log"
 	"net/http"
 	"strings"
 )
@@ -9,7 +8,7 @@ import (
 func Cros(w http.ResponseWriter, req *http.Request) {
 	req.Header.Set("Grpc-Metadata-G-Method", req.Method)
 	req.Header.Set("Grpc-Metadata-IP", ClientIP(req))
-	log.Println(req)
+	req.Header.Set("Grpc-Metadata-Host", req.Host)
 	if origin := req.Header.Get("Origin"); origin != "" {
 		w.Header().Set("Access-Control-Allow-Origin", origin)
 		if req.Method == "OPTIONS" && req.Header.Get("Access-Control-Request-Method") != "" {

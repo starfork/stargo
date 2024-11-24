@@ -11,9 +11,9 @@ import (
 	"github.com/starfork/go-slice"
 )
 
-type RequestData map[string]interface{}
+type RequestData map[string]any
 
-func (e RequestData) Set(key string, value interface{}) RequestData {
+func (e RequestData) Set(key string, value any) RequestData {
 
 	e[key] = value
 	return e

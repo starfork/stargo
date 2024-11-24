@@ -40,7 +40,7 @@ func (e *Api) Run() {
 	mux := http.NewServeMux()
 
 	mux.Handle("/", e.rmux)
-	WrapperSwagger(mux, e.conf.SwgFs)
+	e.WrapperSwagger(mux)
 	// start a standard HTTP server with the router
 	log.Println("start listen " + e.conf.Port)
 	// if e.conf.Wrapper != nil {

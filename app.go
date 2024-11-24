@@ -59,6 +59,7 @@ func (s *App) Init() {
 		s.Tz = tz
 		conf.Timezome = s.opts.Timezone
 	}
+	//registry，store这样的方式，需要改进成配置形式
 	s.once.Do(func() {
 		s.logger = logger.DefaultLogger
 
@@ -100,7 +101,6 @@ func (s *App) Init() {
 			if k == "redis" {
 				s.Store(k, sredis.NewRedis(v))
 			}
-
 		}
 
 	})

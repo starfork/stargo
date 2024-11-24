@@ -9,10 +9,12 @@ import (
 )
 
 type Config struct {
-	App      string
-	Port     string
-	Registry *naming.Config
-	DiaOpts  []grpc.DialOption
-	SwgFs    fs.FS
-	Wrapper  func(http.Handler) http.Handler
+	App             string
+	Port            string
+	Registry        *naming.Config
+	DiaOpts         []grpc.DialOption
+	SwgFs           fs.FS
+	Wrapper         func(http.Handler) http.Handler
+	SwaggerRoute    string
+	SwaggerUIPrefix string
 }
