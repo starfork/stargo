@@ -28,3 +28,6 @@ func MetaIp(ctx context.Context) string {
 func MetaMethod(ctx context.Context) string {
 	return MetaString(ctx, "g-method")
 }
+func MetaToken(ctx context.Context) string {
+	return MetaString(ctx, "token")
+}
