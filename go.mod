@@ -3,6 +3,7 @@ module github.com/starfork/stargo
 go 1.23.2
 
 require (
+	github.com/go-playground/locales v0.14.1
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.1.0
 	github.com/influxdata/influxdb-client-go/v2 v2.14.0
 	github.com/json-iterator/go v1.1.12
@@ -26,6 +27,11 @@ require (
 )
 
 require (
+	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
+	github.com/leodido/go-urn v1.4.0 // indirect
+)
+
+require (
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/HdrHistogram/hdrhistogram-go v1.1.2 // indirect
 	github.com/apapsch/go-jsonmerge/v2 v2.0.0 // indirect
@@ -34,6 +40,8 @@ require (
 	github.com/coreos/go-semver v0.3.1 // indirect
 	github.com/coreos/go-systemd/v22 v22.5.0 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
+	github.com/go-playground/universal-translator v0.18.1
+	github.com/go-playground/validator/v10 v10.23.0
 	github.com/go-sql-driver/mysql v1.8.1 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
