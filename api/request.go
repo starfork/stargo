@@ -27,7 +27,7 @@ type Request struct {
 	Query url.Values
 }
 
-func New(h http.Handler, w http.ResponseWriter, req *http.Request) *Request {
+func NewRequest(h http.Handler, w http.ResponseWriter, req *http.Request) *Request {
 	return &Request{
 		h: h, w: w, req: req,
 		Data:  make(RequestData),
