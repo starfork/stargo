@@ -32,8 +32,8 @@ func NewApi(conf *Config) *Api {
 	E(err)
 	conn, err := client.New(ctx, r, logger.DefaultLogger).NewClient(conf.Registry.Org+"/"+conf.App, conf.DiaOpts...)
 	E(err)
-
-	return &Api{conf: conf, ctx: ctx, conn: conn, rmux: runtime.NewServeMux()}
+	rmux := runtime.NewServeMux(conf.SMOpts...)
+	return &Api{conf: conf, ctx: ctx, conn: conn, rmux: rmux}
 }
 
 func (e *Api) Run() {

@@ -4,6 +4,7 @@ import (
 	"io/fs"
 	"net/http"
 
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/starfork/stargo/naming"
 	"google.golang.org/grpc"
 )
@@ -17,4 +18,5 @@ type Config struct {
 	Wrapper         func(http.Handler) http.Handler
 	SwaggerRoute    string
 	SwaggerUIPrefix string
+	SMOpts          []runtime.ServeMuxOption
 }
