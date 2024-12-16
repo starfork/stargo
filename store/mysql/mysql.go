@@ -38,26 +38,24 @@ func (e *Mysql) Connect(confs ...*store.Config) {
 		c = confs[0]
 	}
 
-	// if c.Timezome != "" {
-	// 	TIME_LOCATION = c.Timezome
-	// }
-	// if c.Timeformat != "" {
-	// 	TFORMAT = c.Timeformat
-	// }
-	c.User = ustring.Or(c.User, os.Getenv("MYSQL_USER"))
-	c.Auth = ustring.Or(c.Auth, os.Getenv("MYSQL_PASSWD"))
-	c.Host = ustring.Or(c.Host, os.Getenv("MYSQL_HOST"))
-	c.Port = ustring.Or(c.Port, os.Getenv("MYSQL_PORT"))
-	c.Name = ustring.Or(c.Name, os.Getenv("MYSQL_NAME"))
-
 	var err error
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
-		c.User,
-		c.Auth,
-		c.Host,
-		c.Port,
-		c.Name,
-	)
+	var dsn string
+	if c.DSN != "" {
+		dsn = c.DSN
+	} else {
+		c.User = ustring.Or(c.User, os.Getenv("MYSQL_USER"))
+		c.Auth = ustring.Or(c.Auth, os.Getenv("MYSQL_PASSWD"))
+		c.Host = ustring.Or(c.Host, os.Getenv("MYSQL_HOST"))
+		c.Port = ustring.Or(c.Port, os.Getenv("MYSQL_PORT"))
+		c.Name = ustring.Or(c.Name, os.Getenv("MYSQL_NAME"))
+		dsn = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&collation=utf8mb4_general_ci&parseTime=True&loc=Local",
+			c.User,
+			c.Auth,
+			c.Host,
+			c.Port,
+			c.Name,
+		)
+	}
 
 	conf := &gorm.Config{
 		NamingStrategy: schema.NamingStrategy{
