@@ -28,6 +28,9 @@ func (e *Influxdb) GetInstance(conf ...*store.Config) influxdb2.Client {
 		e.Connect(conf...)
 		return e.client
 	}
+	if e.client == nil {
+		e.Connect()
+	}
 	return e.client
 }
 

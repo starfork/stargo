@@ -30,11 +30,6 @@ func Register(db *gorm.DB, conf plugins.Config) {
 	//db.Callback().Update().Before("gorm:update").Register("unmarshaler_after_update", p.Before)
 }
 
-// // 接口定义
-// type Unmarshaler interface {
-// 	Unmarshal()
-// }
-
 func (e *Plugin) After(db *gorm.DB) {
 
 	value := db.Statement.ReflectValue

@@ -43,7 +43,7 @@ func (s *App) Logger(l ...logger.Logger) logger.Logger {
 	return s.logger
 }
 
-// // 获取或者创建一个store
+// 获取或者创建一个store
 func (s *App) Store(name string, st ...store.Store) store.Store {
 	if len(st) > 0 {
 		s.store[name] = st[0]
