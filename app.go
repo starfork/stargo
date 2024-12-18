@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/starfork/stargo/broker"
+	"github.com/starfork/stargo/broker/nats"
 	"github.com/starfork/stargo/config"
 	"github.com/starfork/stargo/logger"
 	"github.com/starfork/stargo/naming"
@@ -15,6 +16,8 @@ import (
 	"github.com/starfork/stargo/store"
 	smysql "github.com/starfork/stargo/store/mysql"
 	sredis "github.com/starfork/stargo/store/redis"
+	"github.com/starfork/stargo/tracer"
+	"github.com/starfork/stargo/tracer/otel"
 	"google.golang.org/grpc/reflection"
 )
 
@@ -30,11 +33,11 @@ type App struct {
 	broker   broker.Broker
 	registry naming.Registry
 	resolver naming.Resolver
+	tracer   tracer.Tracer
 
 	Tz *time.Location
 
 	once sync.Once
-	//client *client.Client
 }
 
 func New(opt ...Option) *App {
@@ -102,6 +105,15 @@ func (s *App) Init() {
 				s.Store(k, sredis.NewRedis(v))
 			}
 		}
+		if conf.Broker != nil {
+			s.broker = nats.NewBroker(conf.Broker)
+		}
+		if conf.Tracer != nil {
+			var err error
+			if s.tracer, err = otel.NewTracer(conf.Tracer); err != nil {
+				s.logger.Fatalf("tracer init fail: [%s]\n", conf.Tracer.Host)
+			}
+		}
 
 	})
 }
@@ -128,6 +140,10 @@ func (s *App) stopStargo() {
 
 	if s.broker != nil {
 		s.broker.UnSubscribe()
+	}
+
+	if s.tracer != nil {
+		s.tracer.Close()
 	}
 }
 

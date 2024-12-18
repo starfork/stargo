@@ -9,7 +9,8 @@ import (
 )
 
 type Limiter struct {
-	rdc *redis.Client
+	rdc   *redis.Client
+	Fails int64
 }
 
 func New(conn *redis.Client) *Limiter {
@@ -35,6 +36,7 @@ func (e *Limiter) CountLimit(ctx context.Context, key string, count, ttl int64) 
 		if reqCounts == 1 {
 			e.rdc.Expire(ctx, key, time.Duration(ttl)*time.Second)
 		}
+		e.Fails = reqCounts
 		return true
 	}
 

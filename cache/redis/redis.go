@@ -61,6 +61,10 @@ func (e *Redis) Decr(ctx context.Context, key string) error {
 	return nil
 }
 
+func (e *Redis) Expire(ctx context.Context, key string) (bool, error) {
+	return false, nil
+}
+
 // func (e *Redis) Scan(ctx context.Context, key string, data any) error {
 // 	if err := e.rdc.Get(ctx, key).Scan(data); err != nil {
 // 		return err

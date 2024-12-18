@@ -21,6 +21,8 @@ type Cache interface {
 	Incr(ctx context.Context, key string) error
 	// Decrement a cached int value by key, as a counter.
 	Decr(ctx context.Context, key string) error
+
+	//Expire(ctx context.Context, key string) error
 }
 
 type Marshaler interface {

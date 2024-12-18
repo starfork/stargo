@@ -7,6 +7,7 @@ import (
 	"github.com/starfork/stargo/naming"
 	"github.com/starfork/stargo/server"
 	"github.com/starfork/stargo/store"
+	"github.com/starfork/stargo/tracer"
 )
 
 var (
@@ -29,6 +30,7 @@ type Config struct {
 	Log      *logger.Config
 	Broker   *broker.Config
 	Registry *naming.Config
+	Tracer   *tracer.Config
 }
 
 var DefaultConfig = &Config{
@@ -37,4 +39,5 @@ var DefaultConfig = &Config{
 	Log:      &logger.Config{},
 	Broker:   &broker.Config{},
 	Registry: &naming.Config{},
+	//Tracer:   &tracer.Config{},
 }

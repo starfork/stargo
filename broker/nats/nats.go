@@ -1,13 +1,25 @@
 package nats
 
-import "github.com/starfork/stargo/broker"
+import (
+	"github.com/nats-io/nats.go"
+	"github.com/nats-io/nats.go/jetstream"
+	"github.com/starfork/stargo/broker"
+)
 
 type NatsBroker struct {
-	c broker.Config
+	c  *broker.Config
+	nc *nats.Conn
+	js jetstream.JetStream
 }
 
-func NewNatsBrokder(c broker.Config) broker.Broker {
-	return &NatsBroker{c}
+func NewBroker(c *broker.Config) broker.Broker {
+	nc, err := nats.Connect(c.Host)
+	if err != nil {
+		panic(err.Error())
+	}
+	js, _ := jetstream.New(nc)
+
+	return &NatsBroker{c, nc, js}
 }
 
 func (e *NatsBroker) Public(broker.Message) error {
