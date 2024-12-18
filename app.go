@@ -57,6 +57,10 @@ func New(opt ...Option) *App {
 	app.Init()
 	app.server = server.New(opts.Config.Server)
 	r := app.opts.Config.Registry
+	//注册reflection
+	if app.opts.Config.Env != config.ENV_PRODUCTION {
+		reflection.Register(app.server.Server())
+	}
 	if r != nil {
 		if r.Scheme == "etcd" {
 			rg, err := etcd.NewRegistry(r)
@@ -94,11 +98,6 @@ func (s *App) Init() {
 	//registry，store这样的方式，需要改进成配置形式
 	s.once.Do(func() {
 		s.logger = logger.DefaultLogger
-
-		//注册reflection
-		if conf.Env != config.ENV_PRODUCTION {
-			reflection.Register(s.server.Server())
-		}
 
 		for k, v := range conf.Store {
 			if k == "mysql" {

@@ -1,7 +1,7 @@
 package broker
 
 type Broker interface {
-	Public(Message) error
+	Public(message Message) error
 	Subscribe()
 	UnSubscribe()
 }
