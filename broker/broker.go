@@ -1,8 +1,8 @@
 package broker
 
 type Broker interface {
-	Public(message Message) error
-	Subscribe()
+	Publish(topic string, message Message) error
+	Subscribe(topic string, handler MessageHandler)
 	UnSubscribe()
 }
 
@@ -10,3 +10,5 @@ type Message struct {
 	Header map[string]string
 	Body   []byte
 }
+
+type MessageHandler func(Message)

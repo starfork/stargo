@@ -14,6 +14,7 @@ type NatsBroker struct {
 
 func NewBroker(c *broker.Config) broker.Broker {
 	nc, err := nats.Connect(c.Host)
+
 	if err != nil {
 		panic(err.Error())
 	}
@@ -22,8 +23,12 @@ func NewBroker(c *broker.Config) broker.Broker {
 	return &NatsBroker{c, nc, js}
 }
 
-func (e *NatsBroker) Public(broker.Message) error {
-	return nil
+func (e *NatsBroker) Publish(topic string, msg broker.Message) error {
+	return e.nc.Publish(topic, msg.Body)
 }
-func (e *NatsBroker) Subscribe()   {}
+func (e *NatsBroker) Subscribe(topic string, handler broker.MessageHandler) {
+	e.nc.Subscribe(topic, func(msg *nats.Msg) {
+		handler(broker.Message{Body: msg.Data})
+	})
+}
 func (e *NatsBroker) UnSubscribe() {}

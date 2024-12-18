@@ -26,7 +26,7 @@ func (s *App) Client() *client.Client {
 	return nil
 }
 
-// // 返回标准服务格式
+// 返回标准服务格式
 func (s *App) Service() naming.Service {
 	return s.server.Service()
 }
@@ -39,6 +39,7 @@ func (s *App) Resolver() naming.Resolver {
 }
 
 func (s *App) Broker() broker.Broker {
+
 	return s.broker
 }
 func (s *App) Tracer() tracer.Tracer {
