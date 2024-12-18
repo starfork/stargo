@@ -1,11 +1,13 @@
 package stargo
 
 import (
+	"github.com/starfork/stargo/broker"
 	"github.com/starfork/stargo/client"
 	"github.com/starfork/stargo/config"
 	"github.com/starfork/stargo/logger"
 	"github.com/starfork/stargo/naming"
 	"github.com/starfork/stargo/store"
+	"github.com/starfork/stargo/tracer"
 	"google.golang.org/grpc"
 )
 
@@ -34,6 +36,13 @@ func (s *App) Registry() naming.Registry {
 }
 func (s *App) Resolver() naming.Resolver {
 	return s.resolver
+}
+
+func (s *App) Broker() broker.Broker {
+	return s.broker
+}
+func (s *App) Tracer() tracer.Tracer {
+	return s.tracer
 }
 
 func (s *App) Logger(l ...logger.Logger) logger.Logger {

@@ -18,7 +18,10 @@ import (
 	sredis "github.com/starfork/stargo/store/redis"
 	"github.com/starfork/stargo/tracer"
 	"github.com/starfork/stargo/tracer/otel"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
+
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 )
 
 // App App
@@ -51,11 +54,37 @@ func New(opt ...Option) *App {
 		opts:  opts,
 		store: make(map[string]store.Store),
 	}
-
-	app.server = server.New(opts.Config.Server)
 	app.Init()
+	app.server = server.New(opts.Config.Server)
+	r := app.opts.Config.Registry
+	if r != nil {
+		if r.Scheme == "etcd" {
+			rg, err := etcd.NewRegistry(r)
+			if err != nil {
+				app.logger.Fatalf("unknow registry")
+			}
+			app.registry = rg
+			rs, err := etcd.NewResolver(r)
+			if err != nil {
+				app.logger.Fatalf("unknow registry")
+			}
+			app.resolver = rs
+		} else if r.Scheme == "redis" {
+			app.registry = redis.NewRegistry(r)
+			app.resolver = redis.NewResolver(r)
+		} else {
+			app.logger.Fatalf("unknow registry")
+		}
+		service := app.server.Service()
+		service.Org = r.Org
+		err := app.registry.Register(service)
+		if err != nil {
+			app.logger.Fatalf("registry err %+v", err)
+		}
+	}
 	return app
 }
+
 func (s *App) Init() {
 	conf := s.opts.Config
 	if tz, err := time.LoadLocation(s.opts.Timezone); err == nil {
@@ -66,32 +95,6 @@ func (s *App) Init() {
 	s.once.Do(func() {
 		s.logger = logger.DefaultLogger
 
-		r := conf.Registry
-		if r != nil {
-			if r.Scheme == "etcd" {
-				rg, err := etcd.NewRegistry(r)
-				if err != nil {
-					s.logger.Fatalf("unknow registry")
-				}
-				s.registry = rg
-				rs, err := etcd.NewResolver(r)
-				if err != nil {
-					s.logger.Fatalf("unknow registry")
-				}
-				s.resolver = rs
-			} else if r.Scheme == "redis" {
-				s.registry = redis.NewRegistry(r)
-				s.resolver = redis.NewResolver(r)
-			} else {
-				s.logger.Fatalf("unknow registry")
-			}
-			service := s.server.Service()
-			service.Org = r.Org
-			err := s.registry.Register(service)
-			if err != nil {
-				s.logger.Fatalf("registry err %+v", err)
-			}
-		}
 		//注册reflection
 		if conf.Env != config.ENV_PRODUCTION {
 			reflection.Register(s.server.Server())
@@ -113,6 +116,11 @@ func (s *App) Init() {
 			if s.tracer, err = otel.NewTracer(conf.Tracer); err != nil {
 				s.logger.Fatalf("tracer init fail: [%s]\n", conf.Tracer.Host)
 			}
+			//
+			s.opts.Config.Server.Server = append(
+				s.opts.Config.Server.Server,
+				grpc.StatsHandler(otelgrpc.NewServerHandler()),
+			)
 		}
 
 	})
