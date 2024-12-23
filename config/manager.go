@@ -3,6 +3,7 @@ package config
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	clientv3 "go.etcd.io/etcd/client/v3"
@@ -11,7 +12,7 @@ import (
 type ConfigManager interface {
 	Get(key string) (string, error)
 	Set(key, value string) error
-	Watch(key string, onChange func(value string))
+	Watch(key string, onChange func(key, value string))
 }
 
 type DefaultConfigManager struct {
@@ -52,16 +53,17 @@ func (cm *DefaultConfigManager) Set(key, value string) error {
 	return err
 }
 
-func (cm *DefaultConfigManager) Watch(key string, onChange func(value string)) {
-	watchChan := cm.client.Watch(context.Background(), key)
-	cm.watchChans[key] = watchChan
+func (cm *DefaultConfigManager) Watch(prefix string, onChange func(k, v string)) {
+	watchChan := cm.client.Watch(context.Background(), prefix, clientv3.WithPrefix())
 	go func() {
 		for watchResp := range watchChan {
 			for _, ev := range watchResp.Events {
 				if ev.Type == clientv3.EventTypePut {
+					fullKey := string(ev.Kv.Key)
 					value := string(ev.Kv.Value)
-					cm.config[key] = value
-					onChange(value)
+					subKey := strings.TrimPrefix(fullKey, prefix)
+					subKey = strings.TrimLeft(subKey, "/")
+					onChange(subKey, value)
 				}
 			}
 		}
