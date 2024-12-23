@@ -14,6 +14,7 @@ type Query struct {
 	offset      uint32
 	tz          map[string]int64
 	loc         string //时区
+	pivot       string
 	l           *time.Location
 }
 
@@ -35,6 +36,10 @@ func (e *Query) Table(m string) *Query {
 }
 func (e *Query) Tz(tz map[string]int64) *Query {
 	e.tz = tz
+	return e
+}
+func (e *Query) Pivot(tz string) *Query {
+	e.pivot = tz
 	return e
 }
 
@@ -64,8 +69,8 @@ func (e *Query) Build() string {
 	if e.tz == nil {
 		now := time.Now().UTC().Unix()
 		e.tz = map[string]int64{
-			"from": now - 30*24*3600, // 默认从 30 天前
-			"to":   now,              // 到当前时间
+			"from": now - 7*24*3600, // 默认7天。不建议太多
+			"to":   now,             // 到当前时间
 		}
 	}
 
@@ -93,7 +98,11 @@ func (e *Query) Build() string {
 	if e.sortOrder != "" {
 		query += fmt.Sprintf(` |> sort(columns: ["_time"], desc: %v)`, e.sortOrder == "desc")
 	}
-
+	if e.pivot == "" {
+		query += ` |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")`
+	} else {
+		query += ` |>` + e.pivot
+	}
 	// 添加分页（如果设置了分页）
 	if e.offset > 0 {
 		query += fmt.Sprintf(` |> offset(n: %d)`, e.offset)
