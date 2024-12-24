@@ -2,6 +2,13 @@ module github.com/starfork/stargo
 
 go 1.23.2
 
+retract (
+	[v0.1.1, v0.1.9]
+	[v0.0.1, v0.0.8]
+)
+
+// bugs found, not support
+
 require (
 	github.com/go-playground/locales v0.14.1
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.1.0
