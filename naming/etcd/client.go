@@ -2,6 +2,7 @@ package etcd
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/starfork/stargo/naming"
@@ -11,7 +12,7 @@ import (
 func newClient(conf *naming.Config) (cli *clientv3.Client, err error) {
 
 	config := clientv3.Config{
-		Endpoints:   []string{conf.Host},
+		Endpoints:   strings.Split(conf.Host, ","),
 		DialTimeout: 2 * time.Second,
 	}
 	if cli, err = clientv3.New(config); err != nil {

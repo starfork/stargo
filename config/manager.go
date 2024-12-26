@@ -21,9 +21,9 @@ type DefaultConfigManager struct {
 	watchChans map[string]clientv3.WatchChan
 }
 
-func NewDefaultConfigManager(endpoints []string) (ConfigManager, error) {
+func NewDefaultConfigManager(endpoints string) (ConfigManager, error) {
 	cli, err := clientv3.New(clientv3.Config{
-		Endpoints:   endpoints,
+		Endpoints:   strings.Split(endpoints, ","),
 		DialTimeout: 5 * time.Second,
 	})
 	if err != nil {
