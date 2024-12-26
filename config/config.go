@@ -3,6 +3,7 @@ package config
 import (
 	"github.com/starfork/stargo/api"
 	"github.com/starfork/stargo/broker"
+	"github.com/starfork/stargo/filemanager"
 	"github.com/starfork/stargo/logger"
 	"github.com/starfork/stargo/naming"
 	"github.com/starfork/stargo/server"
@@ -28,10 +29,11 @@ type Config struct {
 
 	Store map[string]*store.Config
 
-	Log      *logger.Config
-	Broker   *broker.Config
-	Registry *naming.Config
-	Tracer   *tracer.Config
+	Log         *logger.Config
+	Broker      *broker.Config
+	Registry    *naming.Config
+	Tracer      *tracer.Config
+	Filemanager *filemanager.Config
 }
 
 var DefaultConfig = &Config{
