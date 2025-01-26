@@ -6,14 +6,14 @@ import (
 )
 
 type Result struct {
-	Uid       string
+	Uid       uint32
 	UserName  string
 	Age       int
 	IsDeleted bool
 	F1        string
 }
 type UserInfo struct {
-	Uid   string
+	Uid   uint32
 	Name  string
 	Age   int
 	Fuser string
@@ -28,22 +28,22 @@ type OriList struct {
 
 var rsA = &OriList{
 	Data: []*Result{
-		{Uid: "1", UserName: ""},
-		{Uid: "2", UserName: ""},
+		{Uid: 1, UserName: ""},
+		{Uid: 2, UserName: ""},
 	},
 }
 var rB = &UserInfoList{
 	UserInfoList: []*UserInfo{
-		{Uid: "1", Name: "Name1", Fuser: "fuser1"},
-		{Uid: "2", Name: "Name2", Fuser: "fuser2"},
+		{Uid: 1, Name: "Name1", Fuser: "fuser1"},
+		{Uid: 2, Name: "Name2", Fuser: "fuser2"},
 	},
 }
 
 func TestMerge(t *testing.T) {
 
 	Merge(rsA.Data, rB.UserInfoList,
-		func(a *Result) string { return a.Uid },
-		func(b *UserInfo) string { return b.Uid },
+		func(a *Result) any { return a.Uid },
+		func(b *UserInfo) any { return b.Uid },
 		func(a *Result, b *UserInfo) {
 			a.UserName = b.Name
 			a.F1 = b.Fuser
@@ -55,6 +55,6 @@ func TestMerge(t *testing.T) {
 }
 
 func TestReduce(t *testing.T) {
-	uids := Reduce(rsA.Data, func(r *Result) string { return r.Uid })
+	uids := Reduce(rsA.Data, func(r *Result) any { return r.Uid })
 	fmt.Println(uids)
 }

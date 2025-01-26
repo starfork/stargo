@@ -1,9 +1,9 @@
 package merger
 
-type KeyExtractor[T any] func(item T) string
+type Key[T any] func(item T) any
 
-func Merge[A any, B any](rsA []A, rsB []B, keyA KeyExtractor[A], keyB KeyExtractor[B], merger func(A, B)) {
-	bMap := make(map[string]B)
+func Merge[A any, B any](rsA []A, rsB []B, keyA Key[A], keyB Key[B], merger func(A, B)) {
+	bMap := make(map[any]B)
 	for _, b := range rsB {
 		bMap[keyB(b)] = b
 	}
@@ -13,7 +13,6 @@ func Merge[A any, B any](rsA []A, rsB []B, keyA KeyExtractor[A], keyB KeyExtract
 		}
 	}
 }
-
 func Reduce[T any, R any](input []T, mapper func(T) R) []R {
 	result := make([]R, len(input))
 	for i, item := range input {
