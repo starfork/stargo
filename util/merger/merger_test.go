@@ -22,10 +22,15 @@ type UserInfo struct {
 type UserInfoList struct {
 	UserInfoList []*UserInfo
 }
+type OriList struct {
+	Data []*Result
+}
 
-var rsA = []*Result{
-	{Uid: "1", UserName: ""},
-	{Uid: "2", UserName: ""},
+var rsA = &OriList{
+	Data: []*Result{
+		{Uid: "1", UserName: ""},
+		{Uid: "2", UserName: ""},
+	},
 }
 var rB = &UserInfoList{
 	UserInfoList: []*UserInfo{
@@ -36,7 +41,7 @@ var rB = &UserInfoList{
 
 func TestMerge(t *testing.T) {
 
-	Merge(rsA, rB.UserInfoList,
+	Merge(rsA.Data, rB.UserInfoList,
 		func(a *Result) string { return a.Uid },
 		func(b *UserInfo) string { return b.Uid },
 		func(a *Result, b *UserInfo) {
@@ -44,12 +49,12 @@ func TestMerge(t *testing.T) {
 			a.F1 = b.Fuser
 		})
 
-	for _, v := range rsA {
+	for _, v := range rsA.Data {
 		fmt.Printf("%+v \n", v)
 	}
 }
 
 func TestReduce(t *testing.T) {
-	uids := Reduce(rsA, func(r *Result) string { return r.Uid })
+	uids := Reduce(rsA.Data, func(r *Result) string { return r.Uid })
 	fmt.Println(uids)
 }
