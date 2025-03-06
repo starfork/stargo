@@ -14,6 +14,9 @@ import (
 	"gorm.io/gorm"
 )
 
+const PrivateUrl = "stargoprivate://"
+const PublicUrl = "stargopublic://"
+
 type Plugin struct {
 	PrivateUrl string
 	PublicUrl  string
@@ -38,16 +41,16 @@ func (e *Plugin) Parse(str string) string {
 	if str == "" {
 		return ""
 	}
-	str = strings.ReplaceAll(str, "private://", e.PrivateUrl)
-	str = strings.ReplaceAll(str, "public://", e.PublicUrl)
+	str = strings.ReplaceAll(str, PrivateUrl, e.PrivateUrl)
+	str = strings.ReplaceAll(str, PublicUrl, e.PublicUrl)
 	return str
 }
 func (e *Plugin) Rebuild(str string) string {
 	if str == "" {
 		return ""
 	}
-	str = strings.ReplaceAll(str, e.PrivateUrl, "private://")
-	str = strings.ReplaceAll(str, e.PublicUrl, "public://")
+	str = strings.ReplaceAll(str, e.PrivateUrl, PrivateUrl)
+	str = strings.ReplaceAll(str, e.PublicUrl, PublicUrl)
 	return str
 }
 

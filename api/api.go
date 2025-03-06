@@ -17,6 +17,7 @@ type Api struct {
 	conn *grpc.ClientConn
 	ctx  context.Context
 	rmux *runtime.ServeMux
+	//mux  *http.ServeMux
 }
 
 func E(err error) {

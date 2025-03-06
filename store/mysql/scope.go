@@ -45,7 +45,7 @@ func int2time(stamp int64, format ...string) string {
 	return time.Unix(stamp, 0).Format(f)
 }
 
-// Timezome time qquery
+// Timezome time query
 // tz["from"] 开始时间戳,tz["to"]截止时间戳
 // field 时间字段名
 func Timezome(tz map[string]int64, field string, format ...string) func(db *gorm.DB) *gorm.DB {
