@@ -11,7 +11,6 @@ import (
 	"github.com/starfork/stargo/logger"
 	"github.com/starfork/stargo/naming"
 	"github.com/starfork/stargo/naming/etcd"
-	"github.com/starfork/stargo/naming/redis"
 	"github.com/starfork/stargo/server"
 	"github.com/starfork/stargo/store"
 	smysql "github.com/starfork/stargo/store/mysql"
@@ -49,46 +48,15 @@ func New(opt ...Option) *App {
 	for _, o := range opt {
 		o(opts)
 	}
-	app := &App{
+	s := &App{
 		ctx:   context.Background(),
 		opts:  opts,
 		store: make(map[string]store.Store),
 	}
-	app.Init()
-	app.server = server.New(opts.Config.Server)
-	r := app.opts.Config.Registry
-	//注册reflection
-	if app.opts.Config.Env != config.ENV_PRODUCTION {
-		reflection.Register(app.server.Server())
-	}
-	if r != nil {
-		if r.Scheme == "etcd" {
-			rg, err := etcd.NewRegistry(r)
-			if err != nil {
-				app.logger.Fatalf("unknow registry")
-			}
-			app.registry = rg
-			rs, err := etcd.NewResolver(r)
-			if err != nil {
-				app.logger.Fatalf("unknow registry")
-			}
-			app.resolver = rs
-		} else if r.Scheme == "redis" {
-			app.registry = redis.NewRegistry(r)
-			app.resolver = redis.NewResolver(r)
-		} else {
-			app.logger.Fatalf("unknow registry")
-		}
-		service := app.server.Service()
-		service.Org = r.Org
-		err := app.registry.Register(service)
-		if err != nil {
-			app.logger.Fatalf("registry err %+v", err)
-		}
-	}
-	return app
-}
+	s.Init()
 
+	return s
+}
 func (s *App) Init() {
 	conf := s.opts.Config
 	if tz, err := time.LoadLocation(s.opts.Timezone); err == nil {
@@ -122,11 +90,55 @@ func (s *App) Init() {
 			)
 		}
 
+		if conf.Registry != nil {
+			r := conf.Registry
+			var err error
+			if r.Scheme == "etcd" {
+				if s.registry, err = etcd.NewRegistry(r); err != nil {
+					s.logger.Fatalf("unknow registry")
+				}
+
+				if s.resolver, err = etcd.NewResolver(r); err != nil {
+					s.logger.Fatalf("unknow registry")
+				}
+			} else {
+				s.logger.Fatalf("unknow registry")
+			}
+		}
 	})
 }
 
 // Run   server
 func (s *App) Run() {
+	conf := s.opts.Config
+	s.server = server.New(conf.Server)
+
+	//注册reflection
+	if conf.Env != config.ENV_PRODUCTION {
+		reflection.Register(s.server.Server())
+	}
+	service := s.server.Service()
+	service.Org = conf.Registry.Org
+	if err := s.registry.Register(service); err != nil {
+		s.logger.Fatalf("registry err %+v", err)
+	}
+	s.server.Run()
+}
+func (s *App) RunService(desc *grpc.ServiceDesc, impl any) {
+	conf := s.opts.Config
+	s.server = server.New(conf.Server)
+
+	//注册reflection
+	if conf.Env != config.ENV_PRODUCTION {
+		reflection.Register(s.server.Server())
+	}
+	service := s.server.Service()
+	service.Org = conf.Registry.Org
+	if err := s.registry.Register(service); err != nil {
+		s.logger.Fatalf("registry err %+v", err)
+	}
+
+	s.server.Server().RegisterService(desc, impl)
 	s.server.Run()
 }
 

@@ -17,9 +17,12 @@ package etcd
 import (
 	"github.com/starfork/stargo/naming"
 	"go.etcd.io/etcd/client/v3/naming/resolver"
+	gresolver "google.golang.org/grpc/resolver"
 )
 
 type Resolver struct {
+	gresolver.Builder
+	conf *naming.Config
 }
 
 // NewResolver creates a resolver builder.
@@ -29,5 +32,17 @@ func NewResolver(conf *naming.Config) (naming.Resolver, error) {
 		return nil, err
 	}
 
-	return resolver.NewBuilder(cli)
+	b, err := resolver.NewBuilder(cli)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Resolver{
+		Builder: b,
+		conf:    conf,
+	}, nil
+}
+
+func (e *Resolver) Config() *naming.Config {
+	return e.conf
 }

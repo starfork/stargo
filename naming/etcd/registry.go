@@ -22,6 +22,9 @@ type Registry struct {
 }
 
 func NewRegistry(conf *naming.Config) (naming.Registry, error) {
+	if conf.Scheme != Scheme {
+
+	}
 	cli, err := newClient(conf)
 	if err != nil {
 		return nil, err

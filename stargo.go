@@ -8,10 +8,11 @@ import (
 	"github.com/starfork/stargo/naming"
 	"github.com/starfork/stargo/store"
 	"github.com/starfork/stargo/tracer"
+
 	"google.golang.org/grpc"
 )
 
-// // Server
+// Server
 func (s *App) RpcServer() *grpc.Server {
 	return s.server.Server()
 }

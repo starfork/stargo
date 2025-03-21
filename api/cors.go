@@ -5,11 +5,35 @@ import (
 	"strings"
 )
 
+const (
+	META_FP     = "Stargo-Fp"
+	META_TOKEN  = "Stargo-Token"
+	META_METHOD = "Stargo-Method"
+	META_IP     = "Stargo-IP"
+	META_HOST   = "Stargo-Host"
+	META_LANG   = "Stargo-Lang"
+)
+
+var (
+	AllowHeaders = []string{"Content-Type", "Origin", "Authorization", "Content-Type", "X-Requested-With",
+		"Accept", "Access-Control-Allow-Credentials",
+		"Access-Token", "Access-Fp", "Accept-Language",
+	}
+	AllowMethods = []string{"GET", "HEAD", "POST", "PUT", "DELETE"}
+)
+
 func Cros(w http.ResponseWriter, req *http.Request, headers ...map[string]string) {
-	req.Header.Set("Grpc-Metadata-G-Method", req.Method)
-	req.Header.Set("Grpc-Metadata-IP", ClientIP(req))
-	req.Header.Set("Grpc-Metadata-Host", req.Host)
-	req.Header.Set("Grpc-Metadata-Token", req.Header.Get("Access-Token"))
+	inHeaders := map[string]string{
+		META_METHOD: req.Method,
+		META_IP:     ClientIP(req),
+		META_HOST:   req.Host,
+		META_TOKEN:  req.Header.Get("Access-Token"),
+		META_FP:     req.Header.Get("Access-Fp"),
+		META_LANG:   req.Header.Get("Accept-Language"),
+	}
+	for k, v := range inHeaders {
+		req.Header.Set("Grpc-Metadata-"+k, v)
+	}
 
 	if len(headers) > 0 {
 		for k, v := range headers[0] {
@@ -20,10 +44,8 @@ func Cros(w http.ResponseWriter, req *http.Request, headers ...map[string]string
 	if origin := req.Header.Get("Origin"); origin != "" {
 		w.Header().Set("Access-Control-Allow-Origin", origin)
 		if req.Method == "OPTIONS" && req.Header.Get("Access-Control-Request-Method") != "" {
-			headers := []string{"Content-Type", "Access-Token", "Origin", "Authorization", "Accept", "Content-Type", "X-Requested-With"}
-			w.Header().Set("Access-Control-Allow-Headers", strings.Join(headers, ","))
-			methods := []string{"GET", "HEAD", "POST", "PUT", "DELETE"}
-			w.Header().Set("Access-Control-Allow-Methods", strings.Join(methods, ","))
+			w.Header().Set("Access-Control-Allow-Headers", strings.Join(AllowHeaders, ","))
+			w.Header().Set("Access-Control-Allow-Methods", strings.Join(AllowMethods, ","))
 			return
 		}
 	}
