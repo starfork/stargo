@@ -8,6 +8,7 @@ import (
 	"github.com/starfork/stargo/logger"
 	"github.com/starfork/stargo/naming"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 const (
@@ -72,10 +73,17 @@ func DefaultOptions() []grpc.DialOption {
 
 // 获取一个连接
 func (e *Client) NewClient(service string, options ...grpc.DialOption) (conn *grpc.ClientConn, err error) {
+	//如果啥都不传递，则表示匿名链接，否则需要传递所有需要的东西（除了DefaultOptions）
+	var opts []grpc.DialOption
+	if len(options) == 0 {
+		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	} else {
+		opts = append(opts, options...)
+	}
 
-	opts := DefaultOptions()
+	opts = append(opts, DefaultOptions()...)
 	opts = append(opts, grpc.WithResolvers(e.resolver))
-	opts = append(opts, options...)
-	target := fmt.Sprintf("%s:///%s/%s", e.resolver.Scheme(), e.resolver.Config().Org, service)
+
+	target := fmt.Sprintf("%s:///stargo/%s", e.resolver.Scheme(), service)
 	return grpc.NewClient(target, opts...)
 }

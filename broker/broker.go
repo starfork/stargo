@@ -7,7 +7,7 @@ type Broker interface {
 }
 
 type Message struct {
-	Header map[string]string
+	Header map[string]any
 	Body   []byte
 }
 

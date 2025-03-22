@@ -10,6 +10,7 @@ import (
 	"github.com/starfork/stargo/logger"
 	"github.com/starfork/stargo/naming/etcd"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 type Api struct {
@@ -31,7 +32,12 @@ func NewApi(conf *Config) *Api {
 	defer cancel()
 	r, err := etcd.NewResolver(conf.Registry)
 	E(err)
-	conn, err := client.New(ctx, r, logger.DefaultLogger).NewClient(conf.Registry.Org+"/"+conf.App, conf.DiaOpts...)
+
+	if len(conf.DiaOpts) == 0 {
+		conf.DiaOpts = []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
+	}
+
+	conn, err := client.New(ctx, r, logger.DefaultLogger).NewClient(conf.App, conf.DiaOpts...)
 	E(err)
 	rmux := runtime.NewServeMux(conf.SMOpts...)
 	return &Api{conf: conf, ctx: ctx, conn: conn, rmux: rmux}

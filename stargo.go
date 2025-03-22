@@ -12,12 +12,14 @@ import (
 	"google.golang.org/grpc"
 )
 
+var Name = "stargo"
+
 // Server
 func (s *App) RpcServer() *grpc.Server {
 	return s.server.Server()
 }
 func (s *App) Config() *config.Config {
-	return s.opts.Config
+	return s.conf
 }
 
 func (s *App) Client() *client.Client {

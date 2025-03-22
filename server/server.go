@@ -98,7 +98,7 @@ func (e *Server) Restart() {
 // newServer return new server
 func newRpcServer(conf *Config) (s grpc.ServiceRegistrar) {
 
-	opt := append(conf.Server,
+	opt := append(conf.ServerOpts,
 		grpc.ChainUnaryInterceptor(conf.UnaryInterceptor...),
 		grpc.ChainStreamInterceptor(conf.StreamInterceptor...),
 	)

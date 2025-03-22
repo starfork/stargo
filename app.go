@@ -25,8 +25,10 @@ import (
 
 // App App
 type App struct {
-	ctx context.Context
+	ctx  context.Context
+	name string
 
+	conf   *config.Config
 	opts   *Options
 	server *server.Server
 	logger logger.Logger
@@ -42,32 +44,28 @@ type App struct {
 	once sync.Once
 }
 
-func New(opt ...Option) *App {
+func New(name string, conf *config.Config) *App {
 
 	opts := DefaultOptions()
-	for _, o := range opt {
-		o(opts)
-	}
+
 	s := &App{
 		ctx:   context.Background(),
 		opts:  opts,
 		store: make(map[string]store.Store),
+		name:  name,
+		conf:  conf,
 	}
-	s.Init()
-
+	s.initConfig()
 	return s
 }
-func (s *App) Init() {
-	conf := s.opts.Config
-	if tz, err := time.LoadLocation(s.opts.Timezone); err == nil {
-		s.Tz = tz
-		conf.Timezome = s.opts.Timezone
-	}
-	//registry，store这样的方式，需要改进成配置形式
+
+// init by Config
+func (s *App) initConfig() {
+
 	s.once.Do(func() {
 		s.logger = logger.DefaultLogger
 
-		for k, v := range conf.Store {
+		for k, v := range s.conf.Store {
 			if k == "mysql" {
 				s.Store(k, smysql.NewMysql(v))
 			}
@@ -75,65 +73,71 @@ func (s *App) Init() {
 				s.Store(k, sredis.NewRedis(v))
 			}
 		}
-		if conf.Broker != nil {
-			s.broker = nats.NewBroker(conf.Broker)
+		if s.conf.Broker != nil {
+			s.conf.Broker.App = s.name
+			s.broker = nats.NewBroker(s.conf.Broker)
 		}
-		if conf.Tracer != nil {
+		if s.conf.Tracer != nil {
 			var err error
-			if s.tracer, err = otel.NewTracer(conf.Tracer); err != nil {
-				s.logger.Fatalf("tracer init fail: [%s]\n", conf.Tracer.Host)
+			if s.tracer, err = otel.NewTracer(s.conf.Tracer); err != nil {
+				s.logger.Fatalf("tracer init fail: [%s]\n", s.conf.Tracer.Host)
 			}
 			//
-			s.opts.Config.Server.Server = append(
-				s.opts.Config.Server.Server,
+			s.conf.Server.ServerOpts = append(
+				s.conf.Server.ServerOpts,
 				grpc.StatsHandler(otelgrpc.NewServerHandler()),
 			)
 		}
 
-		if conf.Registry != nil {
-			r := conf.Registry
+		if s.conf.Registry != nil {
+			r := s.conf.Registry
+
 			var err error
 			if r.Scheme == "etcd" {
 				if s.registry, err = etcd.NewRegistry(r); err != nil {
-					s.logger.Fatalf("unknow registry")
+					s.logger.Fatalf("etcd registry err %+v", err.Error())
 				}
 
 				if s.resolver, err = etcd.NewResolver(r); err != nil {
-					s.logger.Fatalf("unknow registry")
+					s.logger.Fatalf("etcd resolver %+v", err)
 				}
 			} else {
 				s.logger.Fatalf("unknow registry")
 			}
 		}
+
+		//
+
 	})
+
+}
+
+// 初始化数据库之类的东西
+func (s *App) Init(opt ...Option) {
+	opts := s.opts
+	for _, o := range opt {
+		o(opts)
+	}
+	//其他的需要传递给
 }
 
 // Run   server
-func (s *App) Run() {
-	conf := s.opts.Config
-	s.server = server.New(conf.Server)
+
+func (s *App) Run(desc *grpc.ServiceDesc, impl any) {
+
+	if tz, err := time.LoadLocation(s.opts.Timezone); err == nil {
+		s.Tz = tz
+		s.conf.Timezome = s.opts.Timezone
+	}
+
+	s.server = server.New(s.conf.Server)
 
 	//注册reflection
-	if conf.Env != config.ENV_PRODUCTION {
+	if s.conf.Env != config.ENV_PRODUCTION {
 		reflection.Register(s.server.Server())
 	}
 	service := s.server.Service()
-	service.Org = conf.Registry.Org
-	if err := s.registry.Register(service); err != nil {
-		s.logger.Fatalf("registry err %+v", err)
-	}
-	s.server.Run()
-}
-func (s *App) RunService(desc *grpc.ServiceDesc, impl any) {
-	conf := s.opts.Config
-	s.server = server.New(conf.Server)
 
-	//注册reflection
-	if conf.Env != config.ENV_PRODUCTION {
-		reflection.Register(s.server.Server())
-	}
-	service := s.server.Service()
-	service.Org = conf.Registry.Org
 	if err := s.registry.Register(service); err != nil {
 		s.logger.Fatalf("registry err %+v", err)
 	}
@@ -149,7 +153,7 @@ func (s *App) Stop() {
 }
 func (s *App) stopStargo() {
 	if s.registry != nil {
-		s.logger.Infof("UnRegister: [%s]\n", s.opts.Name)
+		s.logger.Infof("UnRegister: [%s]\n", s.name)
 		s.registry.Deregister(s.server.Service())
 	}
 
@@ -170,5 +174,6 @@ func (s *App) stopStargo() {
 func (s *App) Restart() {
 	s.stopStargo()
 	s.server.Restart()
+	s.initConfig()
 	s.Init()
 }

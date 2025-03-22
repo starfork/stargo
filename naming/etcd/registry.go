@@ -1,8 +1,6 @@
 package etcd
 
 import (
-	"fmt"
-
 	"github.com/starfork/stargo/logger"
 	"github.com/starfork/stargo/naming"
 	clientv3 "go.etcd.io/etcd/client/v3"
@@ -11,6 +9,7 @@ import (
 
 const KeyPrefix = "stargo_registry"
 const Scheme = "etcd"
+const Org = "stargo"
 
 type Registry struct {
 	name string
@@ -22,15 +21,13 @@ type Registry struct {
 }
 
 func NewRegistry(conf *naming.Config) (naming.Registry, error) {
-	if conf.Scheme != Scheme {
 
-	}
 	cli, err := newClient(conf)
 	if err != nil {
 		return nil, err
 	}
 
-	em, err := endpoints.NewManager(cli, conf.Org)
+	em, err := endpoints.NewManager(cli, Org)
 	if err != nil {
 		return nil, err
 	}
@@ -43,8 +40,8 @@ func NewRegistry(conf *naming.Config) (naming.Registry, error) {
 	}, nil
 }
 func (e *Registry) key(svc naming.Service) string {
-	key := e.conf.Org + "/" + svc.Name + "/" + svc.Addr
-	fmt.Println(key)
+	key := Org + "/" + svc.Name + "/" + svc.Addr
+	//fmt.Println(key)
 	return key
 }
 

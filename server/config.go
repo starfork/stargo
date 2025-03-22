@@ -20,7 +20,7 @@ type Config struct {
 	UnaryInterceptor  []grpc.UnaryServerInterceptor
 	StreamInterceptor []grpc.StreamServerInterceptor
 
-	Server []grpc.ServerOption
+	ServerOpts []grpc.ServerOption
 }
 
 type RpcServer struct {
@@ -35,5 +35,5 @@ var DefaultConfig = &Config{
 	//RpcServer:         &RpcServer{},
 	UnaryInterceptor:  []grpc.UnaryServerInterceptor{},
 	StreamInterceptor: []grpc.StreamServerInterceptor{},
-	Server:            []grpc.ServerOption{},
+	ServerOpts:        []grpc.ServerOption{},
 }
