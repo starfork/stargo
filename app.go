@@ -114,9 +114,9 @@ func (s *App) initConfig() {
 
 // 初始化数据库之类的东西
 func (s *App) Init(opt ...Option) {
-	opts := s.opts
+
 	for _, o := range opt {
-		o(opts)
+		o(s.opts)
 	}
 	//其他的需要传递给
 }
@@ -130,7 +130,10 @@ func (s *App) Run(desc *grpc.ServiceDesc, impl any) {
 		s.conf.Timezome = s.opts.Timezone
 	}
 
-	s.server = server.New(s.conf.Server)
+	sc := s.opts.Server
+	sc.Addr = s.conf.Server.Addr
+	sc.Name = s.name
+	s.server = server.New(sc)
 
 	//注册reflection
 	if s.conf.Env != config.ENV_PRODUCTION {

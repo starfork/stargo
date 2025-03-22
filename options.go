@@ -31,6 +31,7 @@ func WithAddr(c string) Option {
 // UnaryInterceptor Unary server interceptor
 func WithUnaryInterceptor(opt grpc.UnaryServerInterceptor) Option {
 	return func(o *Options) {
+
 		o.Server.UnaryInterceptor = append(o.Server.UnaryInterceptor, opt)
 	}
 }
