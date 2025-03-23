@@ -2,6 +2,7 @@ package influxdb
 
 import (
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -9,6 +10,7 @@ type Query struct {
 	bucket      string
 	measurement string
 	filters     []string
+	drop        []string
 	sortOrder   string
 	limit       uint32
 	offset      uint32
@@ -18,15 +20,18 @@ type Query struct {
 	l           *time.Location
 }
 
-func NewQuery(bucket string, loc ...string) *Query {
-	l, _ := time.LoadLocation("Asia/Shanghai") // 设置为中国上海时区（UTC+8）
+func NewQuery(bucket string, cloc ...string) *Query {
+	loc := "Asia/Shanghai"
 
-	if len(loc) > 0 {
-		l, _ = time.LoadLocation(loc[0])
+	if len(cloc) > 0 {
+		loc = cloc[0]
 	}
+	l, _ := time.LoadLocation(loc) // 设置为中国上海时区（UTC+8）
+
 	return &Query{
 		bucket: bucket,
 		l:      l,
+		loc:    loc,
 	}
 }
 
@@ -36,6 +41,10 @@ func (e *Query) Table(m string) *Query {
 }
 func (e *Query) Tz(tz map[string]int64) *Query {
 	e.tz = tz
+	return e
+}
+func (e *Query) Drop(tags []string) *Query {
+	e.drop = tags
 	return e
 }
 func (e *Query) Pivot(tz string) *Query {
@@ -63,20 +72,24 @@ func (e *Query) Page(page, limit uint32) *Query {
 	e.offset = (page - 1) * limit
 	return e
 }
+func (e *Query) Count() *Query {
+	e.pivot = `group() |> count()`
+	return e
+}
 
 func (e *Query) Build() string {
 	query := fmt.Sprintf(`from(bucket: "%s")`, e.bucket)
 
-	// 设置默认时间范围为最近 30 天
+	// 设置默认时间范围（最近 7 天）
 	if e.tz == nil {
 		now := time.Now().UTC().Unix()
 		e.tz = map[string]int64{
-			"from": now - 7*24*3600, // 默认7天。不建议太多
-			"to":   now,             // 到当前时间
+			"from": now - 7*24*3600,
+			"to":   now,
 		}
 	}
 
-	// 添加 range 语句，确保时间为 UTC 格式
+	// 时间范围转换为 UTC 格式
 	startTime := time.Unix(e.tz["from"], 0).In(e.l).Format("2006-01-02T15:04:05Z")
 	query += fmt.Sprintf(` |> range(start: %s`, startTime)
 	if stop, exists := e.tz["to"]; exists {
@@ -86,31 +99,44 @@ func (e *Query) Build() string {
 		query += `)`
 	}
 
-	// 添加 Measurement 过滤
+	// 过滤 Measurement
 	if e.measurement != "" {
 		query += fmt.Sprintf(` |> filter(fn: (r) => r["_measurement"] == "%s")`, e.measurement)
 	}
 
-	// 添加字段过滤条件
+	// 处理 Where 条件
 	for _, filter := range e.filters {
 		query += fmt.Sprintf(` |> filter(fn: (r) => %s)`, filter)
 	}
-
-	// 添加排序（如果设置了排序）
-	if e.sortOrder != "" {
-		query += fmt.Sprintf(` |> sort(columns: ["_time"], desc: %v)`, e.sortOrder == "desc")
+	//不同条件可能需要去掉某些tag
+	if len(e.drop) > 0 {
+		query += fmt.Sprintf(`|> drop(columns: ["%s"])`, strings.Join(e.drop, `", "`))
 	}
+
+	// 统计时不排
+	if !strings.Contains(e.pivot, "count()") {
+
+		if e.sortOrder == "" {
+			query += ` |> sort(columns: ["_time"], desc: true)`
+		} else {
+			query += fmt.Sprintf(` |> sort(columns: ["%s"]) |> sort(columns: ["_time"], desc: true)`, e.sortOrder)
+		}
+
+	}
+
 	if e.pivot == "" {
 		query += ` |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")`
 	} else {
 		query += ` |>` + e.pivot
 	}
-	// 添加分页（如果设置了分页）
-	if e.offset > 0 {
-		query += fmt.Sprintf(` |> offset(n: %d)`, e.offset)
-	}
+
+	// 处理分页
 	if e.limit > 0 {
-		query += fmt.Sprintf(` |> limit(n: %d)`, e.limit)
+		if e.offset > 0 {
+			query += fmt.Sprintf(` |> limit(n: %d, offset: %d)`, e.limit, e.offset)
+		} else {
+			query += fmt.Sprintf(` |> limit(n: %d)`, e.limit)
+		}
 	}
 
 	return query
