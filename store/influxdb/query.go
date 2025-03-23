@@ -44,7 +44,9 @@ func (e *Query) Pivot(tz string) *Query {
 }
 
 func (e *Query) Where(field, value string) *Query {
-	e.filters = append(e.filters, fmt.Sprintf(`r["%s"] == "%s"`, field, value))
+	if value != "" {
+		e.filters = append(e.filters, fmt.Sprintf(`r["%s"] == "%s"`, field, value))
+	}
 	return e
 }
 
