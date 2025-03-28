@@ -25,3 +25,20 @@ func RangeRand(min, max int64) (int64, error) {
 	return min + result.Int64(), nil
 
 }
+
+func Pager(page, l uint32) (offset, lmt uint32) {
+	lmt = l
+	if page <= 0 {
+		page = 1
+	}
+	if l > 100 {
+		lmt = 100
+	}
+	if l <= 0 {
+		lmt = 10
+	}
+	offset = (page - 1) * lmt
+
+	return offset, lmt
+
+}

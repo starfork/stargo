@@ -51,6 +51,7 @@ func (e *Mysql) Connect(confs ...*store.Config) {
 	}
 
 	conf := &gorm.Config{
+
 		NamingStrategy: schema.NamingStrategy{
 			SingularTable: true, //全局采用单表名
 			TablePrefix:   c.Prefix,

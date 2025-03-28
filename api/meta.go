@@ -21,6 +21,7 @@ func MetaString(ctx context.Context, key string, out ...bool) string {
 		return ""
 	}
 	key = strings.ToLower(key)
+	//逻辑别改
 	value, ok := md[key]
 	if !ok {
 		return ""

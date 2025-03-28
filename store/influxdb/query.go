@@ -73,7 +73,7 @@ func (e *Query) Page(page, limit uint32) *Query {
 	return e
 }
 func (e *Query) Count() *Query {
-	e.pivot = `group() |> count()`
+	e.pivot = ` group() |> count()`
 	return e
 }
 
@@ -110,7 +110,7 @@ func (e *Query) Build() string {
 	}
 	//不同条件可能需要去掉某些tag
 	if len(e.drop) > 0 {
-		query += fmt.Sprintf(`|> drop(columns: ["%s"])`, strings.Join(e.drop, `", "`))
+		query += fmt.Sprintf(` |> drop(columns: ["%s"])`, strings.Join(e.drop, `", "`))
 	}
 
 	// 统计时不排
