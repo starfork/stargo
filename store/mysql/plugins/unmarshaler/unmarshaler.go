@@ -39,7 +39,7 @@ func (e *Plugin) After(db *gorm.DB) {
 	}
 
 	if kind == reflect.Slice {
-		for i := 0; i < value.Len(); i++ {
+		for i := range value.Len() {
 			//非指针类型的不能设置这些东东
 			if reflect.Value(value.Index(i)).Kind() == reflect.Ptr {
 				item := reflect.Value(value.Index(i)).Elem()
@@ -62,7 +62,7 @@ func (e *Plugin) Before(db *gorm.DB) {
 	}
 
 	if kind == reflect.Slice {
-		for i := 0; i < value.Len(); i++ {
+		for i := range value.Len() {
 			//非指针类型的不能设置这些东东
 			if reflect.Value(value.Index(i)).Kind() == reflect.Ptr {
 				item := reflect.Value(value.Index(i)).Elem()
