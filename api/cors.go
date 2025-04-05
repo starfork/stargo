@@ -12,12 +12,13 @@ const (
 	META_IP     = "Stargo-IP"
 	META_HOST   = "Stargo-Host"
 	META_LANG   = "Stargo-Lang"
+	META_DEVICE = "Stargo-Device"
 )
 
 var (
 	AllowHeaders = []string{"Content-Type", "Origin", "Authorization", "Content-Type", "X-Requested-With",
 		"Accept", "Access-Control-Allow-Credentials",
-		"Access-Token", "Access-Fp", "Accept-Language",
+		"Access-Token", "Access-Fp", "Accept-Language", "Accept-Device",
 	}
 	AllowMethods = []string{"GET", "HEAD", "POST", "PUT", "DELETE"}
 )
@@ -30,6 +31,7 @@ func Cros(w http.ResponseWriter, req *http.Request, headers ...map[string]string
 		META_TOKEN:  req.Header.Get("Access-Token"),
 		META_FP:     req.Header.Get("Access-Fp"),
 		META_LANG:   req.Header.Get("Accept-Language"),
+		META_DEVICE: req.Header.Get("Accept-Device"),
 	}
 	for k, v := range inHeaders {
 		req.Header.Set("Grpc-Metadata-"+k, v)
