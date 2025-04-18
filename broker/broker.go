@@ -1,5 +1,7 @@
 package broker
 
+import "github.com/starfork/stargo/pm"
+
 type Broker interface {
 	Publish(topic string, message Message) error
 	Subscribe(topic string, handler MessageHandler)
@@ -7,7 +9,7 @@ type Broker interface {
 }
 
 type Message struct {
-	Header map[string]any
+	Header pm.Pm
 	Body   []byte
 }
 
