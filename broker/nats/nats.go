@@ -1,6 +1,7 @@
 package nats
 
 import (
+	jsoniter "github.com/json-iterator/go"
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/starfork/stargo/broker"
@@ -25,11 +26,32 @@ func NewBroker(c *broker.Config) broker.Broker {
 
 func (e *NatsBroker) Publish(topic string, msg broker.Message) error {
 	//必须带上当前的app名字
-	return e.nc.Publish(e.c.App+"."+topic, msg.Body)
+	b, err := jsoniter.Marshal(msg)
+	if err != nil {
+		return err
+	}
+	return e.nc.Publish(e.c.App+"."+topic, b)
+	//
 }
+
+func (e *NatsBroker) Flush() error {
+	return e.nc.Flush()
+}
+
+// 需要完整的app.name
 func (e *NatsBroker) Subscribe(topic string, handler broker.MessageHandler) {
+
 	e.nc.Subscribe(topic, func(msg *nats.Msg) {
-		handler(broker.Message{Body: msg.Data})
+		bmsg := broker.Message{}
+		err := jsoniter.Unmarshal(msg.Data, &bmsg)
+		if err == nil {
+			handler(bmsg)
+		}
 	})
+
+	select {}
+
 }
-func (e *NatsBroker) UnSubscribe() {}
+func (e *NatsBroker) UnSubscribe() error {
+	return e.nc.Drain()
+}
