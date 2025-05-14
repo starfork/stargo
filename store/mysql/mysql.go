@@ -60,6 +60,9 @@ func (e *Mysql) Connect(confs ...*store.Config) {
 	if c.Debug {
 		conf.Logger = logger.Default.LogMode(logger.Info)
 	}
+	if c.Tz1k != -1 {
+		store.TZ1K = true
+	}
 	var db *gorm.DB
 
 	if db, err = gorm.Open(mysql.Open(dsn), conf); err != nil {

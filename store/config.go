@@ -23,5 +23,5 @@ type Config struct {
 
 	TimeLocation string //时区
 	TimeFormat   string //时间格式化
-
+	Tz1k         int    //时间戳是否除以1000
 }

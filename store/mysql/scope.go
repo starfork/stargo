@@ -42,6 +42,9 @@ func int2time(stamp int64, format ...string) string {
 	if len(format) > 0 {
 		f = format[0]
 	}
+	if store.TZ1K {
+		stamp /= 1e3
+	}
 	return time.Unix(stamp, 0).Format(f)
 }
 
@@ -61,7 +64,6 @@ func Timezome(tz map[string]int64, field string, format ...string) func(db *gorm
 			return db.Where(field+" <= ?", int2time(tz["to"], format...))
 		}
 		return db
-
 	}
 }
 

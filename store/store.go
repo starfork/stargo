@@ -8,3 +8,4 @@ type Store interface {
 
 var TIME_LOCATION = "Asia/Shanghai" //上海
 var TFORMAT = "2006-01-02T15:04:05+08:00"
+var TZ1K = true //js是否传回来的时间戳，是否1000
