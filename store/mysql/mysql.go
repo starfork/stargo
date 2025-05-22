@@ -27,12 +27,9 @@ func NewMysql(config *store.Config) store.Store {
 		c: config,
 	}
 }
-func (e *Mysql) Instance() *Mysql {
-	return e
-}
 
 // Connect 初始化MySQLme
-func (e *Mysql) Connect(confs ...*store.Config) {
+func (e *Mysql) connect(confs ...*store.Config) {
 	c := e.c
 	if len(confs) > 0 {
 		c = confs[0]
@@ -91,14 +88,14 @@ func (e *Mysql) Connect(confs ...*store.Config) {
 	e.conn = sqlDB
 }
 
-func (e *Mysql) GetInstance(conf ...*store.Config) *gorm.DB {
+func (e *Mysql) Instance(conf ...*store.Config) any {
 
 	if len(conf) > 0 {
-		e.Connect(conf...)
+		e.connect(conf...)
 		return e.db
 	}
 	if e.db == nil {
-		e.Connect()
+		e.connect()
 	}
 	return e.db
 }

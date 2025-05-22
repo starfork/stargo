@@ -83,3 +83,9 @@ func Like(column, pattern string) func(*gorm.DB) *gorm.DB {
 		return db.Where("? LIKE ?", column, pattern)
 	}
 }
+
+func Cache(key string) func(*gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		return db.Set(key, key)
+	}
+}

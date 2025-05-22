@@ -43,7 +43,7 @@ func (e *Redis) Connect(conf ...*store.Config) {
 	e.rdc = rdc
 }
 
-func (e *Redis) GetInstance(conf ...*store.Config) *redis.Client {
+func (e *Redis) Instance(conf ...*store.Config) any {
 	if len(conf) > 0 {
 		e.Connect(conf...)
 		return e.rdc

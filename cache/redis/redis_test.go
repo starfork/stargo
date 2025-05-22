@@ -8,6 +8,7 @@ import (
 	"time"
 
 	jsoniter "github.com/json-iterator/go"
+	"github.com/redis/go-redis/v9"
 	"github.com/starfork/stargo/store"
 	sredis "github.com/starfork/stargo/store/redis"
 )
@@ -16,7 +17,7 @@ var test_conf = &store.Config{
 	Host: "127.0.0.1:6379",
 }
 
-var rdc = sredis.NewRedis(test_conf).(*sredis.Redis).GetInstance()
+var rdc = sredis.NewRedis(test_conf).Instance().(*redis.Client)
 
 type TestStat struct {
 	Total  uint32  `json:"total"`

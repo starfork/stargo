@@ -1,8 +1,7 @@
 package store
 
 type Store interface {
-	Connect(conf ...*Config)
-	//GetInstance(conf ...*config.Config) any
+	Instance(conf ...*Config) any
 	Close() //关闭连接
 }
 

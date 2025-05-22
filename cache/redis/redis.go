@@ -6,16 +6,17 @@ import (
 
 	"github.com/redis/go-redis/v9"
 	"github.com/starfork/stargo/cache"
+	"github.com/starfork/stargo/store"
 )
 
 type Redis struct {
 	rdc *redis.Client
 }
 
-func New(rdc *redis.Client) cache.Cache {
+func New(s store.Store) cache.Cache {
 
 	c := &Redis{
-		rdc: rdc,
+		rdc: s.Instance().(*redis.Client),
 	}
 
 	return c

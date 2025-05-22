@@ -18,13 +18,24 @@ const PrivateUrl = "stargoprivate://"
 const PublicUrl = "stargopublic://"
 
 type Plugin struct {
+	c plugins.Config
+
 	PrivateUrl string
 	PublicUrl  string
+}
+
+func (e Plugin) Name() string {
+	return "tagfile"
+}
+
+func NewPlugin(c plugins.Config) plugins.Plugin {
+	return &Plugin{}
 }
 
 func Register(db *gorm.DB, config plugins.Config) {
 
 	p := &Plugin{}
+
 	if url, ok := config["public_url"]; ok {
 		p.PublicUrl = url.(string)
 	}
@@ -32,9 +43,16 @@ func Register(db *gorm.DB, config plugins.Config) {
 	if url, ok := config["private_url"]; ok {
 		p.PrivateUrl = url.(string)
 	}
-	db.Callback().Query().After("gorm:find").Register("tagfile:after_query", p.AfterQuery)
-	db.Callback().Update().Before("gorm:update").Register("tagfile:before_update", p.BeforeUpdate)
+	db.Use(p)
+	//db.Use(p)
 
+}
+
+func (e Plugin) Initialize(db *gorm.DB) error {
+
+	db.Callback().Query().After("gorm:find").Register("tagfile:after_query", e.AfterQuery)
+	db.Callback().Update().Before("gorm:update").Register("tagfile:before_update", e.BeforeUpdate)
+	return nil
 }
 
 func (e *Plugin) Parse(str string) string {

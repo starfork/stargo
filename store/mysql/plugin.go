@@ -14,6 +14,8 @@ var PluginsMap = map[string]func(db *gorm.DB, config plugins.Config){
 
 func RegisterPlugins(db *gorm.DB, plugins map[string]plugins.Config) {
 
+	//db.Use()
+
 	for name, config := range plugins {
 		if f, ok := PluginsMap[name]; ok {
 			f(db, config)
