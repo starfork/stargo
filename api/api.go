@@ -18,7 +18,7 @@ type Api struct {
 	conn *grpc.ClientConn
 	ctx  context.Context
 	rmux *runtime.ServeMux
-	//mux  *http.ServeMux
+	mux  *http.ServeMux
 }
 
 func E(err error) {
@@ -40,20 +40,31 @@ func NewApi(conf *Config) *Api {
 	conn, err := client.New(ctx, r, logger.DefaultLogger).NewClient(conf.App, conf.DiaOpts...)
 	E(err)
 	rmux := runtime.NewServeMux(conf.SMOpts...)
-	return &Api{conf: conf, ctx: ctx, conn: conn, rmux: rmux}
-}
-
-func (e *Api) Run() {
 	mux := http.NewServeMux()
+	return &Api{
+		conf: conf,
+		ctx:  ctx,
+		conn: conn,
+		rmux: rmux,
+		mux:  mux,
+	}
+}
+func (e *Api) MuxHandler() {
 
-	mux.Handle("/", e.rmux)
-	e.WrapperSwagger(mux)
+}
+func (e *Api) Run() {
+
+	if len(e.conf.MuxHandler) > 0 {
+		for r, f := range e.conf.MuxHandler {
+			e.mux.HandleFunc(r, f)
+		}
+	}
+	e.mux.Handle("/", e.rmux)
+
+	e.WrapperSwagger(e.mux)
 	// start a standard HTTP server with the router
 	log.Println("start listen " + e.conf.Port)
-	// if e.conf.Wrapper != nil {
-	// 	e.conf.Wrapper(mux)
-	// }
-	if err := http.ListenAndServe(e.conf.Port, e.conf.Wrapper(mux)); err != nil {
+	if err := http.ListenAndServe(e.conf.Port, e.conf.Wrapper(e.mux)); err != nil {
 		log.Fatal(err)
 	}
 }

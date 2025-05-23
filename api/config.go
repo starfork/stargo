@@ -19,4 +19,6 @@ type Config struct {
 	SwaggerRoute    string
 	SwaggerUIPrefix string
 	SMOpts          []runtime.ServeMuxOption
+
+	MuxHandler map[string]func(w http.ResponseWriter, r *http.Request)
 }
