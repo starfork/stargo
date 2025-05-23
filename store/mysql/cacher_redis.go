@@ -11,10 +11,15 @@ import (
 
 type redisCacher struct {
 	rdc *redis.Client
+	d   time.Duration
 }
 
-func NewRedisCacher(rdc *redis.Client) *redisCacher {
-	return &redisCacher{rdc: rdc}
+func NewRedisCacher(rdc *redis.Client, d ...time.Duration) *redisCacher {
+	c := &redisCacher{rdc: rdc, d: 300 * time.Second}
+	if len(d) > 0 && d[0] > 0 {
+		c.d = d[0]
+	}
+	return c
 }
 
 func (c *redisCacher) Get(ctx context.Context, key string, q *cache.Query[any]) (*cache.Query[any], error) {
@@ -34,7 +39,7 @@ func (c *redisCacher) Get(ctx context.Context, key string, q *cache.Query[any]) 
 	return q, nil
 }
 
-func (c *redisCacher) Store(ctx context.Context, key string, val *cache.Query[any]) error {
+func (c *redisCacher) Store(ctx context.Context, key string, val *cache.Query[any], d ...time.Duration) error {
 	res, err := val.Marshal()
 	if err != nil {
 		return err
