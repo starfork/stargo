@@ -1,11 +1,13 @@
 package mysql
 
 import (
+	"fmt"
 	"strings"
 	"time"
 
 	"gorm.io/gorm"
 
+	"github.com/go-gorm/caches/v4"
 	"github.com/starfork/stargo/store"
 )
 
@@ -86,6 +88,16 @@ func Like(column, pattern string) func(*gorm.DB) *gorm.DB {
 
 func Cache(key string) func(*gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
-		return db.Set(key, key)
+		v, ok := db.InstanceGet("gorm:caches")
+		if !ok {
+			// 没找到插件就原样返回
+			return db
+		}
+
+		cachePlugin := v.(*caches.Caches)
+
+		fmt.Println(cachePlugin)
+
+		return db
 	}
 }

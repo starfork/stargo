@@ -14,6 +14,10 @@ func (p *Plugin) Name() string {
 	return "cache"
 }
 
+func NewPlugin(c cache.Cache) *Plugin {
+	return &Plugin{}
+}
+
 func Register(db *gorm.DB, conf plugins.Config) {
 	p := &Plugin{}
 	db.Callback().Query().After("gorm:find").Register("cache_after_query", p.After)
