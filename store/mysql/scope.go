@@ -1,13 +1,11 @@
 package mysql
 
 import (
-	"fmt"
 	"strings"
 	"time"
 
 	"gorm.io/gorm"
 
-	"github.com/go-gorm/caches/v4"
 	"github.com/starfork/stargo/store"
 )
 
@@ -83,21 +81,5 @@ func Distance(point string, dist uint32) func(db *gorm.DB) *gorm.DB {
 func Like(column, pattern string) func(*gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		return db.Where("? LIKE ?", column, pattern)
-	}
-}
-
-func Cache(key string) func(*gorm.DB) *gorm.DB {
-	return func(db *gorm.DB) *gorm.DB {
-		v, ok := db.InstanceGet("gorm:caches")
-		if !ok {
-			// 没找到插件就原样返回
-			return db
-		}
-
-		cachePlugin := v.(*caches.Caches)
-
-		fmt.Println(cachePlugin)
-
-		return db
 	}
 }
