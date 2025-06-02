@@ -38,7 +38,8 @@ func (e *NatsBroker) Flush() error {
 	return e.nc.Flush()
 }
 
-// 需要完整的app.name
+// 需要完整的app.name.
+// !大多数情况下，需要使用 go Subscribe
 func (e *NatsBroker) Subscribe(topic string, handler broker.MessageHandler) {
 
 	e.nc.Subscribe(topic, func(msg *nats.Msg) {

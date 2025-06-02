@@ -37,7 +37,11 @@ func (e *Redis) Fetch(ctx context.Context, key []string) ([]any, error) {
 }
 
 func (e *Redis) Put(ctx context.Context, key string, value any, timeout ...time.Duration) error {
-	rs := e.rdc.Set(ctx, key, value, time.Hour)
+	var expr time.Duration = -1
+	if len(timeout) > 0 {
+		expr = timeout[0]
+	}
+	rs := e.rdc.Set(ctx, key, value, expr)
 	return rs.Err()
 }
 
