@@ -34,11 +34,13 @@ func NewApi(conf *Config) *Api {
 	E(err)
 
 	if len(conf.DiaOpts) == 0 {
+
 		conf.DiaOpts = []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
 	}
 
 	conn, err := client.New(ctx, r, logger.DefaultLogger).NewClient(conf.App, conf.DiaOpts...)
 	E(err)
+
 	rmux := runtime.NewServeMux(conf.SMOpts...)
 	mux := http.NewServeMux()
 	return &Api{
