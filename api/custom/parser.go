@@ -1,7 +1,6 @@
 package custom
 
 import (
-	"encoding/base64"
 	"net/url"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
@@ -10,13 +9,26 @@ import (
 )
 
 type StargoQueryParser struct {
+	key []byte
+}
+
+func NewStargoQueryParser(key ...[]byte) *StargoQueryParser {
+	k := Key
+	if len(key) > 0 {
+		k = key[0]
+	}
+	return &StargoQueryParser{
+		key: k,
+	}
 }
 
 // Parse parses query parameters and populates the appropriate fields in the gRPC request message.
-func (p *StargoQueryParser) Parse(target proto.Message, values url.Values, filter *utilities.DoubleArray) error {
+func (e *StargoQueryParser) Parse(target proto.Message, values url.Values, filter *utilities.DoubleArray) error {
 
 	if v := values.Get("data"); v != "" && len(values) == 1 {
-		data, err := base64.StdEncoding.DecodeString(v)
+		//data, err := base64.StdEncoding.DecodeString(v[len(e.prefix):])
+
+		data, err := Decode(v, string(e.key))
 		if err == nil {
 			if u, err := url.ParseQuery(string(data)); err == nil {
 				values = u
