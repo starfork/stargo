@@ -146,6 +146,10 @@ func (s *App) Run(desc *grpc.ServiceDesc, impl any) {
 	}
 
 	s.server.Server().RegisterService(desc, impl)
+
+	for _, v := range s.opts.ServiceDesc {
+		s.server.Server().RegisterService(v, impl)
+	}
 	s.server.Run()
 }
 

@@ -11,6 +11,8 @@ type Options struct {
 	Addr     string
 	Server   *server.Config
 	Timezone string
+
+	ServiceDesc []*grpc.ServiceDesc
 }
 
 // Option Option
@@ -31,7 +33,6 @@ func WithAddr(c string) Option {
 // UnaryInterceptor Unary server interceptor
 func WithUnaryInterceptor(opt grpc.UnaryServerInterceptor) Option {
 	return func(o *Options) {
-
 		o.Server.UnaryInterceptor = append(o.Server.UnaryInterceptor, opt)
 	}
 }
@@ -47,6 +48,11 @@ func WithStreamnIterceptor(opt grpc.StreamServerInterceptor) Option {
 func WithServer(opt ...grpc.ServerOption) Option {
 	return func(o *Options) {
 		o.Server.ServerOpts = append(o.Server.ServerOpts, opt...)
+	}
+}
+func WithServerDesc(opt ...*grpc.ServiceDesc) Option {
+	return func(o *Options) {
+		o.ServiceDesc = append(o.ServiceDesc, opt...)
 	}
 }
 
