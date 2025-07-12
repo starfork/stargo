@@ -160,7 +160,7 @@ func (s *App) Stop() {
 }
 func (s *App) stopStargo() {
 	if s.registry != nil {
-		s.logger.Infof("UnRegister: [%s]\n", s.name)
+		s.logger.Infof("unregister: [%s]\n", s.name)
 		s.registry.Deregister(s.server.Service())
 	}
 
