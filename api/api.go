@@ -42,6 +42,7 @@ func NewApi(conf *Config) *Api {
 	E(err)
 
 	rmux := runtime.NewServeMux(conf.SMOpts...)
+
 	mux := http.NewServeMux()
 	return &Api{
 		conf: conf,
@@ -63,7 +64,7 @@ func (e *Api) Run() {
 	}
 	e.mux.Handle("/", e.rmux)
 
-	e.WrapperSwagger(e.mux)
+	//e.WrapperSwagger(e.mux)
 	// start a standard HTTP server with the router
 	log.Println("start listen " + e.conf.Port)
 	if err := http.ListenAndServe(e.conf.Port, e.conf.Wrapper(e.mux)); err != nil {

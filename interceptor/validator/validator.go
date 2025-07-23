@@ -34,8 +34,8 @@ func Unary() grpc.UnaryServerInterceptor {
 	}
 	validate.RegisterValidation("money", ValidateMoney)
 
-	return func(ctx context.Context, req interface{}, in *grpc.UnaryServerInfo,
-		handler grpc.UnaryHandler) (resp interface{}, err error) {
+	return func(ctx context.Context, req any, in *grpc.UnaryServerInfo,
+		handler grpc.UnaryHandler) (resp any, err error) {
 
 		vfields := []string{}
 		method := api.MetaMethod(ctx)

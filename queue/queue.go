@@ -86,7 +86,6 @@ func (q *Queue) exec() {
 		go func() {
 			q.log("sart task ")
 			//执行成功则删除任务，否则如果设置了
-			//fmt.Println(task)
 			if err := hander.(task.Handler)(t); err != nil {
 				q.log(ErrFailGetTask, err)
 				//如果有循环条件设置。则循环加入

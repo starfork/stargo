@@ -7,10 +7,10 @@ import (
 )
 
 type Task struct {
-	Key   string                 // system_name/job_id
-	Tag   string                 // Tag匹配Handler，无Tag的Task将不会被执行
-	Args  map[string]interface{} // 任务参数
-	Delay int64                  // 延迟时间
+	Key   string         // system_name/job_id
+	Tag   string         // Tag匹配Handler，无Tag的Task将不会被执行
+	Args  map[string]any // 任务参数
+	Delay int64          // 延迟时间
 
 	TTL      int64 //如果执行失败，下一次重复的时间
 	Retry    int   //已经重试的次数

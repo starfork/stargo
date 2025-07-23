@@ -105,9 +105,6 @@ func (s *App) initConfig() {
 				s.logger.Fatalf("unknow registry")
 			}
 		}
-
-		//
-
 	})
 
 }
@@ -123,8 +120,7 @@ func (s *App) Init(opt ...Option) {
 
 // Run   server
 
-func (s *App) Run(desc *grpc.ServiceDesc, impl any) {
-
+func (s *App) beforeRun() {
 	if tz, err := time.LoadLocation(s.opts.Timezone); err == nil {
 		s.Tz = tz
 		s.conf.Timezome = s.opts.Timezone
@@ -145,6 +141,10 @@ func (s *App) Run(desc *grpc.ServiceDesc, impl any) {
 		s.logger.Fatalf("registry err %+v", err)
 	}
 
+}
+
+func (s *App) Run(desc *grpc.ServiceDesc, impl any) {
+	s.beforeRun()
 	s.server.Server().RegisterService(desc, impl)
 
 	for _, v := range s.opts.ServiceDesc {
