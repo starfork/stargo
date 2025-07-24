@@ -16,13 +16,13 @@ type Options struct {
 // Option Option
 type Option func(o *Options)
 
-func Name(s string) Option {
+func WithName(s string) Option {
 	return func(o *Options) {
 		o.Name = s
 	}
 }
 
-func Logger(s logger.Logger) Option {
+func WithLogger(s logger.Logger) Option {
 	return func(o *Options) {
 		o.Logger = s
 	}

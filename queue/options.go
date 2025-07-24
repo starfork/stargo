@@ -16,6 +16,8 @@ type Options struct {
 	//每隔多久去拉一次队列,单位是秒。一般都是1秒钟。
 	interval int64
 
+	maxThread int64
+
 	logger logger.Logger
 }
 
@@ -40,11 +42,18 @@ func WithLogger(s logger.Logger) Option {
 	}
 }
 
+func WithMaxTrhead(s int64) Option {
+	return func(o *Options) {
+		o.maxThread = s
+	}
+}
+
 // DefaultOptions default options
 func DefaultOptions() Options {
 	o := Options{
-		step:     1,
-		interval: 1,
+		step:      1,
+		interval:  1,
+		maxThread: 10,
 	}
 	return o
 }

@@ -8,6 +8,8 @@ import (
 	"github.com/starfork/stargo/queue/task"
 )
 
+var tformat = "2006-01-02 15:04:05"
+
 type Queue struct {
 	store    store.Store
 	handlers *sync.Map
@@ -31,81 +33,96 @@ func New(store store.Store, opts ...Option) *Queue {
 }
 
 // Register 执行方法
-func (q *Queue) Register(tag string, h task.Handler) {
-	q.handlers.Store(tag, h)
+func (e *Queue) Register(tag string, h task.Handler) {
+	e.handlers.Store(tag, h)
 }
 
 // Load 任务内容
-func (q *Queue) Load(handlers map[string]task.Handler) *Queue {
+func (e *Queue) Load(handlers map[string]task.Handler) *Queue {
 	for k, v := range handlers {
-		q.handlers.Store(k, v)
+		e.Register(k, v)
 	}
-	return q
+	return e
 }
 
-func (q *Queue) Pop(t *task.Task) error {
-	return q.store.Pop(t)
+func (e *Queue) Pop(t *task.Task) error {
+	return e.store.Pop(t)
 }
-func (q *Queue) Push(t *task.Task) error {
-	return q.store.Push(t)
+func (e *Queue) Push(t *task.Task) error {
+	return e.store.Push(t)
 }
 
 // 一般意义上来说，重复添加一个队列，即表示一个更新
 //
-//	func (q *Queue) Update(t *Task) error {
-//		return q.store.Update(t)
+//	func (e *Queue) Update(t *Task) error {
+//		return e.store.Update(t)
 //	}
-func (q *Queue) run() {
-	t := time.NewTicker(time.Second * time.Duration(q.opts.interval))
+func (e *Queue) run() {
+	t := time.NewTicker(time.Second * time.Duration(e.opts.interval))
 	defer t.Stop()
 	for {
 		<-t.C
-		q.exec()
+		e.exec()
 	}
 }
-func (q *Queue) exec() {
-	rs, err := q.store.FetchJob(q.opts.step)
-
+func (e *Queue) exec() {
+	rs, err := e.store.FetchJob(e.opts.step)
 	if err != nil {
-		q.log(ErrFailGetTask, err)
+		e.log(ErrFailGetJob, err)
 	}
 
+	// 限制最大并发数
+	sem := make(chan struct{}, e.opts.maxThread)
+	var wg sync.WaitGroup
+
 	for _, v := range rs {
-		t, err := q.store.ReadTask(v)
+		t, err := e.store.ReadTask(v)
 		if err != nil {
 			continue
 		}
-		q.store.Pop(t)
-		hander, ok := q.handlers.Load(t.Tag)
+		e.store.Pop(t)
+
+		hander, ok := e.handlers.Load(t.Tag)
 		if !ok {
-			q.log(ErrFailGetTask, t.Tag)
-			//log
+			e.log(ErrFailGetTask, t.Tag)
 			continue
 		}
-		//开启goroutine ==> workers
-		go func() {
-			q.log("sart task ")
-			//执行成功则删除任务，否则如果设置了
-			if err := hander.(task.Handler)(t); err != nil {
-				q.log(ErrFailGetTask, err)
-				//如果有循环条件设置。则循环加入
-				t.Retry++
-				if t.TTL > 0 && t.Retry <= t.RetryMax {
-					t.Delay = t.TTL
-					q.store.Update(t)
-				} else {
-					q.store.Pop(t)
-				}
 
+		sem <- struct{}{} // 占用一个位置
+		wg.Add(1)
+
+		go func(t *task.Task, handler task.Handler) {
+			defer func() {
+				<-sem // 释放位置
+				wg.Done()
+			}()
+
+			e.log("start task  %s  at %s \r\n", t.Subkey(), time.Now().Format(tformat))
+
+			if err := handler(t); err != nil {
+				e.log(ErrTaskExec, err)
+				ttl := t.GetTTL(t.Retry)
+				t.Retry++
+				if ttl > 0 && t.Retry <= t.RetryMax {
+					t.Delay = ttl
+					e.store.Update(t)
+					e.log(TaskUpdate)
+				} else {
+					e.log("finished task %s error %+s at %s \r\n", t.Subkey(), err.Error(), time.Now().Format(tformat))
+					e.store.Pop(t)
+				}
 			} else {
-				q.store.Pop(t)
+				e.log("finished task %s success  at %s \r\n", t.Subkey(), time.Now().Format(tformat))
+				e.store.Pop(t)
 			}
-		}()
+		}(t, hander.(task.Handler))
 	}
+
+	wg.Wait()
 }
 
-func (q *Queue) log(template string, args ...interface{}) {
-	if q.opts.logger != nil {
-		q.opts.logger.Debugf(template, args...)
+func (e *Queue) log(template string, args ...interface{}) {
+	if e.opts.logger != nil {
+		e.opts.logger.Debugf(template, args...)
 	}
 }
