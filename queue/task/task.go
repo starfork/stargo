@@ -10,7 +10,7 @@ type Task struct {
 	Key string // job_id/ 订单号之类的东西
 	Tag string // Tag匹配Handler，无Tag的Task将不会被执行
 
-	// 延迟时间。本次执行之后下一次的执行时间
+	// 延迟时间。本次执行之后下一次的执行时间。单位秒
 	Delay int64
 
 	//如果执行失败，下一次重复的时间.
