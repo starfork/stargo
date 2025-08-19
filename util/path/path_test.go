@@ -41,3 +41,8 @@ func TestClength(t *testing.T) {
 	}
 
 }
+
+func TestUidPathAppend(t *testing.T) {
+	p := NewPath()
+	fmt.Println(p.UidPathAppend("/"))
+}

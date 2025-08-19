@@ -20,3 +20,24 @@ func Reduce[T any, R any](input []T, mapper func(T) R) []R {
 	}
 	return result
 }
+
+func MergeAppend[A any, B any](
+	rsA []A,
+	rsB []B,
+	keyA func(A) any,
+	keyB func(B) any,
+	appender func(A, B),
+) {
+	bMap := make(map[any][]B)
+	for _, b := range rsB {
+		k := keyB(b)
+		bMap[k] = append(bMap[k], b) // 支持一对多
+	}
+	for _, a := range rsA {
+		if bs, ok := bMap[keyA(a)]; ok {
+			for _, b := range bs {
+				appender(a, b) // 注意 a、b 不做拷贝，直接传递
+			}
+		}
+	}
+}

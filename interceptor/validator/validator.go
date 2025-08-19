@@ -34,6 +34,14 @@ func Unary() grpc.UnaryServerInterceptor {
 	}
 	validate.RegisterValidation("money", ValidateMoney)
 
+	validate.RegisterTagNameFunc(func(fld reflect.StructField) string {
+		name := fld.Tag.Get("mapstructure")
+		if name == "-" {
+			return ""
+		}
+		return name
+	})
+
 	return func(ctx context.Context, req any, in *grpc.UnaryServerInfo,
 		handler grpc.UnaryHandler) (resp any, err error) {
 
@@ -59,7 +67,7 @@ func Unary() grpc.UnaryServerInterceptor {
 				translations := tErrs.Translate(trans)
 				var buf bytes.Buffer
 				for _, s2 := range translations {
-					buf.WriteString(s2)
+					buf.WriteString(s2 + ",")
 				}
 				return resp, status.New(codes.InvalidArgument, buf.String()).Err()
 			}
