@@ -12,6 +12,8 @@ const MaxLevel = 10    //最大层级
 
 func TestNewPath(t *testing.T) {
 	p := NewPath()
+	fmt.Println(p.Uid2Path([]uint32{100}...))
+
 	uids := []uint32{10000, 10002}
 	p1, err := p.Uid2Path(uids...)
 	fmt.Println(p1, err)

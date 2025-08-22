@@ -19,18 +19,18 @@ func NewPath(options ...Option) *Path {
 }
 
 // 把uint32的uid转换成长度短一些的字符串
-func (e *Path) Uid2Path(uid ...uint32) (string, error) {
-	if len(uid) > e.opts.maxLevel {
+func (e *Path) Uid2Path(uids ...uint32) (string, error) {
+	if len(uids) > e.opts.maxLevel {
 		return "", errors.New("max level limit")
 	}
 
 	path := "/"
-	for _, v := range uid {
+	for _, v := range uids {
 		if v != 0 {
 			path += strconv.FormatUint(uint64(v), e.opts.base) + "/"
 		}
 	}
-	return path, nil
+	return path[:len(path)-1], nil
 }
 
 func (e *Path) Path2Uid(path string) ([]uint32, error) {
@@ -61,5 +61,5 @@ func (e *Path) UidPathAppend(path string, uid ...uint32) (string, error) {
 			path += strconv.FormatUint(uint64(v), e.opts.base) + "/"
 		}
 	}
-	return path, nil
+	return path[:len(path)-1], nil
 }
