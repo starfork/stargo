@@ -11,6 +11,7 @@ import (
 	"github.com/starfork/stargo/naming/etcd"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 type Api struct {
@@ -40,7 +41,9 @@ func NewApi(conf *Config) *Api {
 
 	conn, err := client.New(ctx, r, logger.DefaultLogger).NewClient(conf.App, conf.DiaOpts...)
 	E(err)
-
+	if len(conf.SMOpts) == 0 {
+		conf.SMOpts = append(conf.SMOpts, DefaultMarshaler)
+	}
 	rmux := runtime.NewServeMux(conf.SMOpts...)
 
 	mux := http.NewServeMux()
@@ -52,6 +55,19 @@ func NewApi(conf *Config) *Api {
 		mux:  mux,
 	}
 }
+
+var DefaultMarshaler = runtime.WithMarshalerOption(runtime.MIMEWildcard,
+
+	&runtime.JSONPb{
+		MarshalOptions: protojson.MarshalOptions{
+			UseProtoNames:   true, // 使用 proto 定义里的名字（snake_case）
+			EmitUnpopulated: true, // 输出默认值字段
+		},
+		UnmarshalOptions: protojson.UnmarshalOptions{
+			DiscardUnknown: true,
+		},
+	})
+
 func (e *Api) MuxHandler() {
 
 }

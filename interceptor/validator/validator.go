@@ -17,6 +17,9 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+type Validate struct {
+}
+
 // Unary Interceptor
 func Unary() grpc.UnaryServerInterceptor {
 	var (
@@ -62,7 +65,7 @@ func Unary() grpc.UnaryServerInterceptor {
 
 		if err != nil {
 			if tErrs, ok := err.(validator.ValidationErrors); !ok {
-				return resp, status.New(codes.Unknown, fmt.Sprintf("error%s", err)).Err()
+				return resp, status.New(codes.InvalidArgument, fmt.Sprintf("error%s", err)).Err()
 			} else {
 				translations := tErrs.Translate(trans)
 				var buf bytes.Buffer
