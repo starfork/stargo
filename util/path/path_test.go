@@ -10,6 +10,18 @@ import (
 const ConvertBase = 36 //转换机制，一旦程序运行，则不可修改
 const MaxLevel = 10    //最大层级
 
+func TestNewPath(t *testing.T) {
+	p := NewPath()
+	uids := []uint32{10000, 10002}
+	p1, err := p.Uid2Path(uids...)
+	fmt.Println(p1, err)
+	fmt.Println(p.Path2Uid(p1))
+	p2, err := p.UidPathAppend(p1, []uint32{30002}...)
+	fmt.Println(p2, err)
+	fmt.Println(p.Path2Uid(p2))
+
+}
+
 func TestPath(t *testing.T) {
 
 	p := strconv.FormatUint(117779567824864525, ConvertBase)

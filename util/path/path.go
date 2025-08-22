@@ -19,12 +19,12 @@ func NewPath(options ...Option) *Path {
 }
 
 // 把uint32的uid转换成长度短一些的字符串
-func (e *Path) Uid2Path(etype string, uid ...uint32) (string, error) {
+func (e *Path) Uid2Path(uid ...uint32) (string, error) {
 	if len(uid) > e.opts.maxLevel {
 		return "", errors.New("max level limit")
 	}
 
-	path := "/" + etype + "/"
+	path := "/"
 	for _, v := range uid {
 		if v != 0 {
 			path += strconv.FormatUint(uint64(v), e.opts.base) + "/"
@@ -36,10 +36,10 @@ func (e *Path) Uid2Path(etype string, uid ...uint32) (string, error) {
 func (e *Path) Path2Uid(path string) ([]uint32, error) {
 	ids := []uint32{}
 	//默认是'/'
-	if len(path) < 3 {
+	if len(path) < 1 {
 		return ids, nil
 	}
-	arr := strings.SplitSeq(path[3:len(path)-1], "/")
+	arr := strings.SplitSeq(path[1:len(path)-1], "/")
 	for v := range arr {
 		uid, err := strconv.ParseUint(v, e.opts.base, 64)
 		if err != nil {
@@ -52,7 +52,7 @@ func (e *Path) Path2Uid(path string) ([]uint32, error) {
 
 // 再原来的path上面再追加uid
 func (e *Path) UidPathAppend(path string, uid ...uint32) (string, error) {
-	arr := strings.Split(path[3:len(path)-1], "/")
+	arr := strings.Split(path[1:len(path)-1], "/")
 	if len(arr)+len(uid) > e.opts.maxLevel {
 		return "", errors.New("max level limit")
 	}
