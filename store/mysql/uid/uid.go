@@ -57,7 +57,18 @@ func (e *UID) productID() {
 		if e.min >= e.max {
 			e.reLoad()
 		}
-		e.min++
+		if e.opt.setp != nil {
+			min := e.opt.setp(e.min)
+			//处理之后的id必须大于min
+			if min <= e.min {
+				e.min++
+			} else {
+				e.min = min
+			}
+		} else {
+			e.min++
+		}
+
 		//过滤方法
 		if len(e.opt.fun) > 0 {
 			filter := e.opt.fun[0]

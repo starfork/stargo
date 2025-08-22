@@ -6,6 +6,7 @@ import (
 )
 
 type CheckFunc func(num ...uint32) uint32
+type SetpFunc func(num uint32) uint32
 
 type Options struct {
 	table  string //表名称
@@ -14,7 +15,8 @@ type Options struct {
 	id     string //业务id
 	len    uint32
 
-	fun []CheckFunc
+	fun  []CheckFunc
+	setp SetpFunc
 }
 
 type Option func(o *Options)
@@ -50,6 +52,11 @@ func Table(c string) Option {
 func Fun(c CheckFunc) Option {
 	return func(o *Options) {
 		o.fun = append(o.fun, c)
+	}
+}
+func Setp(c SetpFunc) Option {
+	return func(o *Options) {
+		o.setp = c
 	}
 }
 
