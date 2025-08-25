@@ -7,15 +7,13 @@ import (
 	"strings"
 
 	jsoniter "github.com/json-iterator/go"
-	"google.golang.org/protobuf/types/known/structpb"
 )
 
-const (
-	NULL = ""
-)
+const EmptyString = ""
 
 type Pm map[string]any
 
+// 构造
 func NewPm(data map[string]any) Pm {
 	_pm := make(Pm)
 	for k, v := range data {
@@ -26,26 +24,50 @@ func NewPm(data map[string]any) Pm {
 
 // 设置参数
 func (pm Pm) Set(key string, value any) Pm {
-	key = strings.ToLower(key)
-	pm[key] = value
+	if pm == nil {
+		pm = make(Pm)
+	}
+	pm[strings.ToLower(key)] = value
 	return pm
 }
 
+// 删除参数
 func (pm Pm) Delete(keys ...string) Pm {
+	if pm == nil {
+		return pm
+	}
 	for _, key := range keys {
-		delete(pm, key)
+		delete(pm, strings.ToLower(key))
 	}
 	return pm
 }
-func (pm Pm) SetPm(key string, f func(b Pm)) Pm {
-	key = strings.ToLower(key)
-	_pm := make(Pm)
-	f(_pm)
-	pm[key] = _pm
+
+// 设置子 Pm
+func (pm Pm) SetPm(key string, sub Pm) Pm {
+	if pm == nil {
+		pm = make(Pm)
+	}
+	pm[strings.ToLower(key)] = sub
 	return pm
 }
 
-// 获取参数，同 GetString()
+// 获取或创建子 Pm
+func (pm Pm) SubPm(key string) Pm {
+	if pm == nil {
+		pm = make(Pm)
+	}
+	k := strings.ToLower(key)
+	if v, ok := pm[k]; ok {
+		if sub, ok := v.(Pm); ok {
+			return sub
+		}
+	}
+	sub := make(Pm)
+	pm[k] = sub
+	return sub
+}
+
+// 获取参数
 func (pm Pm) Get(key string) any {
 	if pm == nil {
 		return nil
@@ -58,71 +80,145 @@ func (pm Pm) Get(key string) any {
 	return value
 }
 
-// 获取参数转换string
+// --- 字符串获取 ---
 func (pm Pm) GetString(key string) string {
-	value := pm.Get(key)
-	v, ok := value.(string)
-	if !ok {
-		return pm.toString(value)
-	}
-	return v
-}
-
-func (pm Pm) GetPbAny(key string) *structpb.Value {
 	v := pm.Get(key)
-	if value, err := structpb.NewValue(v); err == nil {
-		return value
+	s, ok := v.(string)
+	if ok {
+		return s
 	}
-	return nil
+	return pm.toString(v)
 }
 
-// 获取float64。其他float再转一下
-func (pm Pm) GetFloat64(key string) float64 {
-	value := pm.GetString(key)
-
-	v, err := strconv.ParseFloat(value, 64)
-	if err != nil {
-		return 0
+// 严格字符串获取：只允许 string 类型
+func (pm Pm) GetStringStrict(key string) string {
+	v := pm.Get(key)
+	if s, ok := v.(string); ok {
+		return s
 	}
-	return v
-}
-func (pm Pm) GetUint32(key string) uint32 {
-	return uint32(pm.GetInt(key))
+	return EmptyString
 }
 
-// 获取int。其他int自己再转一下
+// --- 数字获取 ---
 func (pm Pm) GetInt(key string) int {
-	value := pm.GetString(key)
-
-	v, err := strconv.Atoi(value)
-	if err != nil {
-		return 0
+	if v, ok := pm.GetIntOk(key); ok {
+		return v
 	}
-	return v
+	return 0
 }
+
+func (pm Pm) GetIntOk(key string) (int, bool) {
+	v := pm.Get(key)
+	switch x := v.(type) {
+	case int:
+		return x, true
+	case int64:
+		return int(x), true
+	case float64:
+		return int(x), true
+	case string:
+		i, err := strconv.Atoi(x)
+		if err == nil {
+			return i, true
+		}
+	}
+	return 0, false
+}
+
 func (pm Pm) GetInt64(key string) int64 {
-	return int64(pm.GetInt(key))
+	if v, ok := pm.GetIntOk(key); ok {
+		return int64(v)
+	}
+	return 0
 }
 
-func (pm Pm) toString(v any) (str string) {
-
-	if v == nil {
-		return NULL
+func (pm Pm) GetUint32(key string) uint32 {
+	if v, ok := pm.GetUint32Ok(key); ok {
+		return v
 	}
-	var (
-		bs  []byte
-		err error
-	)
-	if bs, err = jsoniter.Marshal(v); err != nil {
-		return NULL
+	return 0
+}
+
+func (pm Pm) GetUint32Ok(key string) (uint32, bool) {
+	v := pm.Get(key)
+	switch x := v.(type) {
+	case uint32:
+		return x, true
+	case int:
+		if x >= 0 {
+			return uint32(x), true
+		}
+	case int64:
+		if x >= 0 {
+			return uint32(x), true
+		}
+	case float64:
+		if x >= 0 {
+			return uint32(x), true
+		}
+	case string:
+		u, err := strconv.ParseUint(x, 10, 32)
+		if err == nil {
+			return uint32(u), true
+		}
+	}
+	return 0, false
+}
+
+func (pm Pm) GetFloat64(key string) float64 {
+	if v, ok := pm.GetFloat64Ok(key); ok {
+		return v
+	}
+	return 0
+}
+
+func (pm Pm) GetFloat64Ok(key string) (float64, bool) {
+	v := pm.Get(key)
+	switch x := v.(type) {
+	case float64:
+		return x, true
+	case int:
+		return float64(x), true
+	case int64:
+		return float64(x), true
+	case string:
+		f, err := strconv.ParseFloat(x, 64)
+		if err == nil {
+			return f, true
+		}
+	}
+	return 0, false
+}
+
+// --- Protobuf Any ---
+// 这个使用体验并不好
+// func (pm Pm) GetPbAny(key string) *structpb.Value {
+// 	v := pm.Get(key)
+// 	if value, err := structpb.NewValue(v); err == nil {
+// 		return value
+// 	}
+// 	return nil
+// }
+
+// --- 内部工具 ---
+func (pm Pm) toString(v any) string {
+	if v == nil {
+		return EmptyString
+	}
+	if s, ok := v.(string); ok {
+		return s
+	}
+	bs, err := jsoniter.Marshal(v)
+	if err != nil {
+		return EmptyString
 	}
 	return string(bs)
 }
 
-// 编码URL
+// --- URL 编码 ---
 func (pm Pm) EncodeURL() string {
 	if pm == nil {
-		return NULL
+		return EmptyString
 	}
 	var (
 		buf  strings.Builder
@@ -133,7 +229,8 @@ func (pm Pm) EncodeURL() string {
 	}
 	sort.Strings(keys)
 	for _, k := range keys {
-		if v := pm.GetString(k); v != NULL {
+		v := pm.GetString(k)
+		if v != EmptyString {
 			buf.WriteString(url.QueryEscape(k))
 			buf.WriteByte('=')
 			buf.WriteString(url.QueryEscape(v))
@@ -141,8 +238,7 @@ func (pm Pm) EncodeURL() string {
 		}
 	}
 	if buf.Len() <= 0 {
-		return NULL
+		return EmptyString
 	}
 	return buf.String()[:buf.Len()-1]
-
 }
