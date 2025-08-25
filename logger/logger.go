@@ -3,11 +3,11 @@ package logger
 type Logger interface {
 	// Logf writes a formatted log entry
 
-	Warnf(format string, v ...interface{})
-	Debugf(format string, v ...interface{})
-	Errorf(format string, v ...interface{})
-	Fatalf(format string, v ...interface{})
-	Infof(format string, v ...interface{})
+	Warnf(format string, v ...any)
+	Debugf(format string, v ...any)
+	Errorf(format string, v ...any)
+	Fatalf(format string, v ...any)
+	Infof(format string, v ...any)
 
 	// String returns the name of logger
 	String() string

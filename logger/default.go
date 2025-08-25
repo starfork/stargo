@@ -3,6 +3,7 @@ package logger
 import (
 	"context"
 	"fmt"
+	"maps"
 	"os"
 	"sync"
 )
@@ -34,51 +35,45 @@ func (l *defaultLogger) String() string {
 	return "default"
 }
 
-func (l *defaultLogger) Fields(fields map[string]interface{}) Logger {
+func (l *defaultLogger) Fields(fields map[string]any) Logger {
 	l.Lock()
-	nfields := make(map[string]interface{}, len(l.opts.Fields))
+	nfields := make(map[string]any, len(l.opts.Fields))
 
-	for k, v := range l.opts.Fields {
-		nfields[k] = v
-	}
+	maps.Copy(nfields, l.opts.Fields)
 	l.Unlock()
 
-	for k, v := range fields {
-		nfields[k] = v
-	}
+	maps.Copy(nfields, fields)
 
 	return &defaultLogger{opts: Options{
 		Level: l.opts.Level,
 	}}
 }
 
-func copyFields(src map[string]interface{}) map[string]interface{} {
-	dst := make(map[string]interface{}, len(src))
-	for k, v := range src {
-		dst[k] = v
-	}
+func copyFields(src map[string]any) map[string]any {
+	dst := make(map[string]any, len(src))
+	maps.Copy(dst, src)
 
 	return dst
 }
 
-func (l *defaultLogger) Logf(level Level, format string, v ...interface{}) {
+func (l *defaultLogger) Logf(level Level, format string, v ...any) {
 	fmt.Printf(format, v...)
 }
 
-func (l *defaultLogger) Warnf(format string, v ...interface{}) {
+func (l *defaultLogger) Warnf(format string, v ...any) {
 	l.Logf(WarnLevel, format, v...)
 }
-func (l *defaultLogger) Debugf(format string, v ...interface{}) {
+func (l *defaultLogger) Debugf(format string, v ...any) {
 	l.Logf(DebugLevel, format, v...)
 }
-func (l *defaultLogger) Errorf(format string, v ...interface{}) {
+func (l *defaultLogger) Errorf(format string, v ...any) {
 	l.Logf(ErrorLevel, format, v...)
 }
-func (l *defaultLogger) Fatalf(format string, v ...interface{}) {
+func (l *defaultLogger) Fatalf(format string, v ...any) {
 	l.Logf(FatalLevel, format, v...)
 	os.Exit(1)
 }
-func (l *defaultLogger) Infof(format string, v ...interface{}) {
+func (l *defaultLogger) Infof(format string, v ...any) {
 	l.Logf(InfoLevel, format, v...)
 }
 
@@ -98,7 +93,7 @@ func NewLogger(opts ...Option) Logger {
 	// Default options
 	options := Options{
 		Level:           InfoLevel,
-		Fields:          make(map[string]interface{}),
+		Fields:          make(map[string]any),
 		Out:             os.Stderr,
 		CallerSkipCount: 2,
 		Context:         context.Background(),
