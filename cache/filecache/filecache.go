@@ -34,7 +34,7 @@ import (
 // FileCacheItem is basic unit of file cache adapter which
 // contains data and expire time.
 type FileCacheItem struct {
-	Data       interface{}
+	Data       any
 	Lastaccess time.Time
 	Expired    time.Time
 }
@@ -153,7 +153,7 @@ func (fc *FileCache) getCacheFileName(key string) (string, error) {
 
 // Get value from file cache.
 // if nonexistent or expired return an empty string.
-func (fc *FileCache) Get(ctx context.Context, key string) (interface{}, error) {
+func (fc *FileCache) Get(ctx context.Context, key string) (any, error) {
 	fn, err := fc.getCacheFileName(key)
 	if err != nil {
 		return nil, err
@@ -200,7 +200,7 @@ func (fc *FileCache) Fetch(ctx context.Context, keys []string) ([]any, error) {
 // Put value into file cache.
 // timeout: how long this file should be kept in ms
 // if timeout equals fc.EmbedExpiry(default is 0), cache this item forever.
-func (fc *FileCache) Put(ctx context.Context, key string, val interface{}, timeout ...time.Duration) error {
+func (fc *FileCache) Put(ctx context.Context, key string, val any, timeout ...time.Duration) error {
 	gob.Register(val)
 
 	item := FileCacheItem{Data: val}
@@ -322,7 +322,7 @@ func FilePutContents(filename string, content []byte) error {
 }
 
 // GobEncode Gob encodes a file cache item.
-func GobEncode(data interface{}) ([]byte, error) {
+func GobEncode(data any) ([]byte, error) {
 	buf := bytes.NewBuffer(nil)
 	enc := gob.NewEncoder(buf)
 	err := enc.Encode(data)

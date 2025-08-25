@@ -11,11 +11,11 @@ import (
 )
 
 type APIError struct {
-	Service string        `json:"service"`
-	Method  string        `json:"method"`
-	Code    string        `json:"code"`
-	Msg     string        `json:"msg"`
-	Details []interface{} `json:"details,omitempty"`
+	Service string `json:"service"`
+	Method  string `json:"method"`
+	Code    string `json:"code"`
+	Msg     string `json:"msg"`
+	Details []any  `json:"details,omitempty"`
 }
 
 func StargoHTTPError(ctx context.Context, mux *runtime.ServeMux, marshaler runtime.Marshaler, w http.ResponseWriter, r *http.Request, err error) {

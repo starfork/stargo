@@ -13,7 +13,7 @@ type Options struct {
 	// Alternative options
 	Context context.Context
 	// fields to always be logged
-	Fields map[string]interface{}
+	Fields map[string]any
 	// Caller skip frame count for file:line info
 	CallerSkipCount int
 	// The logging level the logger should log at. default is `InfoLevel`
@@ -21,7 +21,7 @@ type Options struct {
 }
 
 // WithFields set default fields for the logger.
-func WithFields(fields map[string]interface{}) Option {
+func WithFields(fields map[string]any) Option {
 	return func(args *Options) {
 		args.Fields = fields
 	}
@@ -49,7 +49,7 @@ func WithCallerSkipCount(c int) Option {
 }
 
 // WithContext set Context
-func WithContext(k, v interface{}) Option {
+func WithContext(k, v any) Option {
 	return func(o *Options) {
 		if o.Context == nil {
 			o.Context = context.Background()

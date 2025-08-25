@@ -86,7 +86,7 @@ func (s *Session) Commit() error {
 }
 
 // Exec 执行sql语句，如果已经开启事务，就以事务方式执行，如果没有开启事务，就以非事务方式执行
-func (s *Session) Exec(query string, args ...interface{}) (sql.Result, error) {
+func (s *Session) Exec(query string, args ...any) (sql.Result, error) {
 	if s.tx != nil {
 		return s.tx.Exec(query, args...)
 	}
@@ -94,7 +94,7 @@ func (s *Session) Exec(query string, args ...interface{}) (sql.Result, error) {
 }
 
 // QueryRow 如果已经开启事务，就以事务方式执行，如果没有开启事务，就以非事务方式执行
-func (s *Session) QueryRow(query string, args ...interface{}) *sql.Row {
+func (s *Session) QueryRow(query string, args ...any) *sql.Row {
 	if s.tx != nil {
 		return s.tx.QueryRow(query, args...)
 	}
@@ -102,7 +102,7 @@ func (s *Session) QueryRow(query string, args ...interface{}) *sql.Row {
 }
 
 // Query 查询数据，如果已经开启事务，就以事务方式执行，如果没有开启事务，就以非事务方式执行
-func (s *Session) Query(query string, args ...interface{}) (*sql.Rows, error) {
+func (s *Session) Query(query string, args ...any) (*sql.Rows, error) {
 	if s.tx != nil {
 		return s.tx.Query(query, args...)
 	}

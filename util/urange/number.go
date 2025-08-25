@@ -14,7 +14,7 @@ import (
 //	 uid := Ruint32(rs, "Id")
 //
 // 对象的key区分大小写。返回结果已经去重复
-func Ruint32(source interface{}, key string) []uint32 {
+func Ruint32(source any, key string) []uint32 {
 	var uid []uint32
 	for _, v := range rdi(source, key) {
 		uid = append(uid, v.(uint32))
@@ -23,7 +23,7 @@ func Ruint32(source interface{}, key string) []uint32 {
 }
 
 // 拼接成 'bbb','xxx'
-func Rstring(source interface{}, key string) string {
+func Rstring(source any, key string) string {
 	var uid string
 	for _, v := range rdi(source, key) {
 		uid += fmt.Sprintf("%s,", v.(string))
@@ -32,7 +32,7 @@ func Rstring(source interface{}, key string) string {
 }
 
 // 拼接成 ['xxx','xxx']
-func Rstrings(source interface{}, key string) []string {
+func Rstrings(source any, key string) []string {
 	var uid []string
 	for _, v := range rdi(source, key) {
 		uid = append(uid, v.(string))
@@ -41,7 +41,7 @@ func Rstrings(source interface{}, key string) []string {
 }
 
 // 去重
-func Ruint64(source interface{}, key string) []uint64 {
+func Ruint64(source any, key string) []uint64 {
 	var uid []uint64
 	for _, v := range rdi(source, key) {
 		uid = append(uid, v.(uint64))
@@ -50,7 +50,7 @@ func Ruint64(source interface{}, key string) []uint64 {
 }
 
 // ROuint32 原始的，没有去重复的遍历数据
-func ROuint32(source interface{}, key string) []uint32 {
+func ROuint32(source any, key string) []uint32 {
 	var uid []uint32
 	for _, v := range ri(source, key) {
 		uid = append(uid, v.(uint32))
@@ -59,7 +59,7 @@ func ROuint32(source interface{}, key string) []uint32 {
 }
 
 // 原始
-func ROuint64(source interface{}, key string) []uint64 {
+func ROuint64(source any, key string) []uint64 {
 	var uid []uint64
 	for _, v := range ri(source, key) {
 		uid = append(uid, v.(uint64))
@@ -68,8 +68,8 @@ func ROuint64(source interface{}, key string) []uint64 {
 }
 
 // ri 原始interface
-func ri(source interface{}, key string) []interface{} {
-	var uid []interface{}
+func ri(source any, key string) []any {
+	var uid []any
 	val := reflect.ValueOf(source)
 	for i := 0; i < val.Len(); i++ {
 		k := val.Index(i).Elem()
@@ -80,11 +80,11 @@ func ri(source interface{}, key string) []interface{} {
 }
 
 // ri range duplicate interface 原始去重复interface
-func rdi(source interface{}, key string) []interface{} {
-	//var uid []interface{}
+func rdi(source any, key string) []any {
+	//var uid []any
 	val := reflect.ValueOf(source)
-	uid := make([]interface{}, 0, val.Len())
-	temp := map[interface{}]struct{}{}
+	uid := make([]any, 0, val.Len())
+	temp := map[any]struct{}{}
 	for i := 0; i < val.Len(); i++ {
 		f := val.Index(i).Elem().FieldByName(key).Interface()
 		if _, ok := temp[f]; !ok {

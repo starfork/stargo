@@ -14,7 +14,7 @@ func Unary() grpc.UnaryServerInterceptor {
 
 // Interceptor panic时返回Unknown错误吗
 func Interceptor() grpc_recovery.Option {
-	return grpc_recovery.WithRecoveryHandler(func(p interface{}) (err error) {
+	return grpc_recovery.WithRecoveryHandler(func(p any) (err error) {
 		return status.Errorf(codes.Unknown, "panic triggered: %v", p)
 	})
 }

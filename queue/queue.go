@@ -121,7 +121,7 @@ func (e *Queue) exec() {
 	wg.Wait()
 }
 
-func (e *Queue) log(template string, args ...interface{}) {
+func (e *Queue) log(template string, args ...any) {
 	if e.opts.logger != nil {
 		e.opts.logger.Debugf(template, args...)
 	}

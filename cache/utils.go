@@ -9,7 +9,7 @@ const (
 	MinUint64 uint64 = 0
 )
 
-func Incr(originVal interface{}) (interface{}, error) {
+func Incr(originVal any) (any, error) {
 	switch val := originVal.(type) {
 	case int:
 		tmp := val + 1
@@ -48,7 +48,7 @@ func Incr(originVal interface{}) (interface{}, error) {
 	}
 }
 
-func Decr(originVal interface{}) (interface{}, error) {
+func Decr(originVal any) (any, error) {
 	switch val := originVal.(type) {
 	case int:
 		tmp := val - 1

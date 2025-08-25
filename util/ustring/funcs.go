@@ -26,7 +26,7 @@ func AnyToString(value any) string {
 		sb.WriteString("}")
 		return sb.String()
 	case reflect.Slice:
-		valueSlice := make([]interface{}, v.Len())
+		valueSlice := make([]any, v.Len())
 		for i := range valueSlice {
 			valueSlice[i] = AnyToString(v.Index(i).Interface())
 		}

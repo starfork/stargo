@@ -9,7 +9,7 @@ import (
 // target 需要遍历的数据，source rpc过来的数据
 // 目前仅支持string,uint类型
 // (rs.Data, suser.Data, "Avatar,NickName", "", "UserId,Uid")
-func I2i(target, source, targetKey, sourceKey, compareKey interface{}) {
+func I2i(target, source, targetKey, sourceKey, compareKey any) {
 	tKey := getTargetKey(targetKey)
 	sKey := getSourceKey(tKey, sourceKey)
 	cKey := getCompareKey(compareKey)
@@ -49,7 +49,7 @@ func I2i(target, source, targetKey, sourceKey, compareKey interface{}) {
 // compareKey对比key
 // subkey二级struct名字
 // urange.I2iKey(data, suser.Data, "Avatar,NickName", "", "FriendId,Uid", "worker")
-func I2iKey(target, source, targetKey, sourceKey, compareKey interface{}, subkey string) {
+func I2iKey(target, source, targetKey, sourceKey, compareKey any, subkey string) {
 	tKey := getTargetKey(targetKey)
 	sKey := getSourceKey(tKey, sourceKey)
 	cKey := getCompareKey(compareKey)
@@ -92,7 +92,7 @@ func I2iKey(target, source, targetKey, sourceKey, compareKey interface{}, subkey
 }
 
 // getTargetKey 获取target 的key。估计后面都不会用string的slice了。
-func getTargetKey(key interface{}) []string {
+func getTargetKey(key any) []string {
 	if op, ok := key.(string); ok {
 		return strings.Split(op, ",")
 	}
@@ -100,7 +100,7 @@ func getTargetKey(key interface{}) []string {
 }
 
 // getSourceKey 获取Source的key
-func getSourceKey(targetKey []string, key interface{}) []string {
+func getSourceKey(targetKey []string, key any) []string {
 	if op, ok := key.(string); ok {
 		if op == "" {
 			return targetKey
@@ -117,7 +117,7 @@ func getSourceKey(targetKey []string, key interface{}) []string {
 // getCompareKey 解析对比Key。
 // 如果没逗号，表示两个key相同
 // 如果有逗号。第一个表示target的key，第二个是source key
-func getCompareKey(key interface{}) []string {
+func getCompareKey(key any) []string {
 	if op, ok := key.(string); ok {
 		tmp := strings.Split(op, ",")
 		if len(tmp) == 1 {
