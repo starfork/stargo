@@ -60,3 +60,10 @@ func TestUidPathAppend(t *testing.T) {
 	p := NewPath()
 	fmt.Println(p.UidPathAppend("/"))
 }
+
+func TestPath2Uid(t *testing.T) {
+	p := NewPath()
+	tmp, err := p.Uid2Path(123, 456)
+	fmt.Println(tmp, err)
+	fmt.Println(p.Path2Uid("/13ze/15jj"))
+}

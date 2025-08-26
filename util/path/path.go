@@ -39,7 +39,7 @@ func (e *Path) Path2Uid(path string) ([]uint32, error) {
 	if len(path) < 1 {
 		return ids, nil
 	}
-	arr := strings.SplitSeq(path[1:len(path)-1], "/")
+	arr := strings.SplitSeq(path[1:], "/") //格式"/abc/def".不要最后一个斜杠
 	for v := range arr {
 		uid, err := strconv.ParseUint(v, e.opts.base, 64)
 		if err != nil {
@@ -57,9 +57,7 @@ func (e *Path) UidPathAppend(path string, uid ...uint32) (string, error) {
 		return "", errors.New("max level limit")
 	}
 	for _, v := range uid {
-		if v > 0 {
-			path += strconv.FormatUint(uint64(v), e.opts.base) + "/"
-		}
+		path += strconv.FormatUint(uint64(v), e.opts.base) + "/"
 	}
 	return path[:len(path)-1], nil
 }
