@@ -190,16 +190,6 @@ func (pm Pm) GetFloat64Ok(key string) (float64, bool) {
 	return 0, false
 }
 
-// --- Protobuf Any ---
-// 这个使用体验并不好
-// func (pm Pm) GetPbAny(key string) *structpb.Value {
-// 	v := pm.Get(key)
-// 	if value, err := structpb.NewValue(v); err == nil {
-// 		return value
-// 	}
-// 	return nil
-// }
-
 // --- 内部工具 ---
 func (pm Pm) toString(v any) string {
 	if v == nil {
@@ -214,22 +204,46 @@ func (pm Pm) toString(v any) string {
 	}
 	return string(bs)
 }
+func (pm Pm) flatten(prefix string, out map[string]string) {
+	for k, v := range pm {
+		key := k
+		if prefix != "" {
+			key = prefix + "." + k
+		}
+		switch val := v.(type) {
+		case Pm:
+			val.flatten(key, out)
+		case map[string]any:
+			Pm(val).flatten(key, out)
+		default:
+			out[key] = pm.toString(val)
+		}
+	}
+}
 
 // --- URL 编码 ---
 func (pm Pm) EncodeURL() string {
 	if pm == nil {
 		return EmptyString
 	}
+	flat := make(map[string]string)
+	pm.flatten("", flat)
+
+	if len(flat) == 0 {
+		return EmptyString
+	}
+
 	var (
 		buf  strings.Builder
 		keys []string
 	)
-	for k := range pm {
+	for k := range flat {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
+
 	for _, k := range keys {
-		v := pm.GetString(k)
+		v := flat[k]
 		if v != EmptyString {
 			buf.WriteString(url.QueryEscape(k))
 			buf.WriteByte('=')
@@ -237,8 +251,6 @@ func (pm Pm) EncodeURL() string {
 			buf.WriteByte('&')
 		}
 	}
-	if buf.Len() <= 0 {
-		return EmptyString
-	}
+
 	return buf.String()[:buf.Len()-1]
 }

@@ -52,12 +52,12 @@ func (e *Path) Path2Uid(path string) ([]uint32, error) {
 
 // 再原来的path上面再追加uid
 func (e *Path) UidPathAppend(path string, uid ...uint32) (string, error) {
-	arr := strings.Split(path[1:len(path)-1], "/")
+	arr := strings.Split(path, "/")
 	if len(arr)+len(uid) > e.opts.maxLevel {
 		return "", errors.New("max level limit")
 	}
 	for _, v := range uid {
-		path += strconv.FormatUint(uint64(v), e.opts.base) + "/"
+		path += "/" + strconv.FormatUint(uint64(v), e.opts.base) + "/"
 	}
 	return path[:len(path)-1], nil
 }

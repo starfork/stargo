@@ -14,6 +14,18 @@ func TestEncodeURL(t *testing.T) {
 	}
 	fmt.Println(data.EncodeURL())
 }
+func TestEncodeURLDeep(t *testing.T) {
+	data := Pm{
+		"mer_id": "12345",
+		"amt":    100.01,
+		"acct": Pm{
+			"type":  "bank",
+			"card":  "22222222",
+			"extra": "",
+		},
+	}
+	fmt.Println(data.EncodeURL())
+}
 
 func TestPmBasic(t *testing.T) {
 	pm := NewPm(map[string]any{
