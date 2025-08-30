@@ -215,6 +215,10 @@ func (pm Pm) flatten(prefix string, out map[string]string) {
 			val.flatten(key, out)
 		case map[string]any:
 			Pm(val).flatten(key, out)
+		case map[string]string: // 新增
+			for kk, vv := range val {
+				out[key+"."+kk] = vv
+			}
 		default:
 			out[key] = pm.toString(val)
 		}
