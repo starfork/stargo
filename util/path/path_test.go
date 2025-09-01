@@ -18,6 +18,7 @@ func TestNewPath(t *testing.T) {
 	p1, err := p.Uid2Path(uids...)
 	fmt.Println(p1, err)
 	fmt.Println(p.Path2Uid(p1))
+	fmt.Println("p1", p1)
 	p2, err := p.UidPathAppend(p1, []uint32{30002}...)
 	fmt.Println(p2, err)
 	fmt.Println(p.Path2Uid(p2))

@@ -70,11 +70,10 @@ func (e *Queue) exec() {
 	if err != nil {
 		e.log(ErrFailGetJob, err)
 	}
-
-	// 限制最大并发数
-	sem := make(chan struct{}, e.opts.maxThread)
-	var wg sync.WaitGroup
-
+	var (
+		wg  sync.WaitGroup
+		sem = make(chan struct{}, e.opts.maxThread)
+	)
 	for _, v := range rs {
 		t, err := e.store.ReadTask(v)
 		if err != nil {
@@ -88,16 +87,21 @@ func (e *Queue) exec() {
 			continue
 		}
 
-		sem <- struct{}{} // 占用一个位置
 		wg.Add(1)
+		sem <- struct{}{} // 获取令牌
 
 		go func(t *task.Task, handler task.Handler) {
 			defer func() {
-				<-sem // 释放位置
+				if r := recover(); r != nil {
+					e.log("panic in handler %s: %v", t.Subkey(), r)
+					e.store.Pop(t) //直接删掉
+				}
+				<-sem
 				wg.Done()
 			}()
 
-			e.log("start task  %s  at %s \r\n", t.Subkey(), time.Now().Format(tformat))
+			start := time.Now()
+			e.log("start task %s at %s", t.Subkey(), start.Format(tformat))
 
 			if err := handler(t); err != nil {
 				e.log(ErrTaskExec, err)
@@ -105,8 +109,11 @@ func (e *Queue) exec() {
 				t.Retry++
 				if ttl > 0 && t.Retry <= t.RetryMax {
 					t.Delay = ttl
-					e.store.Update(t)
-					e.log(TaskUpdate)
+					if err := e.store.Update(t); err != nil {
+						e.log("update task %s failed: %v", t.Subkey(), err)
+					} else {
+						e.log(TaskUpdate)
+					}
 				} else {
 					e.log("finished task %s error %+s at %s \r\n", t.Subkey(), err.Error(), time.Now().Format(tformat))
 					e.store.Pop(t)
