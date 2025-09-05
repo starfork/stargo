@@ -39,7 +39,7 @@ type App struct {
 	resolver naming.Resolver
 	tracer   tracer.Tracer
 
-	Tz *time.Location
+	//Tz *time.Location
 
 	once sync.Once
 }
@@ -67,6 +67,7 @@ func (s *App) initConfig() {
 
 		for k, v := range s.conf.Store {
 			if k == "mysql" {
+				v.TimeLocation = s.opts.Timezone //使用time local
 				s.Store(k, smysql.NewMysql(v))
 			}
 			if k == "redis" {
@@ -122,7 +123,8 @@ func (s *App) Init(opt ...Option) {
 
 func (s *App) beforeRun() {
 	if tz, err := time.LoadLocation(s.opts.Timezone); err == nil {
-		s.Tz = tz
+		time.Local = tz
+		//s.Tz = tz
 		s.conf.Timezome = s.opts.Timezone
 	}
 
