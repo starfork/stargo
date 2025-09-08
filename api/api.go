@@ -31,16 +31,20 @@ func NewApi(conf *Config) *Api {
 	ctx := context.Background()
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
-	r, err := etcd.NewResolver(conf.Registry)
-	E(err)
 
-	if len(conf.DiaOpts) == 0 {
+	var conn *grpc.ClientConn
+	//手动注册的模式
+	if conf.Registry != nil {
+		r, err := etcd.NewResolver(conf.Registry)
+		E(err)
+		if len(conf.DiaOpts) == 0 {
+			conf.DiaOpts = []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
+		}
 
-		conf.DiaOpts = []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
+		conn, err = client.New(ctx, r, logger.DefaultLogger).NewClient(conf.App, conf.DiaOpts...)
+		E(err)
 	}
 
-	conn, err := client.New(ctx, r, logger.DefaultLogger).NewClient(conf.App, conf.DiaOpts...)
-	E(err)
 	if len(conf.SMOpts) == 0 {
 		conf.SMOpts = append(conf.SMOpts, DefaultMarshaler)
 	}
@@ -88,13 +92,19 @@ func (e *Api) Run() {
 	}
 }
 
+func (e *Api) SetConn(conn *grpc.ClientConn) {
+	e.conn = conn
+}
+
 func (e *Api) Conn() *grpc.ClientConn {
 	return e.conn
 }
 func (e *Api) Ctx() context.Context {
 	return e.ctx
 }
-
+func (e *Api) SetCtx(ctx context.Context) {
+	e.ctx = ctx
+}
 func (e *Api) Rmux() *runtime.ServeMux {
 	return e.rmux
 }
