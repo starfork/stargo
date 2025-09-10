@@ -67,6 +67,10 @@ func DefaultOptions() []grpc.DialOption {
 		grpc.WithInitialConnWindowSize(InitialConnWindowSize),
 		grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(MaxSendMsgSize)),
 		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(MaxRecvMsgSize)),
+		grpc.WithDefaultServiceConfig(` {
+        "loadBalancingConfig": [{"round_robin":{}}],
+        "healthCheckConfig": {"serviceName": ""}
+    }`),
 	}
 	return opts
 }
