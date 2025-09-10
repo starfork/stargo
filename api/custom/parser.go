@@ -12,13 +12,10 @@ type StargoQueryParser struct {
 	key []byte
 }
 
-func NewStargoQueryParser(key ...[]byte) *StargoQueryParser {
-	k := Key
-	if len(key) > 0 {
-		k = key[0]
-	}
+func NewStargoQueryParser(key []byte, opt ...MarshalOption) *StargoQueryParser {
+
 	return &StargoQueryParser{
-		key: k,
+		key: key,
 	}
 }
 

@@ -5,13 +5,15 @@ import (
 	"testing"
 )
 
+var TestKey = []byte("UneLqzFTLwjoch8lYJybbMU4urWbhzm6")
+
 func TestEncode(t *testing.T) {
-	rs, err := Encode(Key, []byte("app_id=stargo"))
+	rs, err := Encode(TestKey, []byte("app_id=stargo"))
 	fmt.Println(string(rs), err)
 }
 
 func TestDecode(t *testing.T) {
-	rs, err := Decode("nvK7GdnGaocZ0mJBTkkkr3JJ4J0hKLoAQwsbYwsDHw+RmXsZmVwtzkKK7Huk0dk=", string(Key))
+	rs, err := Decode("GE2kaDGssEPEpNRwYuu--xWMn12pBdg-2iqMQjFaL2zmXR8efX91M5F2QwA28EHh_P6dgVtZ6QFEG5sL_Y04GKJrOjM=", string(TestKey))
 	fmt.Println(string(rs), err)
 
 }

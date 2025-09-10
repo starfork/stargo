@@ -60,17 +60,17 @@ func NewApi(conf *Config) *Api {
 	}
 }
 
-var DefaultMarshaler = runtime.WithMarshalerOption(runtime.MIMEWildcard,
+var DefaultMarshalerOption = runtime.JSONPb{
+	MarshalOptions: protojson.MarshalOptions{
+		UseProtoNames:   true, // 使用 proto 定义里的名字（snake_case）
+		EmitUnpopulated: true, // 输出默认值字段
+	},
+	UnmarshalOptions: protojson.UnmarshalOptions{
+		DiscardUnknown: true,
+	},
+}
 
-	&runtime.JSONPb{
-		MarshalOptions: protojson.MarshalOptions{
-			UseProtoNames:   true, // 使用 proto 定义里的名字（snake_case）
-			EmitUnpopulated: true, // 输出默认值字段
-		},
-		UnmarshalOptions: protojson.UnmarshalOptions{
-			DiscardUnknown: true,
-		},
-	})
+var DefaultMarshaler = runtime.WithMarshalerOption(runtime.MIMEWildcard, &DefaultMarshalerOption)
 
 func (e *Api) MuxHandler() {
 
