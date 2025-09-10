@@ -47,6 +47,7 @@ func (e *Redis) Put(ctx context.Context, key string, value any, timeout ...time.
 
 // Delete removes a key from cache.
 func (e *Redis) Delete(ctx context.Context, key string) error {
+	e.rdc.Del(ctx, key).Result()
 	return nil
 }
 
