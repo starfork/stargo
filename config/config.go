@@ -22,6 +22,7 @@ type Config struct {
 	Env        string
 	Timezome   string //时区设置
 	Timeformat string
+
 	//Cm         []string // config manager。目前只处理基于etcd，所以这里是etcd的地址
 
 	Server *server.Config

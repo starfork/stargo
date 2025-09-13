@@ -14,6 +14,7 @@ type Config struct {
 	Env  string
 	Name string
 	Addr string
+	ID   int
 	//ServerName string //服务名称--4-11改。通过app启动设置
 	//RpcServer *RpcServer
 

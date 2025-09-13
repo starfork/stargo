@@ -73,3 +73,10 @@ func Cros(w http.ResponseWriter, req *http.Request, headers ...map[string]string
 		}
 	}
 }
+
+func DefaultHandlerWrapper(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		Cros(w, req)
+		h.ServeHTTP(w, req)
+	})
+}

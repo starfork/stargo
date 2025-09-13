@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
-	"time"
 
 	"github.com/starfork/stargo/store"
 	"github.com/starfork/stargo/util/ustring"
@@ -56,6 +55,7 @@ func (e *Mysql) connect(confs ...*store.Config) {
 			TablePrefix:   c.Prefix,
 		},
 	}
+	fmt.Println(c.Prefix)
 	if c.Debug {
 		conf.Logger = logger.Default.LogMode(logger.Info)
 	}
@@ -63,7 +63,7 @@ func (e *Mysql) connect(confs ...*store.Config) {
 		store.TZ1K = true
 	}
 	var db *gorm.DB
-	fmt.Println(time.Now(), "-----------")
+	//fmt.Println(time.Now(), "-----------")
 	if db, err = gorm.Open(mysql.Open(dsn), conf); err != nil {
 		panic("Db Connect TO " + dsn + " With Error:" + err.Error())
 	}

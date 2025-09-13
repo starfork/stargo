@@ -2,7 +2,6 @@ package request
 
 import (
 	"errors"
-	"fmt"
 	"net"
 	"net/http"
 	"sync"
@@ -47,7 +46,7 @@ func (e *Limiter) Allow() bool {
 	//fmt.Printf("%v", e)
 
 	e.visits++
-	fmt.Printf("\r limit %d visits", e.visits)
+	//fmt.Printf("\r limit %d visits", e.visits)
 	return e.limiter.Allow()
 
 }
@@ -57,11 +56,12 @@ func (e *Limiter) Visits() uint64 {
 func (e *VisitorLimiter) Allow() bool {
 	var err error
 	var limiter *Limiter
-	if e.policy.Name == "token" {
+	switch e.policy.Name {
+	case "token":
 		limiter, err = e.NewTokenLimiter()
-	} else if e.policy.Name == "ip" {
+	case "ip":
 		limiter, err = e.NewIpLimiter()
-	} else {
+	default:
 		limiter, err = e.SetPolicy(Policy{
 			Name: "token",
 			R:    rate.Every(2 * time.Second),
