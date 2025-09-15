@@ -19,6 +19,8 @@ type Redis struct {
 	rdc    *redis.Client
 	name   string
 	logger logger.Logger
+
+	ctx context.Context
 }
 
 // 预留redis的配置
@@ -30,82 +32,53 @@ func New(rdc *redis.Client, opts ...store.Option) store.Store {
 	for _, o := range opts {
 		o(&options)
 	}
-
 	s := &Redis{
 		rdc:    rdc,
 		name:   options.Name,
 		logger: options.Logger,
+		ctx:    context.Background(),
 	}
 	return s
 }
 
 // 添加任务
-func (e *Redis) Push(t *task.Task, pctx ...context.Context) error {
+func (e *Redis) Push(t *task.Task) error {
 	value := t.MarshalJson()
 	interval := time.Now().Unix() + t.Delay
 	member := redis.Z{
 		Score:  float64(interval), //执行时间
 		Member: t.Subkey(),
 	}
-	var ctx context.Context
-	if len(pctx) > 0 {
-		ctx = pctx[0]
-	} else {
-		var cancel context.CancelFunc
-		ctx, cancel = context.WithTimeout(context.Background(), 500*time.Millisecond)
-		defer cancel()
-	}
 
-	rs := e.rdc.ZAdd(ctx, e.name, member)
-	// fmt.Println(t.Subkey(), e.name, member, t.Delay)
-	// fmt.Println("e.name", e.name, "---ZAdd result:", rs.Val(), "err:", rs.Err())
-	if rs.Err() != nil {
+	if rs := e.rdc.ZAdd(e.ctx, e.name, member); rs.Err() != nil {
 		return rs.Err()
 	}
-	if rs := e.rdc.Set(ctx, e.name+"."+t.Subkey(), value, 0); rs.Err() != nil {
+	if rs := e.rdc.Set(e.ctx, e.name+"."+t.Subkey(), value, 0); rs.Err() != nil {
 		return rs.Err()
 	}
 	return nil
 
 }
 
-func (e *Redis) Pop(t *task.Task, pctx ...context.Context) error {
-	var ctx context.Context
-	if len(pctx) > 0 {
-		ctx = pctx[0]
-	} else {
-		var cancel context.CancelFunc
-		ctx, cancel = context.WithTimeout(context.Background(), 500*time.Millisecond)
-		defer cancel()
-	}
-
+func (e *Redis) Pop(t *task.Task) error {
 	//e.logger.Debug("RemoveTask:", subkey)
-	if rs := e.rdc.ZRem(ctx, e.name, t.Subkey()); rs.Err() != nil {
+	if rs := e.rdc.ZRem(e.ctx, e.name, t.Subkey()); rs.Err() != nil {
 		return rs.Err()
 	}
-	if rs := e.rdc.Del(ctx, e.name+"."+t.Subkey()); rs.Err() != nil {
+	if rs := e.rdc.Del(e.ctx, e.name+"."+t.Subkey()); rs.Err() != nil {
 		return rs.Err()
 	}
 	return nil
 }
 
 // redis里面，有序集合新增，即可实现update
-func (e *Redis) Update(t *task.Task, pctx ...context.Context) error {
-	return e.Push(t, pctx...)
+func (e *Redis) Update(t *task.Task) error {
+	return e.Push(t)
 }
 
 // redis里面，有序集合新增，即可实现update
-func (e *Redis) Clear(key string, pctx ...context.Context) error {
-	var ctx context.Context
-	if len(pctx) > 0 {
-		ctx = pctx[0]
-	} else {
-		var cancel context.CancelFunc
-		ctx, cancel = context.WithTimeout(context.Background(), 500*time.Millisecond)
-		defer cancel()
-	}
-
-	rs := e.rdc.ZRange(ctx, e.name, 0, -1)
+func (e *Redis) Clear(key string) error {
+	rs := e.rdc.ZRange(e.ctx, e.name, 0, -1)
 	if rs.Err() != nil {
 		return rs.Err()
 	}
@@ -118,7 +91,7 @@ func (e *Redis) Clear(key string, pctx ...context.Context) error {
 	return nil
 }
 
-func (e *Redis) FetchJob(step int64, pctx ...context.Context) ([]string, error) {
+func (e *Redis) FetchJob(step int64) ([]string, error) {
 	now := time.Now().Unix()
 	s_unix := strconv.FormatInt(now-step, 10)
 	e_unix := strconv.FormatInt(now, 10)
@@ -127,30 +100,12 @@ func (e *Redis) FetchJob(step int64, pctx ...context.Context) ([]string, error) 
 		Max: e_unix, //当前时间
 	}
 
-	var ctx context.Context
-	if len(pctx) > 0 {
-		ctx = pctx[0]
-	} else {
-		var cancel context.CancelFunc
-		ctx, cancel = context.WithTimeout(context.Background(), 500*time.Millisecond)
-		defer cancel()
-	}
-
-	rs := e.rdc.ZRangeByScore(ctx, e.name, opt)
+	rs := e.rdc.ZRangeByScore(e.ctx, e.name, opt)
 	return rs.Val(), rs.Err()
 
 }
-func (e *Redis) ReadTask(key string, pctx ...context.Context) (*task.Task, error) {
-	var ctx context.Context
-	if len(pctx) > 0 {
-		ctx = pctx[0]
-	} else {
-		var cancel context.CancelFunc
-		ctx, cancel = context.WithTimeout(context.Background(), 500*time.Millisecond)
-		defer cancel()
-	}
-
-	rs := e.rdc.Get(ctx, e.name+"."+key)
+func (e *Redis) ReadTask(key string) (*task.Task, error) {
+	rs := e.rdc.Get(e.ctx, e.name+"."+key)
 	if rs.Err() != nil {
 		return nil, rs.Err()
 	}

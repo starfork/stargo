@@ -7,8 +7,9 @@ import (
 )
 
 type Task struct {
-	Key string // job_id/ 订单号之类的东西
-	Tag string // Tag匹配Handler，无Tag的Task将不会被执行
+	Key  string // job_id/ 订单号之类的东西
+	Tag  string // Tag匹配Handler，无Tag的Task将不会被执行
+	User string //预留字段。标记任务谁添加的
 
 	// 延迟时间。本次执行之后下一次的执行时间。单位秒
 	Delay int64
