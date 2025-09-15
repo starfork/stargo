@@ -35,6 +35,8 @@ type Config struct {
 	Registry    *naming.Config
 	Tracer      *tracer.Config
 	Filemanager *filemanager.Config
+
+	Jwt *JwtConfig
 }
 
 var DefaultConfig = &Config{
@@ -44,4 +46,9 @@ var DefaultConfig = &Config{
 	Broker:   &broker.Config{},
 	Registry: &naming.Config{},
 	//Tracer:   &tracer.Config{},
+}
+
+type JwtConfig struct {
+	PublicKey  string
+	PrivateKey string
 }

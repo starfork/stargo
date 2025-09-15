@@ -242,6 +242,9 @@ func (fc *FileCache) Delete(ctx context.Context, key string) error {
 	}
 	return nil
 }
+func (fc *FileCache) Clear(ctx context.Context, key string) error {
+	return fc.Clear(ctx, key)
+}
 
 // Incr increases cached int value.
 // fc value is saved forever unless deleted.

@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-var TestKey = []byte("UneLqzFTLwjoch8lYJybbMU4urWbhzm6")
+var TestKey = []byte("12")
 
 func TestEncode(t *testing.T) {
 	rs, err := Encode(TestKey, []byte("app_id=stargo"))

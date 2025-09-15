@@ -2,6 +2,7 @@ package stargo
 
 import (
 	"context"
+	"os"
 	"sync"
 	"time"
 
@@ -17,6 +18,7 @@ import (
 	sredis "github.com/starfork/stargo/store/redis"
 	"github.com/starfork/stargo/tracer"
 	"github.com/starfork/stargo/tracer/otel"
+	"github.com/starfork/stargo/util/ustring"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
@@ -68,6 +70,13 @@ func (s *App) initConfig() {
 		for k, v := range s.conf.Store {
 			if k == "mysql" {
 				v.TimeLocation = s.opts.Timezone //使用time local
+				if v.Prefix == "" {
+
+				}
+				if v.Prefix == "" {
+					v.Prefix = ustring.Or(s.name+"_", os.Getenv("MYSQL_PREFIX"))
+				}
+
 				s.Store(k, smysql.NewMysql(v))
 			}
 			if k == "redis" {

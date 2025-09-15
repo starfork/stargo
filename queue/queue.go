@@ -104,7 +104,7 @@ func (e *Queue) exec() {
 			e.log("start task %s at %s", t.Subkey(), start.Format(tformat))
 
 			if err := handler(t); err != nil {
-				e.log(ErrTaskExec, err)
+				e.log(ErrTaskExec+time.Now().String(), err)
 				ttl := t.GetTTL(t.Retry)
 				t.Retry++
 				if ttl > 0 && t.Retry <= t.RetryMax {

@@ -14,6 +14,7 @@ type Cache interface {
 	Put(ctx context.Context, key string, value any, timeout ...time.Duration) error
 	// Delete removes a key from cache.
 	Delete(ctx context.Context, key string) error
+	Clear(ctx context.Context, key string) error
 
 	IsExist(ctx context.Context, key string) (bool, error)
 	ClearAll(ctx context.Context) error

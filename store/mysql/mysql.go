@@ -55,7 +55,6 @@ func (e *Mysql) connect(confs ...*store.Config) {
 			TablePrefix:   c.Prefix,
 		},
 	}
-	fmt.Println(c.Prefix)
 	if c.Debug {
 		conf.Logger = logger.Default.LogMode(logger.Info)
 	}

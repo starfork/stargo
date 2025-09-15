@@ -50,6 +50,16 @@ func (e *Redis) Delete(ctx context.Context, key string) error {
 	e.rdc.Del(ctx, key).Result()
 	return nil
 }
+func (e *Redis) Clear(ctx context.Context, key string) error {
+	iter := e.rdc.Scan(ctx, 0, key+"*", 0).Iterator()
+	for iter.Next(ctx) {
+		_, err := e.rdc.Del(ctx, iter.Val()).Result()
+		if err != nil {
+			return err
+		}
+	}
+	return iter.Err()
+}
 
 func (e *Redis) IsExist(ctx context.Context, key string) (bool, error) {
 	return false, nil
