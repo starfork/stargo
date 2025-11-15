@@ -38,18 +38,19 @@ func (e *Plugin) After(db *gorm.DB) {
 		return
 	}
 
-	if kind == reflect.Slice {
+	switch kind {
+	case reflect.Slice:
 		for i := range value.Len() {
 			//非指针类型的不能设置这些东东
 			if reflect.Value(value.Index(i)).Kind() == reflect.Ptr {
 				item := reflect.Value(value.Index(i)).Elem()
-				e.unmarshal(item)
+				e.unmarshal(db, item)
 			}
 
 		}
-	} else if kind == reflect.Struct {
+	case reflect.Struct:
 		item := reflect.Value(value)
-		e.unmarshal(item)
+		e.unmarshal(db, item)
 	}
 
 }
@@ -61,7 +62,8 @@ func (e *Plugin) Before(db *gorm.DB) {
 		return
 	}
 
-	if kind == reflect.Slice {
+	switch kind {
+	case reflect.Slice:
 		for i := range value.Len() {
 			//非指针类型的不能设置这些东东
 			if reflect.Value(value.Index(i)).Kind() == reflect.Ptr {
@@ -70,20 +72,41 @@ func (e *Plugin) Before(db *gorm.DB) {
 			}
 
 		}
-	} else if kind == reflect.Struct {
+	case reflect.Struct:
 		item := reflect.Value(value)
 		e.marshal(item)
 	}
 
 }
 
-func (e *Plugin) unmarshal(item reflect.Value) {
-	it := reflect.TypeOf((*interface{ Unmarshal() })(nil)).Elem()
+// 可支持参数
+func (e *Plugin) unmarshal(db *gorm.DB, item reflect.Value) {
 	addr := item.Addr()
-
-	if addr.Type().Implements(it) {
-		addr.MethodByName("Unmarshal").Call(nil)
+	m := addr.MethodByName("Unmarshal")
+	if !m.IsValid() {
+		return
 	}
+
+	mt := m.Type()
+	n := mt.NumIn()
+
+	val, _ := db.Get("Sence")
+	if val != nil {
+		m.Call([]reflect.Value{reflect.ValueOf(val)})
+		return
+	}
+
+	if n == 0 {
+		m.Call(nil)
+		return
+	}
+	args := make([]reflect.Value, n)
+	for i := range n {
+		t := mt.In(i)
+		args[i] = reflect.Zero(t)
+	}
+
+	m.Call(args)
 }
 
 func (e *Plugin) marshal(item reflect.Value) {

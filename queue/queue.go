@@ -101,7 +101,7 @@ func (e *Queue) exec() {
 			}()
 
 			start := time.Now()
-			e.log("start task %s at %s", t.Subkey(), start.Format(tformat))
+			e.log("start task %s at %s \n", t.Subkey(), start.Format(tformat))
 
 			if err := handler(t); err != nil {
 				e.log(ErrTaskExec+time.Now().String(), err)
@@ -110,7 +110,7 @@ func (e *Queue) exec() {
 				if ttl > 0 && t.Retry <= t.RetryMax {
 					t.Delay = ttl
 					if err := e.store.Update(t); err != nil {
-						e.log("update task %s failed: %v", t.Subkey(), err)
+						e.log("update task %s failed: %v \n", t.Subkey(), err)
 					} else {
 						e.log(TaskUpdate)
 					}

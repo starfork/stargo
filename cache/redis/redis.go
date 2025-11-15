@@ -2,6 +2,7 @@ package redis
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -53,7 +54,7 @@ func (e *Redis) Delete(ctx context.Context, key string) error {
 func (e *Redis) Clear(ctx context.Context, key string) error {
 	iter := e.rdc.Scan(ctx, 0, key+"*", 0).Iterator()
 	for iter.Next(ctx) {
-		//fmt.Println("del key", iter.Val())
+		fmt.Println("del key ", iter.Val())
 		_, err := e.rdc.Del(ctx, iter.Val()).Result()
 		if err != nil {
 			return err
@@ -87,28 +88,4 @@ func (e *Redis) Expire(ctx context.Context, key string) (bool, error) {
 // 		return err
 // 	}
 // 	return nil
-// }
-
-// 过期清除，好像用不着
-// func (e *Redis) Clear(ctx context.Context) {
-// 	iter := e.rdc.Scan(ctx, 0, "", 0).Iterator()
-
-// 	for iter.Next(ctx) {
-// 		key := iter.Val()
-
-// 		d, err := e.rdc.TTL(ctx, key).Result()
-// 		if err != nil {
-// 			panic(err)
-// 		}
-// 		if d == -1 { // -1 means no TTL
-// 			if err := e.rdc.Del(ctx, key).Err(); err != nil {
-// 				panic(err)
-// 			}
-// 		}
-// 	}
-
-// 	if err := iter.Err(); err != nil {
-// 		panic(err)
-// 	}
-
 // }
