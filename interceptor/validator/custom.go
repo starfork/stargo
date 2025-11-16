@@ -10,7 +10,7 @@ import (
 )
 
 var tagNameFunc_vLabel = func(field reflect.StructField) string {
-	//fmt.Println(field.Tag)
+
 	label := field.Tag.Get("vlabel")
 	if label == "" {
 		return field.Name

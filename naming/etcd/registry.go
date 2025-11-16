@@ -41,7 +41,6 @@ func NewRegistry(conf *naming.Config) (naming.Registry, error) {
 }
 func (e *Registry) key(svc naming.Service) string {
 	key := Org + "/" + svc.Name + "/" + svc.Addr
-	//fmt.Println(key)
 	return key
 }
 

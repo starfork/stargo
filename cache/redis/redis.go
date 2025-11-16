@@ -2,7 +2,6 @@ package redis
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -54,7 +53,7 @@ func (e *Redis) Delete(ctx context.Context, key string) error {
 func (e *Redis) Clear(ctx context.Context, key string) error {
 	iter := e.rdc.Scan(ctx, 0, key+"*", 0).Iterator()
 	for iter.Next(ctx) {
-		fmt.Println("del key ", iter.Val())
+		//fmt.Println("del key ", iter.Val())
 		_, err := e.rdc.Del(ctx, iter.Val()).Result()
 		if err != nil {
 			return err

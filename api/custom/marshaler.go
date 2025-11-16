@@ -31,7 +31,6 @@ func (e *StargoMarshaler) Marshal(v any) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	//fmt.Println("marshaler")
 	//encoded := base64.StdEncoding.EncodeToString(append(e.prefix, jsonData...))
 
 	return Encode(e.key, jsonData)

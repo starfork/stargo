@@ -62,7 +62,6 @@ func (e *Mysql) connect(confs ...*store.Config) {
 		store.TZ1K = true
 	}
 	var db *gorm.DB
-	//fmt.Println(time.Now(), "-----------")
 	if db, err = gorm.Open(mysql.Open(dsn), conf); err != nil {
 		panic("Db Connect TO " + dsn + " With Error:" + err.Error())
 	}

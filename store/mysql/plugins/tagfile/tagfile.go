@@ -5,7 +5,6 @@ package tagfile
 //配置文件配置 fileserver
 
 import (
-	"fmt"
 	"reflect"
 	"strings"
 
@@ -122,9 +121,10 @@ func (e *Plugin) SetPlugin(item reflect.Value, parseField []string) {
 		if (f != reflect.Value{}) { //字段没找到
 			if f.CanSet() {
 				f.SetString(e.Parse(f.String()))
-			} else {
-				fmt.Println("field can not set " + field)
 			}
+			//  else {
+			// 	fmt.Println("field can not set " + field)
+			// }
 			//f.SetString(ReplacePrefix(f.String()))
 		}
 		// else {
@@ -157,8 +157,9 @@ func (e *Plugin) BeforeUpdate(db *gorm.DB) {
 		f := item.FieldByName(field)
 		if f.CanSet() {
 			f.SetString(e.Rebuild(f.String()))
-		} else {
-			fmt.Println("field can not set " + field)
 		}
+		// else {
+		// 	fmt.Println("field can not set " + field)
+		// }
 	}
 }
