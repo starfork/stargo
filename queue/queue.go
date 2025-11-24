@@ -100,8 +100,7 @@ func (e *Queue) exec() {
 				wg.Done()
 			}()
 
-			start := time.Now()
-			e.log("start task %s at %s \n", t.Subkey(), start.Format(tformat))
+			e.log("[task start] %s", t.Subkey())
 
 			if err := handler(t); err != nil {
 				e.log(ErrTaskExec+time.Now().String(), err)
@@ -110,16 +109,16 @@ func (e *Queue) exec() {
 				if ttl > 0 && t.Retry <= t.RetryMax {
 					t.Delay = ttl
 					if err := e.store.Update(t); err != nil {
-						e.log("update task %s failed: %v \n", t.Subkey(), err)
+						e.log("[task update] %s failed: %v", t.Subkey(), err)
 					} else {
 						e.log(TaskUpdate)
 					}
 				} else {
-					e.log("finished task %s error %+s at %s \r\n", t.Subkey(), err.Error(), time.Now().Format(tformat))
+					e.log("[task finished] %s error %+s", t.Subkey(), err.Error())
 					e.store.Pop(t)
 				}
 			} else {
-				e.log("finished task %s success  at %s \r\n", t.Subkey(), time.Now().Format(tformat))
+				e.log("[task finished] %s success", t.Subkey())
 				e.store.Pop(t)
 			}
 		}(t, hander.(task.Handler))
@@ -130,6 +129,7 @@ func (e *Queue) exec() {
 
 func (e *Queue) log(template string, args ...any) {
 	if e.opts.logger != nil {
-		e.opts.logger.Debugf(template, args...)
+		start := time.Now()
+		e.opts.logger.Debugf(start.Format(tformat)+" "+template+" \r\n", args...)
 	}
 }

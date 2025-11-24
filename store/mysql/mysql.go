@@ -49,12 +49,13 @@ func (e *Mysql) connect(confs ...*store.Config) {
 	}
 
 	conf := &gorm.Config{
-
+		Logger: logger.Default.LogMode(logger.Silent),
 		NamingStrategy: schema.NamingStrategy{
 			SingularTable: true, //全局采用单表名
 			TablePrefix:   c.Prefix,
 		},
 	}
+
 	if c.Debug {
 		conf.Logger = logger.Default.LogMode(logger.Info)
 	}
