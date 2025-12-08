@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"sync"
 
 	"github.com/go-playground/locales/zh"
 	ut "github.com/go-playground/universal-translator"
@@ -17,33 +18,36 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-type Validate struct {
+var (
+	validate *validator.Validate
+	trans    ut.Translator
+	once     sync.Once
+)
+
+func initValidator() {
+	once.Do(func() {
+		validate = validator.New()
+		uni := ut.New(zh.New())
+		trans, _ = uni.GetTranslator("zh")
+
+		validate.RegisterTagNameFunc(tagNameFunc_vLabel)
+		validate.RegisterValidation("money", ValidateMoney)
+		_ = zh_translations.RegisterDefaultTranslations(validate, trans)
+		validate.RegisterTranslation("money", trans, registerFn_Money, translationFn_Money)
+
+		validate.RegisterTagNameFunc(func(fld reflect.StructField) string {
+			name := fld.Tag.Get("mapstructure")
+			if name == "-" {
+				return ""
+			}
+			return name
+		})
+	})
 }
 
 // Unary Interceptor
 func Unary() grpc.UnaryServerInterceptor {
-	var (
-		validate = validator.New()
-		uni      = ut.New(zh.New())
-		trans, _ = uni.GetTranslator("zh")
-	)
-	validate.RegisterTagNameFunc(tagNameFunc_vLabel)
-	///validate.RegisterTagNameFunc(tagNameFunc_vFor)
-	validate.RegisterTranslation("money", trans, registerFn_Money, translationFn_Money)
-
-	err := zh_translations.RegisterDefaultTranslations(validate, trans)
-	if err != nil {
-		panic(err)
-	}
-	validate.RegisterValidation("money", ValidateMoney)
-
-	validate.RegisterTagNameFunc(func(fld reflect.StructField) string {
-		name := fld.Tag.Get("mapstructure")
-		if name == "-" {
-			return ""
-		}
-		return name
-	})
+	initValidator() // 确保全局 validator 初始化一次
 
 	return func(ctx context.Context, req any, in *grpc.UnaryServerInfo,
 		handler grpc.UnaryHandler) (resp any, err error) {
@@ -61,15 +65,14 @@ func Unary() grpc.UnaryServerInterceptor {
 			}
 		}
 
-		err = validate.StructExcept(req, vfields...)
+		err = validate.StructExcept(req, vfields...) // <--- 只调用，不再注册规则
 
 		if err != nil {
 			if tErrs, ok := err.(validator.ValidationErrors); !ok {
 				return resp, status.New(codes.InvalidArgument, fmt.Sprintf("error%s", err)).Err()
 			} else {
-				translations := tErrs.Translate(trans)
 				var buf bytes.Buffer
-				for _, s2 := range translations {
+				for _, s2 := range tErrs.Translate(trans) {
 					buf.WriteString(s2 + ",")
 				}
 				return resp, status.New(codes.InvalidArgument, buf.String()).Err()

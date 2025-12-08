@@ -100,7 +100,7 @@ func (e *Queue) exec() {
 				wg.Done()
 			}()
 
-			e.log("[task start] %s", t.Subkey())
+			//e.log("[task start] %s", t.Subkey())
 
 			if err := handler(t); err != nil {
 				e.log(ErrTaskExec+time.Now().String(), err)
@@ -118,7 +118,7 @@ func (e *Queue) exec() {
 					e.store.Pop(t)
 				}
 			} else {
-				e.log("[task finished] %s success", t.Subkey())
+				//e.log("[task finished] %s success", t.Subkey())
 				e.store.Pop(t)
 			}
 		}(t, hander.(task.Handler))

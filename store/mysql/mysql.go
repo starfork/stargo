@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/starfork/stargo/store"
 	"github.com/starfork/stargo/util/ustring"
@@ -80,6 +81,8 @@ func (e *Mysql) connect(confs ...*store.Config) {
 	if c.MaxOpen > 0 {
 		sqlDB.SetMaxOpenConns(c.MaxOpen)
 	}
+	sqlDB.SetConnMaxLifetime(20 * time.Minute)
+	sqlDB.SetConnMaxIdleTime(5 * time.Minute)
 	//自己到项目里去注册
 	//p := plugin.New(config)
 	if len(c.Plugins) > 0 {
