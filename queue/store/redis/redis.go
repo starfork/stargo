@@ -93,7 +93,8 @@ func (e *Redis) Clear(key string) error {
 
 func (e *Redis) FetchJob(step int64) ([]string, error) {
 	now := time.Now().Unix()
-	s_unix := strconv.FormatInt(now-step, 10)
+	//todo这里的-5，应该配合超exec的超时来
+	s_unix := strconv.FormatInt(now-step-10, 10)
 	e_unix := strconv.FormatInt(now, 10)
 	opt := &redis.ZRangeBy{
 		Min: s_unix, //1秒前
