@@ -62,7 +62,7 @@ func (e *Queue) run() {
 	defer t.Stop()
 	for {
 		<-t.C
-		e.exec()
+		go e.exec()
 	}
 }
 func (e *Queue) exec() {
