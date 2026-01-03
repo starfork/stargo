@@ -16,23 +16,10 @@ func Page(page, lmt uint32) func(db *gorm.DB) *gorm.DB {
 		if page <= 0 {
 			page = 1
 		}
-		//var limit uint32
-		//limit = 10
-		if lmt > 100 {
-			lmt = 100
+		if lmt == 0 {
+			lmt = 20
 		}
-		if lmt <= 0 {
-			lmt = 10
-		}
-		// var Arr = [6]uint32{5, 10, 20, 30, 50, 100}
-		// for _, v := range Arr {
-		// 	if lmt == v {
-		// 		limit = v
-		// 	}
-		// }
 		offset := (page - 1) * lmt
-		//fmt.Println(lmt)
-
 		return db.Offset(int(offset)).Limit(int(lmt))
 	}
 }
