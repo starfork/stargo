@@ -61,16 +61,14 @@ func New(ctx context.Context, resolver naming.Resolver, logger logger.Logger) *C
 
 func DefaultOptions() []grpc.DialOption {
 	opts := []grpc.DialOption{
-		//grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithDefaultServiceConfig(`{"loadBalancingConfig": [{"round_robin":{}}]}`),
+		grpc.WithDefaultServiceConfig(`{
+			"loadBalancingConfig": [{"round_robin":{}}],
+			"healthCheckConfig": {"serviceName": ""}
+		}`),
 		grpc.WithInitialWindowSize(InitialWindowSize),
 		grpc.WithInitialConnWindowSize(InitialConnWindowSize),
 		grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(MaxSendMsgSize)),
 		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(MaxRecvMsgSize)),
-		grpc.WithDefaultServiceConfig(` {
-        "loadBalancingConfig": [{"round_robin":{}}],
-        "healthCheckConfig": {"serviceName": ""}
-    }`),
 	}
 	return opts
 }
