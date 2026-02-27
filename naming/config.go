@@ -1,6 +1,7 @@
 package naming
 
 type Config struct {
+	Org         string
 	Environment string
 	Scheme      string //那种驱动类型，redis，etcd
 

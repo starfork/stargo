@@ -3,26 +3,26 @@ package client
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/starfork/stargo/logger"
 	"github.com/starfork/stargo/naming"
+	"github.com/starfork/stargo/util/ustring"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
 
 const (
 	// DialTimeout the timeout of create connection
-	DialTimeout = 5 * time.Second
+	//DialTimeout = 3 * time.Second
 	// BackoffMaxDelay provided maximum delay when backing off after failed connection attempts.
-	BackoffMaxDelay = 3 * time.Second
+	//BackoffMaxDelay = 3 * time.Second
 	// KeepAliveTime is the duration of time after which if the client doesn't see
 	// any activity it pings the server to see if the transport is still alive.
-	KeepAliveTime = time.Duration(10) * time.Second
+	//KeepAliveTime = time.Duration(10) * time.Second
 	// KeepAliveTimeout is the duration of time for which the client waits after having
 	// pinged for keepalive check and if no activity is seen even after that the connection
 	// is closed.
-	KeepAliveTimeout = time.Duration(3) * time.Second
+	//KeepAliveTimeout = time.Duration(3) * time.Second
 
 	// InitialWindowSize we set it 1GB is to provide system's throughput.
 	InitialWindowSize = 1 << 30
@@ -86,6 +86,6 @@ func (e *Client) NewClient(service string, options ...grpc.DialOption) (conn *gr
 	opts = append(opts, DefaultOptions()...)
 	opts = append(opts, grpc.WithResolvers(e.resolver))
 
-	target := fmt.Sprintf("%s:///stargo/%s", e.resolver.Scheme(), service)
+	target := fmt.Sprintf("%s:///%s/%s", ustring.OrString("stargo", e.resolver.Config().Org), e.resolver.Scheme(), service)
 	return grpc.NewClient(target, opts...)
 }
