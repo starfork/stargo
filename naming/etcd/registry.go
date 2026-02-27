@@ -8,7 +8,7 @@ import (
 	"go.etcd.io/etcd/client/v3/naming/endpoints"
 )
 
-const KeyPrefix = "stargo_registry"
+// const KeyPrefix = "stargo_registry"
 const Scheme = "etcd"
 
 //const Org = "stargo"
