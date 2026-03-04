@@ -10,6 +10,9 @@ import (
 	"github.com/starfork/stargo/logger"
 	"github.com/starfork/stargo/naming"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/health"
+
+	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 )
 
 // App App
@@ -18,6 +21,8 @@ type Server struct {
 	rpcServer *grpc.Server
 	lis       net.Listener
 	logger    logger.Logger
+
+	healthServer *health.Server
 
 	conf *Config
 }
@@ -77,6 +82,11 @@ func (e *Server) Run() {
 		}
 	}()
 
+	// 注册健康检查服务
+	e.healthServer = health.NewServer()
+	healthpb.RegisterHealthServer(e.rpcServer, e.healthServer)
+	e.healthServer.SetServingStatus("", healthpb.HealthCheckResponse_SERVING)
+
 	if err := e.rpcServer.Serve(lis); err != nil {
 		e.logger.Fatalf("failed to serve: %v", err)
 	}
@@ -92,6 +102,7 @@ func (e *Server) Stop() {
 func (e *Server) Restart() {
 
 	e.rpcServer.GracefulStop()
+	e.healthServer.SetServingStatus("", healthpb.HealthCheckResponse_NOT_SERVING)
 	e.rpcServer.Serve(e.lis)
 }
 

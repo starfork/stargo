@@ -32,7 +32,6 @@ func I2i(target, source, targetKey, sourceKey, compareKey any) {
 					case reflect.String:
 						sf.SetString(f3.String())
 					case reflect.Uint:
-						//fmt.Println(f3.Uint())
 						sf.SetUint(uint64(f3.Uint()))
 					}
 				}
@@ -61,7 +60,6 @@ func I2iKey(target, source, targetKey, sourceKey, compareKey any, subkey string)
 		tField := iTarget.FieldByName(cKey[0]).Interface() //compare key 1
 		for j := 0; j < sSource.Len(); j++ {
 			de1 := sSource.Index(j).Elem()
-			//fmt.Println(cKey)
 			sField := de1.FieldByName(cKey[1]).Interface() //compare key 2
 
 			if tField == sField {

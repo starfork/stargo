@@ -9,7 +9,6 @@ import (
 
 func Meta(ctx context.Context, r *http.Request) metadata.MD {
 	md := make(map[string]string)
-	//fmt.Println(r.Header)
 	maps := map[string]string{
 		"access-token": "Access-Token",
 		"device-id":    "Device-Id",

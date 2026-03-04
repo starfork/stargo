@@ -122,23 +122,12 @@ func (e *Plugin) SetPlugin(item reflect.Value, parseField []string) {
 			if f.CanSet() {
 				f.SetString(e.Parse(f.String()))
 			}
-			//  else {
-			// 	fmt.Println("field can not set " + field)
-			// }
-			//f.SetString(ReplacePrefix(f.String()))
 		}
-		// else {
-		// 	if log != nil {
-		// 		log.Info(context.TODO(), "field not found %s", field)
-		// 	}
-		// 	//log
-		// }
 	}
 }
 
 func (e *Plugin) BeforeUpdate(db *gorm.DB) {
 	value := db.Statement.ReflectValue
-	//fmt.Println(value.Kind())
 	if value.Kind() != reflect.Struct {
 		return
 	}
@@ -158,8 +147,5 @@ func (e *Plugin) BeforeUpdate(db *gorm.DB) {
 		if f.CanSet() {
 			f.SetString(e.Rebuild(f.String()))
 		}
-		// else {
-		// 	fmt.Println("field can not set " + field)
-		// }
 	}
 }

@@ -61,9 +61,12 @@ func New(ctx context.Context, resolver naming.Resolver, logger logger.Logger) *C
 
 func DefaultOptions() []grpc.DialOption {
 	opts := []grpc.DialOption{
+		// grpc.WithDefaultServiceConfig(`{
+		// 	"loadBalancingConfig": [{"round_robin":{}}],
+		// 	"healthCheckConfig": {"serviceName": ""}
+		// }`),
 		grpc.WithDefaultServiceConfig(`{
-			"loadBalancingConfig": [{"round_robin":{}}],
-			"healthCheckConfig": {"serviceName": ""}
+			"loadBalancingConfig": [{"round_robin":{}}]
 		}`),
 		grpc.WithInitialWindowSize(InitialWindowSize),
 		grpc.WithInitialConnWindowSize(InitialConnWindowSize),
@@ -87,5 +90,6 @@ func (e *Client) NewClient(service string, options ...grpc.DialOption) (conn *gr
 	opts = append(opts, grpc.WithResolvers(e.resolver))
 
 	target := fmt.Sprintf("%s:///%s/%s", e.resolver.Scheme(), ustring.OrString("stargo", e.resolver.Config().Org), service)
+
 	return grpc.NewClient(target, opts...)
 }
