@@ -36,11 +36,14 @@ func initValidator() {
 		validate.RegisterTranslation("money", trans, registerFn_Money, translationFn_Money)
 
 		validate.RegisterTagNameFunc(func(fld reflect.StructField) string {
-			name := fld.Tag.Get("mapstructure")
+			//一般的pb生成的都是
+			//`protobuf:"bytes,5,opt,name=notify_url,json=notifyUrl,proto3" json:"notify_url,omitempty"
+			//这样的格式。取json这个tag的,之前的即可。不用再定义mapstruct了
+			name := fld.Tag.Get("json")
 			if name == "-" {
 				return ""
 			}
-			return name
+			return strings.Split(name, ",")[0]
 		})
 	})
 }

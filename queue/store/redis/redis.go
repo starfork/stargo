@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 	"time"
 
@@ -49,7 +50,7 @@ func (e *Redis) Push(t *task.Task) error {
 		Score:  float64(interval), //执行时间
 		Member: t.Subkey(),
 	}
-
+	fmt.Println("e.name", e.name)
 	if rs := e.rdc.ZAdd(e.ctx, e.name, member); rs.Err() != nil {
 		return rs.Err()
 	}
