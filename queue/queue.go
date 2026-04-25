@@ -79,7 +79,7 @@ func (e *Queue) exec() {
 		if err != nil {
 			continue
 		}
-		e.store.Pop(t)
+		//e.store.Pop(t)
 
 		hander, ok := e.handlers.Load(t.Tag)
 		if !ok {

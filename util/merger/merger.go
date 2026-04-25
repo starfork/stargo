@@ -13,10 +13,35 @@ func Merge[A any, B any](rsA []A, rsB []B, keyA Key[A], keyB Key[B], merger func
 		}
 	}
 }
+
+// compare的时候需要指定类型
+func MergeFlat[A any, B any, K comparable](rsA []A, rsB []B, keyA func(A) []K, keyB func(B) K, merger func(A, B)) {
+	bMap := make(map[K]B)
+	for _, b := range rsB {
+		bMap[keyB(b)] = b
+	}
+
+	for i := range rsA {
+		for _, k := range keyA(rsA[i]) {
+			if b, ok := bMap[k]; ok {
+				merger(rsA[i], b)
+			}
+		}
+	}
+}
 func Reduce[T any, R any](input []T, mapper func(T) R) []R {
 	result := make([]R, len(input))
 	for i, item := range input {
 		result[i] = mapper(item)
+	}
+	return result
+}
+
+// 处理数组
+func ReduceFlat[T any, R any](input []T, mapper func(T) []R) []R {
+	var result []R
+	for _, item := range input {
+		result = append(result, mapper(item)...)
 	}
 	return result
 }

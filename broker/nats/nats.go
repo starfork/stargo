@@ -30,6 +30,7 @@ func (e *NatsBroker) Publish(topic string, msg broker.Message) error {
 	if err != nil {
 		return err
 	}
+	//fmt.Println("publish topic", e.c.App+"."+topic)
 	return e.nc.Publish(e.c.App+"."+topic, b)
 	//
 }

@@ -28,7 +28,7 @@ type Task struct {
 	Args map[string]any // 任务参数
 }
 
-func (e *Task) MarshalJson() string {
+func (e *Task) Marshal() string {
 	task, _ := jsoniter.Marshal(e)
 	return string(task)
 }

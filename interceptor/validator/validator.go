@@ -49,11 +49,17 @@ func initValidator() {
 }
 
 // Unary Interceptor
-func Unary() grpc.UnaryServerInterceptor {
+func Unary(errCode ...codes.Code) grpc.UnaryServerInterceptor {
 	initValidator() // 确保全局 validator 初始化一次
-
+	code := codes.InvalidArgument
+	if len(errCode) > 0 {
+		code = codes.Code(errCode[0])
+	}
 	return func(ctx context.Context, req any, in *grpc.UnaryServerInfo,
 		handler grpc.UnaryHandler) (resp any, err error) {
+		// if req == nil {
+		// 	return handler(ctx, req)
+		// }
 
 		vfields := []string{}
 		method := api.MetaMethod(ctx)
@@ -72,13 +78,13 @@ func Unary() grpc.UnaryServerInterceptor {
 
 		if err != nil {
 			if tErrs, ok := err.(validator.ValidationErrors); !ok {
-				return resp, status.New(codes.InvalidArgument, fmt.Sprintf("error%s", err)).Err()
+				return resp, status.New(code, fmt.Sprintf("error%s", err)).Err()
 			} else {
 				var buf bytes.Buffer
 				for _, s2 := range tErrs.Translate(trans) {
 					buf.WriteString(s2 + ",")
 				}
-				return resp, status.New(codes.InvalidArgument, buf.String()).Err()
+				return resp, status.New(code, buf.String()).Err()
 			}
 		}
 		return handler(ctx, req)

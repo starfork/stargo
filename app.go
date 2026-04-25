@@ -17,12 +17,9 @@ import (
 	smysql "github.com/starfork/stargo/store/mysql"
 	sredis "github.com/starfork/stargo/store/redis"
 	"github.com/starfork/stargo/tracer"
-	"github.com/starfork/stargo/tracer/otel"
 	"github.com/starfork/stargo/util/ustring"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
-
-	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 )
 
 // App App
@@ -71,12 +68,8 @@ func (s *App) initConfig() {
 			if k == "mysql" {
 				v.TimeLocation = s.opts.Timezone //使用time local
 				if v.Prefix == "" {
-
-				}
-				if v.Prefix == "" {
 					v.Prefix = ustring.Or(s.name+"_", os.Getenv("MYSQL_PREFIX"))
 				}
-
 				s.Store(k, smysql.NewMysql(v))
 			}
 			if k == "redis" {
@@ -87,17 +80,17 @@ func (s *App) initConfig() {
 			s.conf.Broker.App = s.name
 			s.broker = nats.NewBroker(s.conf.Broker)
 		}
-		if s.conf.Tracer != nil {
-			var err error
-			if s.tracer, err = otel.NewTracer(s.conf.Tracer); err != nil {
-				s.logger.Fatalf("tracer init fail: [%s]\n", s.conf.Tracer.Host)
-			}
-			//
-			s.conf.Server.ServerOpts = append(
-				s.conf.Server.ServerOpts,
-				grpc.StatsHandler(otelgrpc.NewServerHandler()),
-			)
-		}
+		// if s.conf.Tracer != nil {
+		// 	var err error
+		// 	if s.tracer, err = otel.NewTracer(s.conf.Tracer); err != nil {
+		// 		s.logger.Fatalf("tracer init fail: [%s]\n", s.conf.Tracer.Host)
+		// 	}
+		//
+		// s.conf.Server.ServerOpts = append(
+		// 	s.conf.Server.ServerOpts,
+		// 	grpc.StatsHandler(otelgrpc.NewServerHandler()),
+		// )
+		// }
 
 		if s.conf.Registry != nil {
 			r := s.conf.Registry

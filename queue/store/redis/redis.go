@@ -2,7 +2,6 @@ package storage
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 	"time"
 
@@ -44,25 +43,23 @@ func New(rdc *redis.Client, opts ...store.Option) store.Store {
 
 // 添加任务
 func (e *Redis) Push(t *task.Task) error {
-	value := t.MarshalJson()
+	value := t.Marshal()
 	interval := time.Now().Unix() + t.Delay
 	member := redis.Z{
 		Score:  float64(interval), //执行时间
 		Member: t.Subkey(),
 	}
-	fmt.Println("e.name", e.name)
-	if rs := e.rdc.ZAdd(e.ctx, e.name, member); rs.Err() != nil {
-		return rs.Err()
+
+	if _, err := e.rdc.ZAdd(e.ctx, e.name, member).Result(); err != nil {
+		return err
 	}
-	if rs := e.rdc.Set(e.ctx, e.name+"."+t.Subkey(), value, 0); rs.Err() != nil {
-		return rs.Err()
+	if _, err := e.rdc.Set(e.ctx, e.name+"."+t.Subkey(), value, 0).Result(); err != nil {
+		return err
 	}
 	return nil
-
 }
 
 func (e *Redis) Pop(t *task.Task) error {
-	//e.logger.Debug("RemoveTask:", subkey)
 	if rs := e.rdc.ZRem(e.ctx, e.name, t.Subkey()); rs.Err() != nil {
 		return rs.Err()
 	}
