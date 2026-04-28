@@ -4,6 +4,7 @@ import (
 	"strconv"
 
 	jsoniter "github.com/json-iterator/go"
+	"github.com/starfork/stargo/pm"
 )
 
 type Task struct {
@@ -25,7 +26,8 @@ type Task struct {
 	//最大重试次数
 	RetryMax int
 
-	Args map[string]any // 任务参数
+	Args pm.Pm // 任务参数
+
 }
 
 func (e *Task) Marshal() string {

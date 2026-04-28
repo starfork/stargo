@@ -83,7 +83,7 @@ func (e *Queue) exec() {
 
 		hander, ok := e.handlers.Load(t.Tag)
 		if !ok {
-			e.log(ErrFailGetTask, t.Tag)
+			e.log(ErrFailGetTask, t.Tag, t.Key)
 			continue
 		}
 
@@ -103,18 +103,18 @@ func (e *Queue) exec() {
 			//e.log("[task start] %s", t.Subkey())
 
 			if err := handler(t); err != nil {
-				e.log(ErrTaskExec+time.Now().String(), err)
+				e.log(ErrTaskExec, t.Key, t.Tag, err.Error())
 				ttl := t.GetTTL(t.Retry)
 				t.Retry++
 				if ttl > 0 && t.Retry <= t.RetryMax {
 					t.Delay = ttl
 					if err := e.store.Update(t); err != nil {
-						e.log("[task update] %s failed: %v", t.Subkey(), err)
+						e.log("[task upd err] %s failed: %v", t.Subkey(), err)
 					} else {
-						e.log(TaskUpdate)
+						e.log("[task upd retry] %s", t.Subkey())
 					}
 				} else {
-					e.log("[task finished] %s error %+s", t.Subkey(), err.Error())
+					e.log("[task err pop] %s %s", t.Subkey(), err.Error())
 					e.store.Pop(t)
 				}
 			} else {

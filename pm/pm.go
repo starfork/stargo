@@ -165,6 +165,38 @@ func (pm Pm) GetUint32Ok(key string) (uint32, bool) {
 	return 0, false
 }
 
+func (pm Pm) GetUint64(key string) uint64 {
+	if v, ok := pm.GetUint64Ok(key); ok {
+		return v
+	}
+	return 0
+}
+func (pm Pm) GetUint64Ok(key string) (uint64, bool) {
+	v := pm.Get(key)
+	switch x := v.(type) {
+	case uint64:
+		return x, true
+	case int:
+		if x >= 0 {
+			return uint64(x), true
+		}
+	case int64:
+		if x >= 0 {
+			return uint64(x), true
+		}
+	case float64:
+		if x >= 0 {
+			return uint64(x), true
+		}
+	case string:
+		u, err := strconv.ParseUint(x, 10, 64)
+		if err == nil {
+			return uint64(u), true
+		}
+	}
+	return 0, false
+}
+
 func (pm Pm) GetFloat64(key string) float64 {
 	if v, ok := pm.GetFloat64Ok(key); ok {
 		return v

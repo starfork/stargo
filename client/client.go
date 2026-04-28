@@ -89,6 +89,8 @@ func (e *Client) NewClient(service string, options ...grpc.DialOption) (conn *gr
 	opts = append(opts, DefaultOptions()...)
 	opts = append(opts, grpc.WithResolvers(e.resolver))
 
+	//opts = append(opts, grpc.WithUnaryInterceptor(ForwardUnaryMetadata))
+
 	target := fmt.Sprintf("%s:///%s/%s", e.resolver.Scheme(), ustring.OrString("stargo", e.resolver.Config().Org), service)
 
 	return grpc.NewClient(target, opts...)
