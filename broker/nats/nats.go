@@ -44,9 +44,11 @@ func (e *NatsBroker) Flush() error {
 func (e *NatsBroker) Subscribe(topic string, handler broker.MessageHandler) {
 
 	e.nc.Subscribe(topic, func(msg *nats.Msg) {
+
 		bmsg := broker.Message{}
 		err := jsoniter.Unmarshal(msg.Data, &bmsg)
 		if err == nil {
+			bmsg.Header["stargo_borker_topic"] = msg.Subject //传递给后续方便做wilcard
 			handler(bmsg)
 		}
 	})
