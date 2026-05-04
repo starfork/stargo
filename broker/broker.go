@@ -10,6 +10,8 @@ type Broker interface {
 }
 
 type Message struct {
+	Topic  string
+	Reply  string
 	Header pm.Pm
 	Body   []byte
 }
