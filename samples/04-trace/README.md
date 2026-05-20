@@ -1,16 +1,23 @@
 # 04-trace
 
-Demonstrates stargo's tracer abstraction.
+Demonstrates the tracer interface within handler methods.
 
-By default a noop tracer is used. To enable distributed tracing,
-swap in a Jaeger (or other) implementation before `stargo.New`.
+## Default behavior
 
-## Prerequisites
+stargo ships with `tracer.DefaultTracer` — a noop implementation.
+All trace calls are safe to call; they simply do nothing.
 
-- Running Jaeger agent (for Jaeger tracer)
+To enable real tracing, swap in a Jaeger tracer before `stargo.New`:
+
+```go
+import jtracer "github.com/starfork/stargo/tracer/jaeger"
+tracer.DefaultTracer = jtracer.InitJaeger("my-service")
+```
+
+The tracer is closed automatically in `app.Stop()`.
 
 ## Run
 
 ```sh
-go run main.go -c config.yaml
+go run . -c config.yaml
 ```

@@ -3,29 +3,21 @@ package main
 import (
 	"github.com/starfork/stargo"
 	"github.com/starfork/stargo/config"
-	"github.com/starfork/stargo/tracer"
+	pb "github.com/starfork/stargo/samples/proto/sample"
 )
 
 func main() {
-	// stargo uses a noop tracer (tracer.DefaultTracer) by default.
-	// All trace operations are safe to call even with the noop tracer.
+	// By default, tracer.DefaultTracer is a noop — all trace calls are safe.
 	//
-	// To enable Jaeger tracing, import and use the Jaeger tracer:
+	// To enable Jaeger tracing, import the Jaeger tracer and set it before New:
 	//
 	//   import jtracer "github.com/starfork/stargo/tracer/jaeger"
-	//   otTracer, closer := jtracer.InitJaeger("trace-demo")
-	//   _ = otTracer
-	//   _ = closer
-
+	//   tracer.DefaultTracer = jtracer.InitJaeger("trace-demo")
+	//
 	conf, _ := config.LoadConfig()
 	app := stargo.New("trace-demo", conf)
+	h := NewHandler(app.Logger())
 
-	// Verify the tracer is a noop by default
-	_ = tracer.DefaultTracer
-	app.LogInfof("tracer type: %T", app.Tracer())
-
-	// Use the tracer interface (Close is called automatically on app.Stop())
-	if err := app.Tracer().Close(); err != nil {
-		app.LogErrorf("tracer close: %v", err)
-	}
+	pb.RegisterSampleServiceServer(app.RpcServer(), h)
+	app.Run(&pb.SampleService_ServiceDesc, h)
 }

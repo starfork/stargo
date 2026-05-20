@@ -2,40 +2,86 @@
 
 [中文](../zh/usage.md)
 
-## Creating the App
+## Config-first principle
+
+stargo follows a **config-first** approach — if a component is present in the YAML
+configuration, it is auto-initialized when `stargo.New` is called. No manual wiring
+is needed for most components.
 
 ```go
 conf, _ := config.LoadConfig()
 app := stargo.New("service-name", conf)
+// Stores, broker, registry, resolver, tracer are auto-initialized
+// based on conf contents.
 ```
 
-`stargo.New` initializes stores, broker, registry, resolver, and tracer based on the config.
+## Handler pattern
+
+Service logic lives in a **handler struct** that:
+
+1. Embeds the protoc-generated `pb.UnimplementedXxxServer`
+2. Receives dependencies through a constructor (`NewHandler`)
+3. Implements the RPC methods
+
+```go
+type handler struct {
+    repo *repo           // data access layer (optional)
+    log  logger.Logger
+    pb.UnimplementedSampleServiceServer
+}
+
+func NewHandler(app *stargo.App) *handler {
+    h := &handler{log: app.Logger()}
+    // Auto-connected stores are available via app.Store().
+    if db := app.Store("mysql"); db != nil {
+        h.repo = &repo{db: db.Instance().(*gorm.DB)}
+    }
+    return h
+}
+
+func (h *handler) GetUser(ctx context.Context, req *pb.GetUserRequest) (*pb.GetUserResponse, error) {
+    h.log.Infof("GetUser: id=%d", req.Id)
+    // Business logic using h.repo, h.log, etc.
+    return &pb.GetUserResponse{Id: req.Id, Name: "Alice"}, nil
+}
+```
 
 ## Running the server
 
 ```go
-app.Run(desc, impl)
-// or register services first:
-// pb.RegisterMyServiceServer(app.RpcServer(), &handler{})
-// app.Run()
+conf, _ := config.LoadConfig()
+app := stargo.New("my-service", conf)
+h := NewHandler(app)
+
+// Register your gRPC service and start serving.
+pb.RegisterMyServiceServer(app.RpcServer(), h)
+app.Run(pb.MyService_ServiceDesc, h)
 ```
 
-`Run` calls `beforeRun` (sets timezone, creates gRPC server, registers reflection in non-production), then registers services and starts gRPC `Serve`. It owns signal handling for SIGTERM/SIGINT/SIGHUP/SIGQUIT and cleans up on shutdown.
+`app.Run`:
+1. Sets the timezone
+2. Creates the gRPC server with configured interceptors
+3. Registers gRPC reflection in non-production environments
+4. Registers the service with etcd (if registry is configured)
+5. Registers your service descriptor
+6. Installs signal handlers (SIGTERM/SIGINT/SIGHUP/SIGQUIT)
+7. Calls `grpc.Serve`
 
-## Stores
+## Stores (MySQL, Redis)
 
-Stores are lazily initialized on first access. They must be registered via blank import:
+Stores are **opt-in** via blank import + YAML config.
 
 ```go
 import _ "github.com/starfork/stargo/store/mysql"
 import _ "github.com/starfork/stargo/store/redis"
 ```
 
-Access pattern:
+If `store.mysql` (or `store.redis`) exists in YAML, the store is auto-connected
+at startup. Access it in your handler:
 
 ```go
-db := app.Store("mysql").(*mysql.Mysql).GetInstance()   // *gorm.DB
-rdc := app.Store("redis").(*redis.Redis).GetInstance()   // *redis.Client
+db := app.Store("mysql").Instance().(*gorm.DB)   // *gorm.DB
+rdc := app.Store("redis").Instance().(*redis.Client) // *redis.Client
 ```
 
 ## Interceptors
@@ -73,7 +119,8 @@ gw := api.NewApi(&api.Config{
 })
 ```
 
-CORS middleware in `api/cors.go` forwards HTTP headers as `Grpc-Metadata-*`. Optional AES-GCM encrypted marshaler in `api/custom/`.
+CORS middleware in `api/cors.go` forwards HTTP headers as `Grpc-Metadata-*`.
+Optional AES-GCM encrypted marshaler in `api/custom/`.
 
 ## Queue (delayed tasks)
 
@@ -95,8 +142,5 @@ q.Register("my_task", func(t *task.Task) error {
 ## Client (service discovery)
 
 ```go
-import "github.com/starfork/stargo/client"
-
-c := client.New(ctx, resolver, logger)
-conn, err := c.NewClient("target-service")
+conn, err := app.Client().NewClient("target-service")
 ```

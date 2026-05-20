@@ -1,17 +1,21 @@
 # 07-client
 
-Demonstrates gRPC client with service discovery.
+Demonstrates gRPC client with service discovery within a handler.
 
-`app.Client()` returns a client that connects to services
-discovered via the configured resolver (e.g. etcd).
+## Pattern
+
+- `app.Client()` returns a client connected via the configured resolver
+- Handler methods call `cli.NewClient("target-service")` with the
+  service name to discover via etcd
+- The returned `*grpc.ClientConn` is used to create a downstream gRPC stub
 
 ## Prerequisites
 
-- Running etcd cluster
-- A target service registered in etcd
+- Running etcd cluster with registering services
+- YAML config with `registry.scheme: etcd`
 
 ## Run
 
 ```sh
-go run main.go -c config.yaml
+go run . -c config.yaml
 ```

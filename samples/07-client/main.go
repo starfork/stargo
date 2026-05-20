@@ -3,31 +3,17 @@ package main
 import (
 	"github.com/starfork/stargo"
 	"github.com/starfork/stargo/config"
+	pb "github.com/starfork/stargo/samples/proto/sample"
 )
 
 func main() {
 	conf, _ := config.LoadConfig()
 	app := stargo.New("client-demo", conf)
+	h := NewHandler(app)
 
-	// app.Client() returns a client connected via the configured resolver.
-	// With etcd naming configured, it discovers the target service.
-	c := app.Client()
-	if c == nil {
-		app.LogInfof("no resolver configured, client unavailable")
-		return
-	}
-
-	// Connect to a target service.
-	// The target format is: scheme:///org/service-name
-	conn, err := c.NewClient("target-service")
-	if err != nil {
-		app.LogFatalf("create client: %v", err)
-		return
-	}
-	defer conn.Close()
-
-	// Use conn to create a gRPC client stub:
-	// pb.NewTargetServiceClient(conn)
-
-	app.LogInfof("connected to target-service via: %s", conn.Target())
+	// The gRPC client uses the configured resolver for service discovery.
+	// When the handler's GetUser or CreateUser is called, it connects
+	// to the downstream "user-service" via etcd.
+	pb.RegisterSampleServiceServer(app.RpcServer(), h)
+	app.Run(&pb.SampleService_ServiceDesc, h)
 }

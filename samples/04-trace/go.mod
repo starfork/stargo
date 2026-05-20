@@ -2,7 +2,10 @@ module github.com/starfork/stargo/samples/04-trace
 
 go 1.25.2
 
-require github.com/starfork/stargo v0.0.0
+require (
+	github.com/starfork/stargo v0.0.0
+	github.com/starfork/stargo/samples/proto/sample v0.0.0
+)
 
 require (
 	github.com/coreos/go-semver v0.3.1 // indirect
@@ -36,4 +39,7 @@ require (
 	gorm.io/gorm v1.31.0 // indirect
 )
 
-replace github.com/starfork/stargo => ../../
+replace (
+	github.com/starfork/stargo => ../../
+	github.com/starfork/stargo/samples/proto/sample => ../proto/sample
+)

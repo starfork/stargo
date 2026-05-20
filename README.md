@@ -46,15 +46,16 @@ func main() {
 
 ## Samples
 
-See [samples/](samples/) directory for runnable examples:
+See [samples/](samples/) directory for runnable examples, each with a proto-defined
+service, handler pattern, and README:
 
-- [01-basic](samples/01-basic/) — Minimal gRPC server
-- [02-logger](samples/02-logger/) — Logger usage
-- [03-mysql-redis](samples/03-mysql-redis/) — MySQL/Redis stores
-- [04-trace](samples/04-trace/) — Tracing
-- [05-broker](samples/05-broker/) — NATS broker
-- [06-naming](samples/06-naming/) — Service discovery
-- [07-client](samples/07-client/) — gRPC client
+- [01-basic](samples/01-basic/) — Minimal gRPC service with handler struct
+- [02-logger](samples/02-logger/) — Structured logging in handler methods
+- [03-mysql-redis](samples/03-mysql-redis/) — MySQL repo + Redis cache-aside
+- [04-trace](samples/04-trace/) — Tracer interface (noop by default)
+- [05-broker](samples/05-broker/) — NATS pub/sub from handler methods
+- [06-naming](samples/06-naming/) — etcd registry + resolver
+- [07-client](samples/07-client/) — gRPC client with service discovery
 
 ## Related projects
 

@@ -4,68 +4,60 @@
 
 ## 最小化 gRPC 服务
 
+### 1. 定义 handler
+
+```go
+type handler struct {
+    pb.UnimplementedSampleServiceServer
+}
+
+func NewHandler() *handler {
+    return &handler{}
+}
+
+func (h *handler) GetUser(ctx context.Context, req *pb.GetUserRequest) (*pb.GetUserResponse, error) {
+    return &pb.GetUserResponse{Id: req.Id, Name: "Alice"}, nil
+}
+```
+
+### 2. 装配启动
+
 ```go
 package main
 
 import (
-	"github.com/starfork/stargo"
-	"github.com/starfork/stargo/config"
+    "github.com/starfork/stargo"
+    "github.com/starfork/stargo/config"
+    pb "your/proto/package"
 )
 
 func main() {
-	conf, err := config.LoadConfig()
-	if err != nil {
-		panic(err)
-	}
+    conf, _ := config.LoadConfig()
+    app := stargo.New("my-service", conf)
+    h := NewHandler()
 
-	app := stargo.New("my-service", conf)
-	// 注册你的gRPC服务:
-	// pb.RegisterMyServiceServer(app.RpcServer(), &handler{})
-	app.Run()
+    pb.RegisterSampleServiceServer(app.RpcServer(), h)
+    app.Run(pb.SampleService_ServiceDesc, h)
 }
 ```
 
-## 使用拦截器
+## 使用存储（配置优先）
+
+如果 YAML 配置中有 `store.mysql` 或 `store.redis`，它们会自动连接。
+通过 blank import 让 `init()` 注册：
 
 ```go
 import (
-	"github.com/starfork/stargo"
-	"github.com/starfork/stargo/interceptor/recovery"
-	"github.com/starfork/stargo/interceptor/validator"
-	"github.com/starfork/stargo/config"
+    _ "github.com/starfork/stargo/store/mysql"
+    _ "github.com/starfork/stargo/store/redis"
 )
 
-func main() {
-	conf, _ := config.LoadConfig()
-	app := stargo.New("my-service", conf)
-
-	s := app.RpcServer()
-	// 注册gRPC服务, 然后:
-	app.Run()
-}
-```
-
-## 添加存储 (MySQL, Redis)
-
-存储是 opt-in 的。在 `main.go` 中 blank-import 需要的存储包：
-
-```go
-import (
-	_ "github.com/starfork/stargo/store/mysql"
-	_ "github.com/starfork/stargo/store/redis"
-	"github.com/starfork/stargo"
-	"github.com/starfork/stargo/config"
-)
-
-func main() {
-	conf, _ := config.LoadConfig()
-	app := stargo.New("my-service", conf)
-
-	// 如果YAML中配置了，可以访问存储:
-	// gormDB := app.Store("mysql").(*mysql.Mysql).GetInstance()
-	// rdc    := app.Store("redis").(*redis.Redis).GetInstance()
-
-	app.Run()
+func NewHandler(app *stargo.App) *handler {
+    h := &handler{log: app.Logger()}
+    if db := app.Store("mysql"); db != nil {
+        h.repo = &repo{db: db.Instance().(*gorm.DB)}
+    }
+    return h
 }
 ```
 

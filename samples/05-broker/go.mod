@@ -2,7 +2,11 @@ module github.com/starfork/stargo/samples/05-broker
 
 go 1.25.2
 
-require github.com/starfork/stargo v0.0.0
+require (
+	github.com/starfork/stargo v0.0.0
+	github.com/starfork/stargo/samples/proto/sample v0.0.0
+	google.golang.org/grpc v1.76.0
+)
 
 require (
 	github.com/coreos/go-semver v0.3.1 // indirect
@@ -30,10 +34,12 @@ require (
 	golang.org/x/text v0.30.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20251007200510-49b9836ed3ff // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20251007200510-49b9836ed3ff // indirect
-	google.golang.org/grpc v1.76.0 // indirect
 	google.golang.org/protobuf v1.36.10 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gorm.io/gorm v1.31.0 // indirect
 )
 
-replace github.com/starfork/stargo => ../../
+replace (
+	github.com/starfork/stargo => ../../
+	github.com/starfork/stargo/samples/proto/sample => ../proto/sample
+)

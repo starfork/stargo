@@ -3,30 +3,16 @@ package main
 import (
 	"github.com/starfork/stargo"
 	"github.com/starfork/stargo/config"
+	pb "github.com/starfork/stargo/samples/proto/sample"
 )
 
 func main() {
 	conf, _ := config.LoadConfig()
 	app := stargo.New("naming-demo", conf)
+	h := NewHandler(app)
 
-	// When YAML config has a "registry" section with scheme "etcd",
-	// the service is automatically registered with etcd on app.Run()
-	// and deregistered on app.Stop().
-
-	r := app.Registry()
-	if r == nil {
-		app.LogInfof("registry not configured, skipping demo")
-		return
-	}
-	app.LogInfof("registry scheme: %s", r.Scheme())
-
-	rr := app.Resolver()
-	if rr == nil {
-		app.LogInfof("resolver not configured, skipping demo")
-		return
-	}
-	app.LogInfof("resolver scheme: %s", rr.Scheme())
-
-	// The service is discoverable by other services via the etcd resolver.
-	app.LogInfof("naming-demo ready for service discovery")
+	// The service is auto-registered with etcd during Run(),
+	// and auto-deregistered during Stop().
+	pb.RegisterSampleServiceServer(app.RpcServer(), h)
+	app.Run(&pb.SampleService_ServiceDesc, h)
 }

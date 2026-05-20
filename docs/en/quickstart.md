@@ -4,68 +4,60 @@
 
 ## Minimal gRPC server
 
+### 1. Define a handler
+
+```go
+type handler struct {
+    pb.UnimplementedSampleServiceServer
+}
+
+func NewHandler() *handler {
+    return &handler{}
+}
+
+func (h *handler) GetUser(ctx context.Context, req *pb.GetUserRequest) (*pb.GetUserResponse, error) {
+    return &pb.GetUserResponse{Id: req.Id, Name: "Alice"}, nil
+}
+```
+
+### 2. Wire it up
+
 ```go
 package main
 
 import (
-	"github.com/starfork/stargo"
-	"github.com/starfork/stargo/config"
+    "github.com/starfork/stargo"
+    "github.com/starfork/stargo/config"
+    pb "your/proto/package"
 )
 
 func main() {
-	conf, err := config.LoadConfig()
-	if err != nil {
-		panic(err)
-	}
+    conf, _ := config.LoadConfig()
+    app := stargo.New("my-service", conf)
+    h := NewHandler()
 
-	app := stargo.New("my-service", conf)
-	// Register your gRPC service:
-	// pb.RegisterMyServiceServer(app.RpcServer(), &handler{})
-	app.Run()
+    pb.RegisterSampleServiceServer(app.RpcServer(), h)
+    app.Run(pb.SampleService_ServiceDesc, h)
 }
 ```
 
-## With interceptors
+## With stores (config-first)
+
+If the YAML config has `store.mysql` or `store.redis`, they auto-connect.
+Blank-import the packages so their `init()` runs:
 
 ```go
 import (
-	"github.com/starfork/stargo"
-	"github.com/starfork/stargo/interceptor/recovery"
-	"github.com/starfork/stargo/interceptor/validator"
-	"github.com/starfork/stargo/config"
+    _ "github.com/starfork/stargo/store/mysql"
+    _ "github.com/starfork/stargo/store/redis"
 )
 
-func main() {
-	conf, _ := config.LoadConfig()
-	app := stargo.New("my-service", conf)
-
-	s := app.RpcServer()
-	// Register gRPC services, then:
-	app.Run()
-}
-```
-
-## Adding stores (MySQL, Redis)
-
-Stores are opt-in. Blank-import the store package in your `main.go`:
-
-```go
-import (
-	_ "github.com/starfork/stargo/store/mysql"
-	_ "github.com/starfork/stargo/store/redis"
-	"github.com/starfork/stargo"
-	"github.com/starfork/stargo/config"
-)
-
-func main() {
-	conf, _ := config.LoadConfig()
-	app := stargo.New("my-service", conf)
-
-	// Access stores if configured in YAML:
-	// gormDB := app.Store("mysql").(*mysql.Mysql).GetInstance()
-	// rdc    := app.Store("redis").(*redis.Redis).GetInstance()
-
-	app.Run()
+func NewHandler(app *stargo.App) *handler {
+    h := &handler{log: app.Logger()}
+    if db := app.Store("mysql"); db != nil {
+        h.repo = &repo{db: db.Instance().(*gorm.DB)}
+    }
+    return h
 }
 ```
 

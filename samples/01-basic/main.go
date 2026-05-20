@@ -1,30 +1,22 @@
 package main
 
 import (
-	"log"
-	"os"
-
 	"github.com/starfork/stargo"
 	"github.com/starfork/stargo/config"
+	pb "github.com/starfork/stargo/samples/proto/sample"
 )
 
 func main() {
-	// Log level can be set via STARGO_LOG_LEVEL env var
-	// Supported: trace, debug, info, warn, error, fatal
-	os.Setenv("STARGO_LOG_LEVEL", "debug")
-
+	// Config-first: stargo reads YAML and auto-connects configured components.
 	conf, err := config.LoadConfig()
 	if err != nil {
-		log.Fatalf("load config: %v", err)
+		panic(err)
 	}
 
 	app := stargo.New("basic-service", conf)
+	h := NewHandler(app.Logger())
 
-	// Your gRPC service would be registered here:
-	// pb.RegisterYourServiceServer(app.RpcServer(), &handler{})
-
-	// app.Run(desc, impl) should be called with your service descriptor and implementation.
-	// For this demo we skip the actual gRPC service registration.
-	app.LogInfof("basic-service initialized, ready to register gRPC services")
-	_ = app
+	// Register the gRPC service and start serving.
+	pb.RegisterSampleServiceServer(app.RpcServer(), h)
+	app.Run(&pb.SampleService_ServiceDesc, h)
 }

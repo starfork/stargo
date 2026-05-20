@@ -1,16 +1,24 @@
 # 06-naming
 
-Demonstrates service registration and discovery via etcd.
+Demonstrates etcd service registration and discovery.
 
-The service is automatically registered on `app.Run()` and
-deregistered on `app.Stop()`.
+## Config-first
+
+When YAML includes a `registry` section with `scheme: etcd`, stargo
+auto-creates the registry and resolver.
+
+- **Registration**: happens in `app.Run()` — the service is registered
+  with etcd. The handler can access its own service info via `app.Service()`.
+- **Deregistration**: happens on `app.Stop()` (SIGTERM/SIGINT).
+- **Discovery**: use `app.Resolver()` to build targets for downstream calls.
 
 ## Prerequisites
 
 - Running etcd cluster
+- YAML config with `registry.scheme: etcd`
 
 ## Run
 
 ```sh
-go run main.go -c config.yaml
+go run . -c config.yaml
 ```

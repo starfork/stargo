@@ -2,40 +2,83 @@
 
 [English](../en/usage.md)
 
-## 创建应用
+## 配置优先原则
+
+stargo 遵循**配置优先**的原则——只要 YAML 配置中存在对应的配置项，组件会在
+`stargo.New` 时自动初始化，无需手动装配。
 
 ```go
 conf, _ := config.LoadConfig()
 app := stargo.New("service-name", conf)
+// Stores、broker、registry、resolver、tracer 根据配置自动初始化
 ```
 
-`stargo.New` 根据配置初始化 stores、broker、registry、resolver 和 tracer。
+## Handler 模式
+
+业务逻辑实现在 **handler 结构体**中，它：
+
+1. 嵌入 protoc 生成的 `pb.UnimplementedXxxServer`
+2. 通过构造函数 `NewHandler` 接收依赖
+3. 实现 RPC 方法
+
+```go
+type handler struct {
+    repo *repo           // 数据访问层（可选）
+    log  logger.Logger
+    pb.UnimplementedSampleServiceServer
+}
+
+func NewHandler(app *stargo.App) *handler {
+    h := &handler{log: app.Logger()}
+    // 自动连接的 store 通过 app.Store() 获取
+    if db := app.Store("mysql"); db != nil {
+        h.repo = &repo{db: db.Instance().(*gorm.DB)}
+    }
+    return h
+}
+
+func (h *handler) GetUser(ctx context.Context, req *pb.GetUserRequest) (*pb.GetUserResponse, error) {
+    h.log.Infof("GetUser: id=%d", req.Id)
+    // 使用 h.repo、h.log 等执行业务逻辑
+    return &pb.GetUserResponse{Id: req.Id, Name: "Alice"}, nil
+}
+```
 
 ## 运行服务
 
 ```go
-app.Run(desc, impl)
-// 或先注册服务:
-// pb.RegisterMyServiceServer(app.RpcServer(), &handler{})
-// app.Run()
+conf, _ := config.LoadConfig()
+app := stargo.New("my-service", conf)
+h := NewHandler(app)
+
+pb.RegisterMyServiceServer(app.RpcServer(), h)
+app.Run(pb.MyService_ServiceDesc, h)
 ```
 
-`Run` 会调用 `beforeRun`（设置时区、创建 gRPC 服务、非生产环境注册 reflection），然后注册服务并启动 gRPC `Serve`。它负责信号处理（SIGTERM/SIGINT/SIGHUP/SIGQUIT）并在关闭时清理资源。
+`app.Run` 执行：
+1. 设置时区
+2. 创建配置了拦截器的 gRPC 服务
+3. 非生产环境注册 gRPC reflection
+4. 向 etcd 注册服务（如果配置了 registry）
+5. 注册你的服务描述符
+6. 安装信号处理（SIGTERM/SIGINT/SIGHUP/SIGQUIT）
+7. 调用 `grpc.Serve`
 
-## 存储
+## 存储（MySQL、Redis）
 
-Stores 在首次访问时懒初始化。必须通过 blank import 注册：
+Stores 通过 blank import + YAML 配置按需启用：
 
 ```go
 import _ "github.com/starfork/stargo/store/mysql"
 import _ "github.com/starfork/stargo/store/redis"
 ```
 
-访问方式：
+如果 YAML 中存在 `store.mysql`（或 `store.redis`），store 会在启动时自动连接。
+在 handler 中访问：
 
 ```go
-db := app.Store("mysql").(*mysql.Mysql).GetInstance()   // *gorm.DB
-rdc := app.Store("redis").(*redis.Redis).GetInstance()   // *redis.Client
+db := app.Store("mysql").Instance().(*gorm.DB)
+rdc := app.Store("redis").Instance().(*redis.Client)
 ```
 
 ## 拦截器
@@ -50,7 +93,7 @@ rdc := app.Store("redis").(*redis.Redis).GetInstance()   // *redis.Client
 | `recovery` | panic 恢复，返回 codes.Unknown |
 | `validator` | 结构体验证，中文语言包 + 自定义 `money` 规则 |
 
-通过 `grpc.ChainUnaryInterceptor` 传入拦截器：
+通过 `grpc.ChainUnaryInterceptor` 传入：
 
 ```go
 conf.Server.UnaryInterceptor = append(conf.Server.UnaryInterceptor,
@@ -73,7 +116,8 @@ gw := api.NewApi(&api.Config{
 })
 ```
 
-CORS 中间件在 `api/cors.go` 中，将 HTTP 头转发为 `Grpc-Metadata-*`。`api/custom/` 提供了可选的 AES-GCM 加密 marshaler。
+CORS 中间件在 `api/cors.go` 中，将 HTTP 头转发为 `Grpc-Metadata-*`。
+`api/custom/` 提供了可选的 AES-GCM 加密 marshaler。
 
 ## 队列（延迟任务）
 
@@ -95,8 +139,5 @@ q.Register("my_task", func(t *task.Task) error {
 ## 客户端（服务发现）
 
 ```go
-import "github.com/starfork/stargo/client"
-
-c := client.New(ctx, resolver, logger)
-conn, err := c.NewClient("target-service")
+conn, err := app.Client().NewClient("target-service")
 ```

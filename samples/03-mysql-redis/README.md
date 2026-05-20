@@ -1,21 +1,39 @@
 # 03-mysql-redis
 
-Demonstrates MySQL and Redis store usage.
+Demonstrates MySQL and Redis stores within a gRPC handler.
 
-Stores are opt-in — you must blank-import the store packages:
+## Config-first
+
+If the YAML config has a `store.mysql` section, stargo auto-connects.
+`NewHandler` receives the connected `*gorm.DB` (and optionally `*redis.Client`)
+and uses them in service methods.
+
+## Pattern
 
 ```go
-import _ "github.com/starfork/stargo/store/mysql"
-import _ "github.com/starfork/stargo/store/redis"
+handler struct {
+    repo *repo       // holds db + rdb connections
+    log  logger.Logger
+    pb.UnimplementedSampleServiceServer
+}
+
+repo struct {
+    db  *gorm.DB
+    rdb *redis.Client
+}
 ```
+
+- `repo` abstracts the data layer
+- Handler methods call `repo` for queries and caching
+- Redis is used for cache-aside (GetUser checks cache first)
 
 ## Prerequisites
 
-- Running MySQL instance
-- Running Redis instance
+- Running MySQL
+- Running Redis (optional, for caching)
 
 ## Run
 
 ```sh
-go run main.go -c config.yaml
+go run . -c config.yaml
 ```
