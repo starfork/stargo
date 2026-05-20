@@ -29,8 +29,6 @@ func E(err error) {
 }
 func NewApi(conf *Config) *Api {
 	ctx := context.Background()
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
 
 	var conn *grpc.ClientConn
 	//手动注册的模式

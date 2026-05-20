@@ -2,29 +2,19 @@ package server
 
 import (
 	"net"
-	"os"
-	"os/signal"
 	"strings"
-	"syscall"
 
 	"github.com/starfork/stargo/logger"
 	"github.com/starfork/stargo/naming"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/health"
-
-	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 )
 
 // App App
 type Server struct {
-	//opts      *Options
 	rpcServer *grpc.Server
 	lis       net.Listener
 	logger    logger.Logger
-
-	healthServer *health.Server
-
-	conf *Config
+	conf      *Config
 }
 
 func New(conf *Config) *Server {
@@ -69,40 +59,17 @@ func (e *Server) Run() {
 
 	e.logger.Infof("starting: gRPC Listener %s\n", e.conf.Addr)
 
-	ch := make(chan os.Signal, 1)
-	signal.Notify(ch, syscall.SIGTERM, syscall.SIGINT, syscall.SIGHUP, syscall.SIGQUIT)
-	go func() {
-		sg := <-ch
-		e.Stop()
-
-		if i, ok := sg.(syscall.Signal); ok {
-			os.Exit(int(i))
-		} else {
-			os.Exit(0)
-		}
-	}()
-
-	// 注册健康检查服务
-	e.healthServer = health.NewServer()
-	healthpb.RegisterHealthServer(e.rpcServer, e.healthServer)
-	e.healthServer.SetServingStatus("", healthpb.HealthCheckResponse_SERVING)
-
-	if err := e.rpcServer.Serve(lis); err != nil {
-		e.logger.Fatalf("failed to serve: %v", err)
-	}
-
+	e.rpcServer.Serve(lis)
 }
 
 // Stop server
 func (e *Server) Stop() {
-	e.rpcServer.Stop()
+	e.rpcServer.GracefulStop()
 }
 
 // Restart server
 func (e *Server) Restart() {
-
 	e.rpcServer.GracefulStop()
-	e.healthServer.SetServingStatus("", healthpb.HealthCheckResponse_NOT_SERVING)
 	e.rpcServer.Serve(e.lis)
 }
 

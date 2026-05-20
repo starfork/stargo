@@ -54,7 +54,7 @@ func MetaMethod(ctx context.Context, out ...bool) string {
 func MetaToken(ctx context.Context, out ...bool) string {
 	return MetaString(ctx, META_TOKEN, out...)
 }
-func MetaDevide(ctx context.Context, out ...bool) string {
+func MetaDevice(ctx context.Context, out ...bool) string {
 	return MetaString(ctx, META_DEVICE, out...)
 }
 

@@ -18,7 +18,7 @@ type Options struct {
 // Option Option
 type Option func(o *Options)
 
-func WithTimezome(c string) Option {
+func WithTimezone(c string) Option {
 	return func(o *Options) {
 		o.Timezone = c
 	}
@@ -38,7 +38,7 @@ func WithUnaryInterceptor(opt grpc.UnaryServerInterceptor) Option {
 }
 
 // StreamInterceptor Stream server interceptor
-func WithStreamnIterceptor(opt grpc.StreamServerInterceptor) Option {
+func WithStreamInterceptor(opt grpc.StreamServerInterceptor) Option {
 	return func(o *Options) {
 		o.Server.StreamInterceptor = append(o.Server.StreamInterceptor, opt)
 	}

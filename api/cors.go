@@ -23,7 +23,7 @@ var (
 	AllowMethods = []string{"GET", "HEAD", "POST", "PUT", "DELETE"}
 )
 
-func Cros(w http.ResponseWriter, req *http.Request, headers ...map[string]string) {
+func Cors(w http.ResponseWriter, req *http.Request, headers ...map[string]string) {
 	inHeaders := map[string]string{
 		META_METHOD: req.Method,
 		META_IP:     ClientIP(req),
@@ -76,7 +76,7 @@ func Cros(w http.ResponseWriter, req *http.Request, headers ...map[string]string
 
 func DefaultHandlerWrapper(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		Cros(w, req)
+		Cors(w, req)
 		h.ServeHTTP(w, req)
 	})
 }

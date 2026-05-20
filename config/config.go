@@ -20,7 +20,7 @@ var (
 // 公共配置模板
 type Config struct {
 	Env        string
-	Timezome   string //时区设置
+	Timezone   string
 	Timeformat string
 
 	//Cm         []string // config manager。目前只处理基于etcd，所以这里是etcd的地址
@@ -40,12 +40,9 @@ type Config struct {
 }
 
 var DefaultConfig = &Config{
-	Server:   server.DefaultConfig,
-	Store:    make(map[string]*store.Config),
-	Log:      &logger.Config{},
-	Broker:   &broker.Config{},
-	Registry: &naming.Config{},
-	//Tracer:   &tracer.Config{},
+	Server: server.DefaultConfig,
+	Store:  make(map[string]*store.Config),
+	Log:    &logger.Config{},
 }
 
 type JwtConfig struct {

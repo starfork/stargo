@@ -11,6 +11,12 @@ import (
 	"github.com/starfork/stargo/util/ustring"
 )
 
+func init() {
+	store.Register("redis", func(c *store.Config) store.Store {
+		return NewRedis(c)
+	})
+}
+
 type Redis struct {
 	rdc *redis.Client
 	c   *store.Config

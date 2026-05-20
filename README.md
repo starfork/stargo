@@ -1,60 +1,106 @@
 ## Usage
 
-### main.go
+### Minimal gRPC server (no mysql, no redis)
 
-```
+```go
+package main
+
 import (
 	"flag"
-	"service/app/internal/server"
-	pb "your/proto/path/v1"
+	"log"
 
 	"github.com/starfork/stargo"
-	"github.com/starfork/stargo/store/mysql"
-	"github.com/starfork/stargo/store/redis"
-	"google.golang.org/grpc/reflection"
+	"github.com/starfork/stargo/config"
+	pb "your/proto/path/v1"
 )
 
 func main() {
-	cf := flag.String("c", "../../config/debug.yaml", "config file path")
-	flag.Parse()
-	sc := server.LoadConfig(*cf)
-	c := sc.Server
-	app := stargo.New(
-		stargo.Org("park"),
-		stargo.Name("app"),
-		stargo.Config(sc.Server),
-		stargo.UnaryInterceptor(your inteceprot1),
-		stargo.UnaryInterceptor(your inteceprot2),
-        ...
-	)
-
-	s := app.Server()
-	if c.Environment == "debug" {
-		reflection.Register(s)
+	conf, err := config.LoadConfig()
+	if err != nil {
+		log.Fatal(err)
 	}
-	pb.RegisterAppServer(s, server.New(app))
+
+	app := stargo.New("my-service", conf)
+
+	// gRPC reflection in non-production
+	// reflection.Register(app.RpcServer())
+
+	pb.RegisterMyServiceServer(app.RpcServer(), &myHandler{})
 	app.Run()
 }
 ```
 
-### server/handler.go
+### With store support (opt-in via blank import)
 
+To use MySQL or Redis stores, add blank imports in your main package:
+
+```go
+import (
+	_ "github.com/starfork/stargo/store/mysql"  // registers mysql store
+	_ "github.com/starfork/stargo/store/redis"  // registers redis store
+	"github.com/starfork/stargo"
+	"github.com/starfork/stargo/config"
+)
+
+func main() {
+	conf, _ := config.LoadConfig()
+	app := stargo.New("my-service", conf)
+
+	// Access store instances (only if configured in YAML)
+	// db := app.Store("mysql").(*mysql.Mysql).GetInstance()  // *gorm.DB
+	// rdc := app.Store("redis").(*redis.Redis).GetInstance() // *redis.Client
+
+	app.Run()
+}
 ```
-type handler struct {
-	logger logger.Logger
-	c      cache.Cache
-	pb.UnimplementedAppServer
-}
 
-// New handler
-func New(app *stargo.App) *handler {
-    rdc:=app.Store("redis").(*redis.Redis).GetInstance()
-	h := &handler{
-		logger: app.GetLogger(),
-		c:      credis.New(rdc),
-	}
-	return h
-}
+### With interceptors
+
+```go
+import (
+	"github.com/starfork/stargo"
+	"github.com/starfork/stargo/interceptor/validator"
+)
+
+app := stargo.New("my-service", conf)
+s := app.RpcServer()
+
+// Register gRPC services
+// pb.RegisterMyServiceServer(s, myHandler)
+
+app.Run()
+```
+
+### Configuration (YAML)
+
+```yaml
+env: dev
+timezone: Asia/Shanghai
+
+server:
+  addr: ":9090"
+
+# store:
+#   mysql:
+#     host: localhost
+#     port: 3306
+#     user: root
+#     auth: password
+#     name: dbname
+#   redis:
+#     host: localhost
+#     port: 6379
+#     auth: ""
+#     num: 0
+
+# registry:
+#   scheme: etcd
+#   host: localhost:2379
+#   org: my-org
+#   ttl: 10
+
+# broker:
+#   host: localhost:4222
 ```
 
 [更多参考 stargo-examples](https://github.com/starfork/stargo-examples)

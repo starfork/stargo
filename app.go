@@ -3,7 +3,9 @@ package stargo
 import (
 	"context"
 	"os"
+	"os/signal"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/starfork/stargo/broker"
@@ -14,8 +16,6 @@ import (
 	"github.com/starfork/stargo/naming/etcd"
 	"github.com/starfork/stargo/server"
 	"github.com/starfork/stargo/store"
-	smysql "github.com/starfork/stargo/store/mysql"
-	sredis "github.com/starfork/stargo/store/redis"
 	"github.com/starfork/stargo/tracer"
 	"github.com/starfork/stargo/util/ustring"
 	"google.golang.org/grpc"
@@ -65,32 +65,21 @@ func (s *App) initConfig() {
 		s.logger = logger.DefaultLogger
 
 		for k, v := range s.conf.Store {
-			if k == "mysql" {
-				v.TimeLocation = s.opts.Timezone //使用time local
-				if v.Prefix == "" {
-					v.Prefix = ustring.Or(s.name+"_", os.Getenv("MYSQL_PREFIX"))
+			if st := store.NewStore(k, v); st != nil {
+				if k == "mysql" {
+					v.TimeLocation = s.opts.Timezone
+					if v.Prefix == "" {
+						v.Prefix = ustring.Or(s.name+"_", os.Getenv("MYSQL_PREFIX"))
+					}
 				}
-				s.Store(k, smysql.NewMysql(v))
-			}
-			if k == "redis" {
-				s.Store(k, sredis.NewRedis(v))
+				s.Store(k, st)
 			}
 		}
 		if s.conf.Broker != nil {
 			s.conf.Broker.App = s.name
 			s.broker = nats.NewBroker(s.conf.Broker)
 		}
-		// if s.conf.Tracer != nil {
-		// 	var err error
-		// 	if s.tracer, err = otel.NewTracer(s.conf.Tracer); err != nil {
-		// 		s.logger.Fatalf("tracer init fail: [%s]\n", s.conf.Tracer.Host)
-		// 	}
-		//
-		// s.conf.Server.ServerOpts = append(
-		// 	s.conf.Server.ServerOpts,
-		// 	grpc.StatsHandler(otelgrpc.NewServerHandler()),
-		// )
-		// }
+		s.tracer = tracer.DefaultTracer
 
 		if s.conf.Registry != nil {
 			r := s.conf.Registry
@@ -105,7 +94,7 @@ func (s *App) initConfig() {
 					s.logger.Fatalf("etcd resolver %+v", err)
 				}
 			} else {
-				s.logger.Fatalf("unknow registry")
+				s.logger.Fatalf("unknown registry")
 			}
 		}
 	})
@@ -127,7 +116,7 @@ func (s *App) beforeRun() {
 	if tz, err := time.LoadLocation(s.opts.Timezone); err == nil {
 		time.Local = tz
 		//s.Tz = tz
-		s.conf.Timezome = s.opts.Timezone
+		s.conf.Timezone = s.opts.Timezone
 	}
 
 	sc := s.opts.Server
@@ -141,8 +130,10 @@ func (s *App) beforeRun() {
 	}
 	service := s.server.Service()
 
-	if err := s.registry.Register(service); err != nil {
-		s.logger.Fatalf("registry err %+v", err)
+	if s.registry != nil {
+		if err := s.registry.Register(service); err != nil {
+			s.logger.Fatalf("registry err %+v", err)
+		}
 	}
 
 }
@@ -154,6 +145,20 @@ func (s *App) Run(desc *grpc.ServiceDesc, impl any) {
 	for _, v := range s.opts.ServiceDesc {
 		s.server.Server().RegisterService(v, impl)
 	}
+
+	ch := make(chan os.Signal, 1)
+	signal.Notify(ch, syscall.SIGTERM, syscall.SIGINT, syscall.SIGHUP, syscall.SIGQUIT)
+	go func() {
+		sig := <-ch
+		s.logger.Infof("received signal: %v, shutting down", sig)
+		s.Stop()
+		if i, ok := sig.(syscall.Signal); ok {
+			os.Exit(int(i))
+		} else {
+			os.Exit(0)
+		}
+	}()
+
 	s.server.Run()
 }
 

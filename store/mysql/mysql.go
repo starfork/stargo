@@ -11,9 +11,15 @@ import (
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
+	gormlogger "gorm.io/gorm/logger"
 	"gorm.io/gorm/schema"
 )
+
+func init() {
+	store.Register("mysql", func(c *store.Config) store.Store {
+		return NewMysql(c)
+	})
+}
 
 //var log logger.Interface
 
@@ -50,15 +56,15 @@ func (e *Mysql) connect(confs ...*store.Config) {
 	}
 
 	conf := &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Silent),
+		Logger: gormlogger.Default.LogMode(gormlogger.Silent),
 		NamingStrategy: schema.NamingStrategy{
-			SingularTable: true, //全局采用单表名
+			SingularTable: true,
 			TablePrefix:   c.Prefix,
 		},
 	}
 
 	if c.Debug {
-		conf.Logger = logger.Default.LogMode(logger.Info)
+		conf.Logger = gormlogger.Default.LogMode(gormlogger.Info)
 	}
 	if c.Tz1k != -1 {
 		store.TZ1K = true

@@ -44,5 +44,5 @@ func ClientIP(r *http.Request) string {
 	if ip, _, err := net.SplitHostPort(strings.TrimSpace(r.RemoteAddr)); err == nil {
 		return ip
 	}
-	return "unknow"
+	return "unknown"
 }
