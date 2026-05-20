@@ -1,11 +1,10 @@
 package api
 
 import (
+	"encoding/json"
 	"net"
 	"net/http"
 	"strings"
-
-	jsoniter "github.com/json-iterator/go"
 )
 
 func Response(w http.ResponseWriter, code int, msg ...string) {
@@ -21,7 +20,7 @@ func Response(w http.ResponseWriter, code int, msg ...string) {
 	if len(msg) > 1 {
 		res.Data = msg[1]
 	}
-	var ret, _ = jsoniter.Marshal(res)
+	var ret, _ = json.Marshal(res)
 	w.Header().Set("Content-Type", "application/json;charset=utf-8")
 	w.WriteHeader(code)
 	w.Write(ret)

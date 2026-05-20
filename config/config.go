@@ -3,7 +3,6 @@ package config
 import (
 	"github.com/starfork/stargo/api"
 	"github.com/starfork/stargo/broker"
-	"github.com/starfork/stargo/filemanager"
 	"github.com/starfork/stargo/logger"
 	"github.com/starfork/stargo/naming"
 	"github.com/starfork/stargo/server"
@@ -23,20 +22,17 @@ type Config struct {
 	Timezone   string
 	Timeformat string
 
-	//Cm         []string // config manager。目前只处理基于etcd，所以这里是etcd的地址
-
 	Server *server.Config
 	Api    *api.Config
 
 	Store map[string]*store.Config
 
-	Log         *logger.Config
-	Broker      *broker.Config
-	Registry    *naming.Config
-	Tracer      *tracer.Config
-	Filemanager *filemanager.Config
+	Log      *logger.Config
+	Broker   *broker.Config
+	Registry *naming.Config
+	Tracer   *tracer.Config
 
-	Jwt *JwtConfig
+	//Jwt *JwtConfig
 }
 
 var DefaultConfig = &Config{
@@ -45,7 +41,7 @@ var DefaultConfig = &Config{
 	Log:    &logger.Config{},
 }
 
-type JwtConfig struct {
-	PublicKey  string
-	PrivateKey string
-}
+// type JwtConfig struct {
+// 	PublicKey  string
+// 	PrivateKey string
+// }

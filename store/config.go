@@ -1,7 +1,5 @@
 package store
 
-import "github.com/starfork/stargo/store/mysql/plugins"
-
 type Config struct {
 	Host string //地址
 	Port string //端口
@@ -12,8 +10,8 @@ type Config struct {
 
 	Monitor bool //监控
 
-	Plugins map[string]plugins.Config //插件
-	Debug   bool                      //是否开启调试
+	Plugins map[string]map[string]any //插件
+	Debug   bool           //是否开启调试
 	MaxIdle int
 	MaxOpen int
 	Prefix  string //表前缀什么的

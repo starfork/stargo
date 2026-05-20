@@ -6,7 +6,7 @@ type Broker interface {
 	Publish(topic string, message Message) error
 	Subscribe(topic string, handler MessageHandler)
 	UnSubscribe() error
-	Flush() error //短期测试（tester等场景）
+	Flush() error
 }
 
 type Message struct {
@@ -17,3 +17,16 @@ type Message struct {
 }
 
 type MessageHandler func(Message)
+
+var brokerFactories = make(map[string]func(*Config) Broker)
+
+func Register(name string, factory func(*Config) Broker) {
+	brokerFactories[name] = factory
+}
+
+func NewBroker(name string, conf *Config) Broker {
+	if f, ok := brokerFactories[name]; ok {
+		return f(conf)
+	}
+	return nil
+}

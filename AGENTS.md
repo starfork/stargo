@@ -2,34 +2,66 @@
 
 Go microservice framework: gRPC + etcd (registry/resolver) + NATS (broker) + MySQL/GORM (store) + Redis (store/queue/cache) + Jaeger (tracer) + grpc-gateway (HTTP API).
 
-Module: `github.com/starfork/stargo` · Go 1.25.2 · Apache 2.0. README is in Chinese; documentation and examples at [stargo-examples](https://github.com/starfork/stargo-examples).
+Root module: `github.com/starfork/stargo` · Contrib module: `github.com/starfork/stargo/contrib` · Go 1.25.2 · Apache 2.0. README is in Chinese; documentation and examples at [stargo-examples](https://github.com/starfork/stargo-examples).
+
+## Module split
+
+The root `go.mod` is minimal (~8 direct deps: grpc, grpc-gateway, grpc-middleware, protobuf, yaml, x/time, x/text, x/exp). All optional/pluggable implementations live in `contrib/` with their own `go.mod`:
+
+| Root (core) | Contrib (optional) |
+|---|---|
+| `broker/broker.go` — interface + registry | `contrib/broker/nats` — NATS implementation |
+| `naming/registry.go`, `resolver.go` — interfaces + registries | `contrib/naming/etcd` — etcd implementation |
+| `store/store.go` — interface + registry | `contrib/store/mysql`, `contrib/store/redis` |
+| `tracer/tracer.go` — interface (noop default) | `contrib/tracer/jaeger` |
+| `interceptor/auth`, `recovery`, `ratelimit` | `contrib/interceptor/validator`, `contrib/interceptor/logger/zap` |
+| `api/api.go` — gateway runtime | `contrib/api/custom` — encrypted marshaler |
+| `cache/cache.go` — interface | `contrib/cache/redis` |
+| `queue/store/store.go` — interface | `contrib/queue/store/redis` |
+| `util/request` — HTTP helpers | `contrib/util/request/limiter` — uber/ratelimit |
+
+## Registry pattern
+
+Optional implementations self-register via `init()`:
+
+- **Broker**: `broker.Register("nats", factory)` → used by `broker.NewBroker("nats", config)`
+- **Registry**: `naming.RegisterRegistry("etcd", factory)` → used by `naming.NewRegistry("etcd", config)`
+- **Resolver**: `naming.RegisterResolver("etcd", factory)` → used by `naming.NewResolver("etcd", config)`
+- **Store**: `store.Register("mysql", factory)` → used by `store.NewStore("mysql", config)`
+
+Users blank-import the contrib package in `main.go` to trigger registration:
+
+```go
+import _ "github.com/starfork/stargo/contrib/broker/nats"
+import _ "github.com/starfork/stargo/contrib/naming/etcd"
+import _ "github.com/starfork/stargo/contrib/store/mysql"
+```
 
 ## Commands
 
 ```sh
-go build ./...          # build all packages
-go test ./...           # test all packages (some require external infra)
-go test ./util/...      # test only utility packages (no external deps)
-go test -run TestXxx ./pkg  # single test
+go build ./...          # build root module
+go build ./contrib/...  # build contrib module
+go test ./util/...      # test utility packages (no external deps)
+go test ./pm/...        # test pm package
 ```
-
-No Makefile, no linter config, no CI workflows. All packages except the root are leaf libraries with no internal dependencies on each other.
 
 ## Test quirks
 
-- **`broker/nats`** and **`cache/redis`** tests require running NATS / Redis — they will panic without them. All other test packages (`util/*`, `pm`, `naming/etcd`, `store/mysql`, `api/custom`) pass standalone.
-- `go test -short` is not wired; skip infra-dependent tests by targeting specific packages: `go test ./util/... ./pm/... ./api/custom/...`
+- **`contrib/broker/nats`** and **`contrib/cache/redis`** tests require running NATS / Redis — they will panic without them. All other test packages pass standalone.
+- Skip infra-dependent tests by targeting specific packages: `go test ./util/... ./pm/...`
 
 ## Architecture
 
 - **Entrypoint**: `stargo.New("name", config)` → `app.Run(desc, impl)`. Read `app.go` first.
 - **Store access**: `app.Store("mysql").(*mysql.Mysql).GetInstance()` → `*gorm.DB`; same for redis → `*redis.Client`.
-- **Stores are opt-in**: mysql/redis packages are NOT imported by `app.go`. They register via `init()`. Users must blank-import them in `main.go`: `_ "github.com/starfork/stargo/store/mysql"` or `_ "github.com/starfork/stargo/store/redis"`.
-- **Service discovery**: etcd-backed. Registry at `naming/etcd/registry.go`, resolver at `naming/etcd/resolver.go`. Client uses `round_robin` LB with 1GB/4GB message windows.
-- **Interceptors**: auth, zap logging, rate-limit, panic recovery, struct validator (Chinese locale, custom `money` validation).
-- **gRPC-gateway**: HTTP→gRPC with optional AES-GCM encrypted marshaler (`api/custom/`). CORS middleware auto-forwards headers as `Grpc-Metadata-*`.
+- **Stores are opt-in**: mysql/redis packages are NOT imported by `app.go`. They register via `init()`. Users must blank-import contrib versions in `main.go`: `_ "github.com/starfork/stargo/contrib/store/mysql"` or `_ "github.com/starfork/stargo/contrib/store/redis"`.
+- **Service discovery**: registry + resolver use registry pattern. Users blank-import `contrib/naming/etcd` to register etcd implementations.
+- **Broker**: users blank-import `contrib/broker/nats` to register NATS broker.
+- **Interceptors**: auth, rate-limit, panic recovery are core (`interceptor/`). Validator and zap logger are in contrib.
+- **gRPC-gateway**: HTTP→gRPC with optional AES-GCM encrypted marshaler (`contrib/api/custom/`). CORS middleware auto-forwards headers as `Grpc-Metadata-*`.
 - **Config**: YAML via `config.LoadConfig()`. Default timezone `Asia/Shanghai`. `DefaultConfig` has nil Broker/Registry — no auto-connection attempts.
-- **Tracer**: `tracer.DefaultTracer` is a no-op by default. Swap in `tracer/jaeger` or another implementation as needed.
+- **Tracer**: `tracer.DefaultTracer` is a no-op by default. Swap in `contrib/tracer/jaeger` or another implementation as needed.
 - **Signal handling**: `app.Run()` owns signal handling (SIGTERM/SIGINT/SIGHUP/SIGQUIT) and calls `app.Stop()` for proper cleanup (registry deregister, store close, broker unsubscribe). `server.Server` has no signal handling.
 
 ## Key conventions

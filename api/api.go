@@ -8,7 +8,7 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/starfork/stargo/client"
 	"github.com/starfork/stargo/logger"
-	"github.com/starfork/stargo/naming/etcd"
+	"github.com/starfork/stargo/naming"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -31,9 +31,8 @@ func NewApi(conf *Config) *Api {
 	ctx := context.Background()
 
 	var conn *grpc.ClientConn
-	//手动注册的模式
 	if conf.Registry != nil {
-		r, err := etcd.NewResolver(conf.Registry)
+		r, err := naming.NewResolver(conf.Registry.Scheme, conf.Registry)
 		E(err)
 		if len(conf.DiaOpts) == 0 {
 			conf.DiaOpts = []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}

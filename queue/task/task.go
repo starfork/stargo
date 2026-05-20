@@ -1,9 +1,9 @@
 package task
 
 import (
+	"encoding/json"
 	"strconv"
 
-	jsoniter "github.com/json-iterator/go"
 	"github.com/starfork/stargo/pm"
 )
 
@@ -31,7 +31,7 @@ type Task struct {
 }
 
 func (e *Task) Marshal() string {
-	task, _ := jsoniter.Marshal(e)
+	task, _ := json.Marshal(e)
 	return string(task)
 }
 

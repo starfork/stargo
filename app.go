@@ -9,11 +9,9 @@ import (
 	"time"
 
 	"github.com/starfork/stargo/broker"
-	"github.com/starfork/stargo/broker/nats"
 	"github.com/starfork/stargo/config"
 	"github.com/starfork/stargo/logger"
 	"github.com/starfork/stargo/naming"
-	"github.com/starfork/stargo/naming/etcd"
 	"github.com/starfork/stargo/server"
 	"github.com/starfork/stargo/store"
 	"github.com/starfork/stargo/tracer"
@@ -77,24 +75,20 @@ func (s *App) initConfig() {
 		}
 		if s.conf.Broker != nil {
 			s.conf.Broker.App = s.name
-			s.broker = nats.NewBroker(s.conf.Broker)
+			if b := broker.NewBroker(s.conf.Broker.Name, s.conf.Broker); b != nil {
+				s.broker = b
+			}
 		}
 		s.tracer = tracer.DefaultTracer
 
 		if s.conf.Registry != nil {
 			r := s.conf.Registry
-
 			var err error
-			if r.Scheme == "etcd" {
-				if s.registry, err = etcd.NewRegistry(r); err != nil {
-					s.logger.Fatalf("etcd registry err %+v", err.Error())
-				}
-
-				if s.resolver, err = etcd.NewResolver(r); err != nil {
-					s.logger.Fatalf("etcd resolver %+v", err)
-				}
-			} else {
-				s.logger.Fatalf("unknown registry")
+			if s.registry, err = naming.NewRegistry(r.Scheme, r); err != nil {
+				s.logger.Fatalf("registry err %+v", err.Error())
+			}
+			if s.resolver, err = naming.NewResolver(r.Scheme, r); err != nil {
+				s.logger.Fatalf("resolver err %+v", err)
 			}
 		}
 	})

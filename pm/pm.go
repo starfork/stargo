@@ -1,12 +1,11 @@
 package pm
 
 import (
+	"encoding/json"
 	"net/url"
 	"sort"
 	"strconv"
 	"strings"
-
-	jsoniter "github.com/json-iterator/go"
 )
 
 const EmptyString = ""
@@ -230,7 +229,7 @@ func (pm Pm) toString(v any) string {
 	if s, ok := v.(string); ok {
 		return s
 	}
-	bs, err := jsoniter.Marshal(v)
+	bs, err := json.Marshal(v)
 	if err != nil {
 		return EmptyString
 	}
