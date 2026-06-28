@@ -1,6 +1,9 @@
 package config
 
 import (
+	"fmt"
+	"time"
+
 	"github.com/starfork/stargo/api"
 	"github.com/starfork/stargo/broker"
 	"github.com/starfork/stargo/logger"
@@ -39,6 +42,31 @@ var DefaultConfig = &Config{
 	Server: server.DefaultConfig,
 	Store:  make(map[string]*store.Config),
 	Log:    &logger.Config{},
+	Env:    ENV_DEV,
+}
+
+func (c *Config) Validate() error {
+	if c.Env == "" {
+		return fmt.Errorf("config: env is required")
+	}
+	if c.Server == nil {
+		return fmt.Errorf("config: server config is required")
+	}
+	if c.Server.Addr == "" {
+		return fmt.Errorf("config: server.addr is required")
+	}
+	if c.Server.ShutdownTimeout <= 0 {
+		c.Server.ShutdownTimeout = 30 * time.Second
+	}
+	for name, sc := range c.Store {
+		if sc == nil {
+			continue
+		}
+		if sc.Host == "" && sc.DSN == "" {
+			return fmt.Errorf("config: store[%s]: host or dsn is required", name)
+		}
+	}
+	return nil
 }
 
 // type JwtConfig struct {

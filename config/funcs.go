@@ -2,6 +2,7 @@ package config
 
 import (
 	"flag"
+	"fmt"
 	"os"
 
 	"gopkg.in/yaml.v3"
@@ -33,5 +34,11 @@ func ParseConfig(f string) (*Config, error) {
 	decoder := yaml.NewDecoder(file)
 
 	err = decoder.Decode(&conf)
-	return conf, err
+	if err != nil {
+		return conf, err
+	}
+	if err := conf.Validate(); err != nil {
+		return conf, fmt.Errorf("config validation failed: %w", err)
+	}
+	return conf, nil
 }

@@ -62,6 +62,9 @@ func New(name string, conf *config.Config) *App {
 func (s *App) initConfig() {
 
 	s.once.Do(func() {
+		if err := s.conf.Validate(); err != nil {
+			s.logger.Warnf("config validation: %v", err)
+		}
 		s.logger = logger.DefaultLogger
 
 		for k, v := range s.conf.Store {

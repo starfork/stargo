@@ -1,0 +1,17 @@
+# MySQL 扩展特性配置 / MySQL Extras config
+env: dev
+server:
+  addr: ":9101"
+store:
+  mysql:
+    host: "127.0.0.1"
+    port: "3306"
+    user: "root"
+    auth: "password"
+    name: "testdb"
+    prefix: "demo_"          # 表前缀 / Table prefix
+    # plugins:               # GORM 插件 / GORM plugins
+    #   tagfile:             # tagfile 插件 — 自动从 struct tags 生成字段
+    #     table: users       #     target table
+    #   unmarshaler:         # unmarshaler 插件 — 将 JSON 字段自动序列化/反序列化
+    #     fields: '["meta"]' #     fields to handle

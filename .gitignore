@@ -1,7 +1,8 @@
 .DS_Store
 *.DS_Store
 */*.DS_Store
-
+/*.md
+!README.md
 # Binaries for programs and plugins
 *.exe
 *.exe~
@@ -17,5 +18,8 @@
 
 report.md
 /_todo
+
+# Sample binaries
+samples/*/[0-9]*
 # Dependency directories (remove the comment below to include it)
 # vendor/

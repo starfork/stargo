@@ -1,0 +1,8 @@
+# 延迟队列配置 / Delayed Queue config
+env: dev
+server:
+  addr: ":9100"
+store:
+  redis:
+    host: "127.0.0.1"
+    port: "6379"
