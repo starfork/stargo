@@ -1,6 +1,7 @@
 package limiter
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 	"sync"
@@ -32,18 +33,20 @@ func NewLimiter(p Policy) *Limiter {
 }
 
 func (e *Limiter) Allow() bool {
-	lr := e.getLimier()
-
+	lr, err := e.getLimier()
+	if err != nil {
+		return false
+	}
 	return lr.Take().Unix() > 0
 }
 
-func (e *Limiter) getLimier() ratelimit.Limiter {
+func (e *Limiter) getLimier() (ratelimit.Limiter, error) {
 	tk, err := e.getToken()
 	if err != nil {
-		panic("token get error") //不满足limiter生成条件
+		return nil, fmt.Errorf("limiter token: %w", err)
 	}
 	limiter, _ := store.LoadOrStore(tk, ratelimit.New(e.p.Num, ratelimit.WithoutSlack))
-	return limiter.(ratelimit.Limiter)
+	return limiter.(ratelimit.Limiter), nil
 }
 
 func (e *Limiter) getToken() (tk string, err error) {

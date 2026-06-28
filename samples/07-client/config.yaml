@@ -1,0 +1,7 @@
+env: dev
+server:
+  addr: ":9096"
+registry:
+  scheme: "etcd"
+  host: "127.0.0.1:2379"
+  org: "stargo"

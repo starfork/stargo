@@ -1,6 +1,8 @@
 package server
 
 import (
+	"time"
+
 	"google.golang.org/grpc"
 )
 
@@ -21,7 +23,9 @@ type Config struct {
 	UnaryInterceptor  []grpc.UnaryServerInterceptor
 	StreamInterceptor []grpc.StreamServerInterceptor
 
-	ServerOpts []grpc.ServerOption
+	ServerOpts       []grpc.ServerOption
+	ShutdownTimeout  time.Duration
+	Metrics          bool
 }
 
 type RpcServer struct {
@@ -37,4 +41,5 @@ var DefaultConfig = &Config{
 	UnaryInterceptor:  []grpc.UnaryServerInterceptor{},
 	StreamInterceptor: []grpc.StreamServerInterceptor{},
 	ServerOpts:        []grpc.ServerOption{},
+	ShutdownTimeout:   30 * time.Second,
 }

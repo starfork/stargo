@@ -1,0 +1,6 @@
+# 最小配置 — 仅 gRPC 服务，无存储/消息/注册
+# Minimal config — gRPC server only, no stores/broker/registry
+env: dev
+timezone: Asia/Shanghai
+server:
+  addr: ":9090"

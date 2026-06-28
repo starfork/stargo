@@ -29,13 +29,14 @@ func NewHandler(app *stargo.App) *handler {
 func (h *handler) GetUser(ctx context.Context, req *pb.GetUserRequest) (*pb.GetUserResponse, error) {
 	h.logger.Infof("GetUser: id=%d", req.Id)
 
-	// app.Client() requires a configured registry/resolver.
+	// app.Client() 返回一个基于 resolver 的 gRPC 连接池 / app.Client() returns a resolver-based gRPC connection pool.
 	cli := h.app.Client()
 	if cli == nil {
 		return nil, status.Error(codes.Unavailable, "service discovery not configured")
 	}
 
-	// Connect to the downstream "user-service".
+	// NewClient 通过 etcd 服务发现连接到下游服务, 无需硬编码地址
+	// NewClient connects to a downstream service via etcd service discovery — no hardcoded addresses needed.
 	conn, err := cli.NewClient("user-service",
 		grpc.WithTimeout(5*time.Second),
 	)
@@ -44,6 +45,7 @@ func (h *handler) GetUser(ctx context.Context, req *pb.GetUserRequest) (*pb.GetU
 	}
 	defer conn.Close()
 
+	// resolver 自动处理负载均衡与节点变更 / The resolver handles load balancing and endpoint changes automatically.
 	// Use conn to create a gRPC client for the downstream service:
 	// downstreamClient := pb.NewUserServiceClient(conn)
 	_ = conn
@@ -58,7 +60,7 @@ func (h *handler) GetUser(ctx context.Context, req *pb.GetUserRequest) (*pb.GetU
 func (h *handler) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*pb.CreateUserResponse, error) {
 	h.logger.Infof("CreateUser: name=%s email=%s", req.Name, req.Email)
 
-	// Call another service's gRPC endpoint.
+	// 再次演示: 通过 client + resolver 调用下游服务 / Another example: calling a downstream service via client + resolver.
 	cli := h.app.Client()
 	if cli != nil {
 		conn, err := cli.NewClient("user-service")

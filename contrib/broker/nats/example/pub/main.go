@@ -9,12 +9,15 @@ import (
 )
 
 func main() {
-	b := nats.NewBroker(&broker.Config{
+	b, err := nats.NewBroker(&broker.Config{
 		App:  "example",
 		Host: "127.0.0.1:4222",
 		Name: "nats",
 	})
-	err := b.Publish("test", broker.Message{
+	if err != nil {
+		panic(err)
+	}
+	err = b.Publish("test", broker.Message{
 		Header: pm.Pm{
 			"abc": "12312",
 		},

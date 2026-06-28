@@ -1,0 +1,4 @@
+# HTTP 网关配置 / HTTP Gateway config
+env: dev
+server:
+  addr: ":9097"

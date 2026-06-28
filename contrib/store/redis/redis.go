@@ -2,6 +2,7 @@ package redis
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"strconv"
@@ -28,7 +29,7 @@ func NewRedis(config *store.Config) store.Store {
 	}
 }
 
-func (e *Redis) Connect(conf ...*store.Config) {
+func (e *Redis) Connect(conf ...*store.Config) error {
 
 	c := e.c
 	if len(conf) > 0 {
@@ -45,20 +46,25 @@ func (e *Redis) Connect(conf ...*store.Config) {
 	})
 
 	if _, err := rdc.Ping(context.Background()).Result(); err != nil {
-		panic(err)
+		return fmt.Errorf("redis connect: %w", err)
 	}
 
 	e.rdc = rdc
+	return nil
 }
 
 func (e *Redis) Instance(conf ...*store.Config) any {
 	if len(conf) > 0 {
-		e.Connect(conf...)
+		if err := e.Connect(conf...); err != nil {
+			return nil
+		}
 		return e.rdc
 	}
 
 	if e.rdc == nil {
-		e.Connect()
+		if err := e.Connect(); err != nil {
+			return nil
+		}
 	}
 
 	return e.rdc

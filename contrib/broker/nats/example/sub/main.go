@@ -8,11 +8,14 @@ import (
 )
 
 func main() {
-	b := nats.NewBroker(&broker.Config{
+	b, err := nats.NewBroker(&broker.Config{
 		App:  "example",
 		Host: "nats://127.0.0.1:4222",
 		Name: "nats",
 	})
+	if err != nil {
+		panic(err)
+	}
 	b.Subscribe("example.*", func(m broker.Message) {
 
 		fmt.Println(m.Header["stargo_borker_topic"])

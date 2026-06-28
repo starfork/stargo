@@ -18,16 +18,18 @@ func NewHandler(l logger.Logger) *handler {
 	}
 }
 
-// Demonstrate different log levels inside a service method.
+// 演示不同日志级别 / Demonstrate different log levels inside a service method
 func (h *handler) GetUser(ctx context.Context, req *pb.GetUserRequest) (*pb.GetUserResponse, error) {
+	// Debugf: 细粒度调试日志 / Debugf: fine-grained debug logging
 	h.logger.Debugf("GetUser request received: id=%d", req.Id)
 
 	if req.Id <= 0 {
+		// Warnf: 非错误但需关注的情况 / Warnf: non-error conditions worth noting
 		h.logger.Warnf("GetUser called with invalid id: %d", req.Id)
 		return nil, nil
 	}
 
-	// In a real service, query logic goes here.
+	// Infof: 常规操作信息 / Infof: normal operational messages
 	h.logger.Infof("GetUser success: id=%d", req.Id)
 
 	return &pb.GetUserResponse{
@@ -41,6 +43,7 @@ func (h *handler) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*p
 	h.logger.Infof("CreateUser: name=%s email=%s", req.Name, req.Email)
 
 	if req.Email == "" {
+		// Errorf: 错误事件记录 / Errorf: error event logging
 		h.logger.Errorf("CreateUser missing email for user: %s", req.Name)
 		return nil, nil
 	}

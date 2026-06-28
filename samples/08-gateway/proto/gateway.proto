@@ -1,0 +1,54 @@
+syntax = "proto3";
+
+package gateway;
+option go_package = "github.com/starfork/stargo/samples/08-gateway/proto";
+
+import "google/api/annotations.proto";
+
+service GatewayService {
+  rpc GetUser (GetUserRequest) returns (GetUserResponse) {
+    option (google.api.http) = {
+      get: "/v1/users/{id}"
+    };
+  }
+  rpc CreateUser (CreateUserRequest) returns (CreateUserResponse) {
+    option (google.api.http) = {
+      post: "/v1/users"
+      body: "*"
+    };
+  }
+  rpc ListUser (ListUserRequest) returns (ListUserResponse) {
+    option (google.api.http) = {
+      get: "/v1/users"
+    };
+  }
+}
+
+message GetUserRequest {
+  int64 id = 1;
+}
+
+message GetUserResponse {
+  int64 id = 1;
+  string name = 2;
+  string email = 3;
+}
+
+message ListUserRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+}
+
+message ListUserResponse {
+  repeated GetUserResponse users = 1;
+  int32 total = 2;
+}
+
+message CreateUserRequest {
+  string name = 1;
+  string email = 2;
+}
+
+message CreateUserResponse {
+  int64 id = 1;
+}

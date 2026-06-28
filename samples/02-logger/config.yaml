@@ -1,0 +1,5 @@
+env: dev
+server:
+  addr: ":9091"
+log:
+  level: debug      # 日志级别: trace/debug/info/warn/error/fatal

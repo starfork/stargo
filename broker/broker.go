@@ -18,15 +18,15 @@ type Message struct {
 
 type MessageHandler func(Message)
 
-var brokerFactories = make(map[string]func(*Config) Broker)
+var brokerFactories = make(map[string]func(*Config) (Broker, error))
 
-func Register(name string, factory func(*Config) Broker) {
+func Register(name string, factory func(*Config) (Broker, error)) {
 	brokerFactories[name] = factory
 }
 
-func NewBroker(name string, conf *Config) Broker {
+func NewBroker(name string, conf *Config) (Broker, error) {
 	if f, ok := brokerFactories[name]; ok {
 		return f(conf)
 	}
-	return nil
+	return nil, nil
 }

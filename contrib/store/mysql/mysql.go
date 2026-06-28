@@ -36,7 +36,7 @@ func NewMysql(config *store.Config) store.Store {
 }
 
 // Connect 初始化MySQLme
-func (e *Mysql) connect(confs ...*store.Config) {
+func (e *Mysql) connect(confs ...*store.Config) error {
 	c := e.c
 	if len(confs) > 0 {
 		c = confs[0]
@@ -71,14 +71,13 @@ func (e *Mysql) connect(confs ...*store.Config) {
 	}
 	var db *gorm.DB
 	if db, err = gorm.Open(mysql.Open(dsn), conf); err != nil {
-		panic("Db Connect TO " + dsn + " With Error:" + err.Error())
+		return fmt.Errorf("mysql connect: %w", err)
 	}
 
 	sqlDB, err := db.DB()
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("mysql db: %w", err)
 	}
-	//defer sqlDB.Close()
 	sqlDB.SetMaxIdleConns(5)
 	if c.MaxIdle > 0 {
 		sqlDB.SetMaxIdleConns(c.MaxIdle)
@@ -89,23 +88,25 @@ func (e *Mysql) connect(confs ...*store.Config) {
 	}
 	sqlDB.SetConnMaxLifetime(20 * time.Minute)
 	sqlDB.SetConnMaxIdleTime(5 * time.Minute)
-	//自己到项目里去注册
-	//p := plugin.New(config)
 	if len(c.Plugins) > 0 {
 		RegisterPlugins(db, c.Plugins)
 	}
 	e.db = db
 	e.conn = sqlDB
+	return nil
 }
 
 func (e *Mysql) Instance(conf ...*store.Config) any {
-
 	if len(conf) > 0 {
-		e.connect(conf...)
+		if err := e.connect(conf...); err != nil {
+			return nil
+		}
 		return e.db
 	}
 	if e.db == nil {
-		e.connect()
+		if err := e.connect(); err != nil {
+			return nil
+		}
 	}
 	return e.db
 }

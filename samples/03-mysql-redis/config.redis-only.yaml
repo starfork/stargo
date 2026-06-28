@@ -1,0 +1,8 @@
+# 仅使用 Redis / Redis only
+env: dev
+server:
+  addr: ":9092"
+store:
+  redis:
+    host: "127.0.0.1"
+    port: "6379"

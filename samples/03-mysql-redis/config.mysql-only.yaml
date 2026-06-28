@@ -1,0 +1,11 @@
+# 仅使用 MySQL / MySQL only
+env: dev
+server:
+  addr: ":9092"
+store:
+  mysql:
+    host: "127.0.0.1"
+    port: "3306"
+    user: "root"
+    auth: "password"
+    name: "testdb"

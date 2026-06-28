@@ -1,0 +1,6 @@
+env: dev
+server:
+  addr: ":9094"
+broker:
+  name: "nats"
+  host: "nats://127.0.0.1:4222"    # NATS 连接地址 / NATS connection address

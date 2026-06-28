@@ -1,11 +1,14 @@
 package stargo
 
 import (
+	"context"
+
 	"github.com/starfork/stargo/broker"
 	"github.com/starfork/stargo/client"
 	"github.com/starfork/stargo/config"
 	"github.com/starfork/stargo/logger"
 	"github.com/starfork/stargo/naming"
+	"github.com/starfork/stargo/server"
 	"github.com/starfork/stargo/store"
 	"github.com/starfork/stargo/tracer"
 
@@ -13,6 +16,14 @@ import (
 )
 
 var Name = "stargo"
+
+func (s *App) Ctx() context.Context {
+	return s.ctx
+}
+
+func (s *App) Health() *server.HealthServer {
+	return s.server.Health()
+}
 
 // Server
 func (s *App) RpcServer() *grpc.Server {

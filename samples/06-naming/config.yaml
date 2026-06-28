@@ -1,0 +1,8 @@
+env: dev
+server:
+  addr: ":9095"
+registry:
+  scheme: "etcd"
+  host: "127.0.0.1:2379"           # etcd 连接地址 / etcd connection address
+  org: "stargo"
+  ttl: 30                           # 注册 TTL 秒数 / Registry TTL in seconds

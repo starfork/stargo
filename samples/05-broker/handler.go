@@ -25,8 +25,10 @@ func NewHandler(app *stargo.App) *handler {
 		logger: app.Logger(),
 	}
 
-	// Subscribe to an event on startup.
+	// 通过 broker 订阅主题 / Subscribe to a topic via the message broker.
 	if b := app.Broker(); b != nil {
+		// Subscribe 注册一个主题监听器, broker.Message 包含 Topic 和 Body 字段
+		// Subscribe registers a topic listener; broker.Message carries Topic and Body fields.
 		b.Subscribe("user.created", func(msg broker.Message) {
 			h.logger.Infof("event received: topic=%s body=%s", msg.Topic, string(msg.Body))
 		})
@@ -46,12 +48,15 @@ func (h *handler) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*p
 
 	id := int64(time.Now().UnixNano())
 
-	// Publish an event via the broker.
+	// 通过 broker 发布事件 / Publish an event via the message broker.
 	if b := h.app.Broker(); b != nil {
+		// broker.Message 是标准的消息结构: Topic 主题 + Body 负载
+		// broker.Message is the standard message envelope: Topic routing key + Body payload.
 		msg := broker.Message{
 			Topic: "user.created",
 			Body:  []byte(fmt.Sprintf(`{"id":%d,"name":"%s"}`, id, req.Name)),
 		}
+		// Publish 将消息发送到 NATS 主题, 订阅方会异步收到 / Publish sends the message to the NATS subject; subscribers receive it asynchronously.
 		if err := b.Publish("user.created", msg); err != nil {
 			h.logger.Errorf("publish user.created: %v", err)
 		}

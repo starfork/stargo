@@ -1,0 +1,8 @@
+# 缓存配置 / Cache config
+env: dev
+server:
+  addr: ":9099"
+store:
+  redis:
+    host: "127.0.0.1"
+    port: "6379"

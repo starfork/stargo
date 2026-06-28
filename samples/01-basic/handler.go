@@ -9,11 +9,15 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+// 处理器结构体: 嵌入 UnimplementedSampleServiceServer 确保向前兼容
+// Handler struct: embeds UnimplementedSampleServiceServer for forward compatibility
 type handler struct {
 	logger logger.Logger
 	pb.UnimplementedSampleServiceServer
 }
 
+// NewHandler 构造函数 — 注入依赖 (logger)
+// NewHandler constructor — injects dependencies (logger)
 func NewHandler(l logger.Logger) *handler {
 	return &handler{
 		logger: l,

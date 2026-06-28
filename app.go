@@ -17,13 +17,15 @@ import (
 	"github.com/starfork/stargo/tracer"
 	"github.com/starfork/stargo/util/ustring"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
 )
 
 // App App
 type App struct {
-	ctx  context.Context
-	name string
+	ctx    context.Context
+	cancel context.CancelFunc
+	name   string
 
 	conf   *config.Config
 	opts   *Options
@@ -36,21 +38,21 @@ type App struct {
 	resolver naming.Resolver
 	tracer   tracer.Tracer
 
-	//Tz *time.Location
-
 	once sync.Once
 }
 
 func New(name string, conf *config.Config) *App {
 
 	opts := DefaultOptions()
+	ctx, cancel := context.WithCancel(context.Background())
 
 	s := &App{
-		ctx:   context.Background(),
-		opts:  opts,
-		store: make(map[string]store.Store),
-		name:  name,
-		conf:  conf,
+		ctx:    ctx,
+		cancel: cancel,
+		opts:   opts,
+		store:  make(map[string]store.Store),
+		name:   name,
+		conf:   conf,
 	}
 	s.initConfig()
 	return s
@@ -75,7 +77,9 @@ func (s *App) initConfig() {
 		}
 		if s.conf.Broker != nil {
 			s.conf.Broker.App = s.name
-			if b := broker.NewBroker(s.conf.Broker.Name, s.conf.Broker); b != nil {
+			if b, err := broker.NewBroker(s.conf.Broker.Name, s.conf.Broker); err != nil {
+				s.logger.Warnf("broker init error: %v", err)
+			} else if b != nil {
 				s.broker = b
 			}
 		}
@@ -117,6 +121,7 @@ func (s *App) beforeRun() {
 	sc.Addr = s.conf.Server.Addr
 	sc.Name = s.name
 	s.server = server.New(sc)
+	s.server.Health().SetServingStatus("", grpc_health_v1.HealthCheckResponse_SERVING)
 
 	//注册reflection
 	if s.conf.Env != config.ENV_PRODUCTION {
@@ -158,6 +163,7 @@ func (s *App) Run(desc *grpc.ServiceDesc, impl any) {
 
 // Stop server
 func (s *App) Stop() {
+	s.cancel()
 	s.stopStargo()
 	s.server.Stop()
 }

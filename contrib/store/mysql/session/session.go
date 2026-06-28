@@ -2,6 +2,7 @@ package mysql
 
 import (
 	"database/sql"
+	"fmt"
 )
 
 const beginStatus = 1
@@ -23,7 +24,7 @@ type Session struct {
 func New(driverName, dataSourseName string) (*Factory, error) {
 	db, err := sql.Open(driverName, dataSourseName)
 	if err != nil {
-		panic(err)
+		return nil, fmt.Errorf("session open: %w", err)
 	}
 	factory := new(Factory)
 	factory.DB = db

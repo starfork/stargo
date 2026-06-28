@@ -1,0 +1,14 @@
+env: dev
+server:
+  addr: ":9092"
+store:
+  mysql:
+    host: "127.0.0.1"
+    port: "3306"
+    user: "root"
+    auth: "password"
+    name: "testdb"
+    debug: false       # 开启 GORM SQL 日志 / Enable GORM SQL logging
+  redis:
+    host: "127.0.0.1"
+    port: "6379"

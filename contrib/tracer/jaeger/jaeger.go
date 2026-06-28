@@ -9,7 +9,7 @@ import (
 	config "github.com/uber/jaeger-client-go/config"
 )
 
-func InitJaeger(service string) (opentracing.Tracer, io.Closer) {
+func InitJaeger(service string) (opentracing.Tracer, io.Closer, error) {
 	cfg := &config.Configuration{
 		ServiceName: service,
 		Sampler: &config.SamplerConfig{
@@ -22,7 +22,7 @@ func InitJaeger(service string) (opentracing.Tracer, io.Closer) {
 	}
 	tracer, closer, err := cfg.NewTracer(config.Logger(jaeger.StdLogger))
 	if err != nil {
-		panic(fmt.Sprintf("ERROR: cannot init Jaeger: %v\n", err))
+		return nil, nil, fmt.Errorf("jaeger init: %w", err)
 	}
-	return tracer, closer
+	return tracer, closer, nil
 }

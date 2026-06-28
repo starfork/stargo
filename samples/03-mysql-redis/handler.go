@@ -29,7 +29,9 @@ func NewHandler(app *stargo.App) *handler {
 		log: app.Logger(),
 	}
 
-	// Config-first: if YAML has store.mysql, it's auto-connected.
+	// app.Store("mysql") → 返回已注册 store 实例（YAML 中配置则自动连接）
+	// app.Store("mysql").Instance().(*gorm.DB) → 获取 *gorm.DB
+	// app.Store returns the registered store (auto-connected if configured in YAML)
 	if db := app.Store("mysql"); db != nil {
 		h.repo = &repo{
 			db: db.Instance().(*gorm.DB),
@@ -37,7 +39,7 @@ func NewHandler(app *stargo.App) *handler {
 		h.log.Infof("mysql store connected")
 	}
 
-	// If YAML has store.redis, it's auto-connected as well.
+	// Redis 同样通过 app.Store("redis") 获取 / Redis accessed via app.Store("redis") as well
 	if rdc := app.Store("redis"); rdc != nil {
 		if h.repo == nil {
 			h.repo = &repo{}
@@ -49,7 +51,8 @@ func NewHandler(app *stargo.App) *handler {
 	return h
 }
 
-// GetUser queries MySQL for a user, with Redis cache-aside.
+// Cache-aside 模式: 先查 Redis 缓存 → 未命中再查 MySQL → 回写缓存
+// Cache-aside pattern: check Redis → miss → query MySQL → backfill cache
 func (h *handler) GetUser(ctx context.Context, req *pb.GetUserRequest) (*pb.GetUserResponse, error) {
 	h.log.Infof("GetUser: id=%d", req.Id)
 
@@ -57,17 +60,18 @@ func (h *handler) GetUser(ctx context.Context, req *pb.GetUserRequest) (*pb.GetU
 		return nil, status.Error(codes.Unavailable, "mysql not configured")
 	}
 
-	// Cache-aside: check Redis first.
+	// 1) 检查 Redis 缓存 / Check Redis cache first
 	if h.repo.rdb != nil {
 		val, err := h.repo.rdb.Get(ctx, fmt.Sprintf("user:%d", req.Id)).Result()
 		if err == nil {
+			// 缓存命中直接返回 / Cache hit — return directly
 			h.log.Debugf("cache hit for user:%d: %s", req.Id, val)
 			return &pb.GetUserResponse{Id: req.Id, Name: val}, nil
 		}
 		h.log.Debugf("cache miss for user:%d", req.Id)
 	}
 
-	// Query MySQL.
+	// 2) 缓存未命中 → 查询 MySQL / Cache miss — query MySQL
 	var user struct {
 		ID    int64
 		Name  string
@@ -80,7 +84,7 @@ func (h *handler) GetUser(ctx context.Context, req *pb.GetUserRequest) (*pb.GetU
 		return nil, status.Error(codes.NotFound, err.Error())
 	}
 
-	// Cache the result in Redis.
+	// 3) 回写 Redis 缓存 / Backfill Redis cache
 	if h.repo.rdb != nil {
 		h.repo.rdb.Set(ctx, fmt.Sprintf("user:%d", req.Id), user.Name, 0)
 	}

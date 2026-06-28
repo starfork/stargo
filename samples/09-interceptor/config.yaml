@@ -1,0 +1,4 @@
+# 拦截器配置 / Interceptor config
+env: dev
+server:
+  addr: ":9098"

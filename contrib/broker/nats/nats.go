@@ -14,20 +14,20 @@ type NatsBroker struct {
 }
 
 func init() {
-	broker.Register("nats", func(c *broker.Config) broker.Broker {
+	broker.Register("nats", func(c *broker.Config) (broker.Broker, error) {
 		return NewBroker(c)
 	})
 }
 
-func NewBroker(c *broker.Config) broker.Broker {
+func NewBroker(c *broker.Config) (broker.Broker, error) {
 	nc, err := nats.Connect(c.Host)
 
 	if err != nil {
-		panic(err.Error())
+		return nil, err
 	}
 	js, _ := jetstream.New(nc)
 
-	return &NatsBroker{c, nc, js}
+	return &NatsBroker{c, nc, js}, nil
 }
 
 func (e *NatsBroker) Publish(topic string, msg broker.Message) error {

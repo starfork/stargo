@@ -1,0 +1,5 @@
+env: dev
+server:
+  addr: ":9093"
+tracer:
+  host: "jaeger:6831"    # Jaeger agent 地址 (仅启用 Jaeger 时使用)

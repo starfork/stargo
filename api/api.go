@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/starfork/stargo/client"
 	"github.com/starfork/stargo/logger"
 	"github.com/starfork/stargo/naming"
@@ -79,6 +80,7 @@ func (e *Api) Run() {
 			e.mux.HandleFunc(r, f)
 		}
 	}
+	e.mux.Handle("/metrics", promhttp.Handler())
 	e.mux.Handle("/", e.rmux)
 
 	//e.WrapperSwagger(e.mux)
