@@ -3,7 +3,7 @@ module github.com/starfork/stargo/store/mysql
 go 1.26.4
 
 require (
-	github.com/redis/go-redis/v9 v9.19.0
+	github.com/redis/go-redis/v9 v9.21.0
 	github.com/starfork/gorm-cache v0.0.0-20251013074659-4bf32fdac72c
 	github.com/starfork/stargo v0.0.0
 	github.com/twpayne/go-geom v1.6.1
