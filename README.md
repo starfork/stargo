@@ -272,7 +272,6 @@ Each sub-module uses `replace github.com/starfork/stargo => ../../` to reference
 
 ## 关联项目 / Related Projects
 
-- [stargo-examples](https://github.com/starfork/stargo-examples) — 示例项目集合 / Example projects
 - [go-slice](https://github.com/starfork/go-slice) — 切片工具库 / Slice utilities
 - [go-crypto](https://github.com/starfork/go-crypto) — 加密工具库 / Encryption utilities
 - [gostar](https://github.com/starfork/gostar) — 项目生成器 / Project generator
