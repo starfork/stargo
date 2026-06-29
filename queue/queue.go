@@ -79,30 +79,25 @@ func (e *Queue) exec() {
 		if err != nil {
 			continue
 		}
-		//e.store.Pop(t)
 
-		hander, ok := e.handlers.Load(t.Tag)
+		handler, ok := e.handlers.Load(t.Tag)
 		if !ok {
 			e.log(ErrFailGetTask, t.Tag, t.Key)
 			continue
 		}
 
-		wg.Add(1)
 		sem <- struct{}{} // 获取令牌
 
-		go func(t *task.Task, handler task.Handler) {
+		wg.Go(func() {
 			defer func() {
 				if r := recover(); r != nil {
 					e.log("panic in handler %s: %v", t.Subkey(), r)
-					e.store.Pop(t) //直接删掉
+					e.store.Pop(t)
 				}
 				<-sem
-				wg.Done()
 			}()
 
-			//e.log("[task start] %s", t.Subkey())
-
-			if err := handler(t); err != nil {
+			if err := handler.(task.Handler)(t); err != nil {
 				e.log(ErrTaskExec, t.Key, t.Tag, err.Error())
 				ttl := t.GetTTL(t.Retry)
 				t.Retry++
@@ -118,10 +113,9 @@ func (e *Queue) exec() {
 					e.store.Pop(t)
 				}
 			} else {
-				//e.log("[task finished] %s success", t.Subkey())
 				e.store.Pop(t)
 			}
-		}(t, hander.(task.Handler))
+		})
 	}
 
 	wg.Wait()

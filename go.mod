@@ -1,6 +1,6 @@
 module github.com/starfork/stargo
 
-go 1.26.2
+go 1.26.4
 
 retract (
 	[v0.1.1, v0.1.9]

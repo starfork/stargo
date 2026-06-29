@@ -1,6 +1,6 @@
 module github.com/starfork/stargo/logger/zap
 
-go 1.26.2
+go 1.26.4
 
 require (
 	github.com/starfork/stargo v0.0.0

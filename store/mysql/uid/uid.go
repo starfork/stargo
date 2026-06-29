@@ -42,8 +42,10 @@ func New(db *gorm.DB, opts ...Option) (*UID, error) {
 
 // Get 获取自增id,当发生超时，返回错误，避免大量请求阻塞，服务器崩溃
 func (e *UID) Get() (uint32, error) {
+	timer := time.NewTimer(1 * time.Second)
+	defer timer.Stop()
 	select {
-	case <-time.After(1 * time.Second):
+	case <-timer.C:
 		return 0, ErrTimeOut
 	case uid := <-e.ch:
 		return uid, nil

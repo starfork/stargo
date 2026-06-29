@@ -75,9 +75,11 @@ func (e *Server) Stop() {
 	if timeout <= 0 {
 		timeout = 30 * time.Second
 	}
+	timer := time.NewTimer(timeout)
+	defer timer.Stop()
 	select {
 	case <-done:
-	case <-time.After(timeout):
+	case <-timer.C:
 		e.logger.Warnf("graceful stop timed out after %v, forcing stop", timeout)
 		e.rpcServer.Stop()
 	}

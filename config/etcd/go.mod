@@ -1,6 +1,6 @@
 module github.com/starfork/stargo/config/etcd
 
-go 1.26.2
+go 1.26.4
 
 require go.etcd.io/etcd/client/v3 v3.6.11
 

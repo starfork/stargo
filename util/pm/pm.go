@@ -2,8 +2,9 @@ package pm
 
 import (
 	"encoding/json"
+	"maps"
 	"net/url"
-	"sort"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -268,14 +269,8 @@ func (pm Pm) EncodeURL() string {
 		return EmptyString
 	}
 
-	var (
-		buf  strings.Builder
-		keys []string
-	)
-	for k := range flat {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
+	var buf strings.Builder
+	keys := slices.Sorted(maps.Keys(flat))
 
 	for _, k := range keys {
 		v := flat[k]

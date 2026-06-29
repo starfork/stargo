@@ -31,13 +31,8 @@ func NewRateLimiter(r rate.Limit, burst int, cleanUpIn time.Duration) *RateLimit
 
 // getLimiter 获取或创建一个限流器
 func (k *RateLimiter) getLimiter(key string) *rate.Limiter {
-	limiter, ok := k.limiters.Load(key)
-	if ok {
-		return limiter.(*rate.Limiter)
-	}
-	newLimiter := rate.NewLimiter(k.rate, k.burst)
-	k.limiters.Store(key, newLimiter)
-	return newLimiter
+	limiter, _ := k.limiters.LoadOrStore(key, rate.NewLimiter(k.rate, k.burst))
+	return limiter.(*rate.Limiter)
 }
 
 func GetKey(ctx context.Context) (string, error) {

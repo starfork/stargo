@@ -1,0 +1,151 @@
+version: 2
+updates:
+  - package-ecosystem: "gomod"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "03:00"
+      timezone: "Asia/Shanghai"
+    labels:
+      - "dependencies"
+
+  - package-ecosystem: "gomod"
+    directory: "/broker/nats"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "03:00"
+      timezone: "Asia/Shanghai"
+    labels:
+      - "dependencies"
+
+  - package-ecosystem: "gomod"
+    directory: "/cache/redis"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "03:00"
+      timezone: "Asia/Shanghai"
+    labels:
+      - "dependencies"
+
+  - package-ecosystem: "gomod"
+    directory: "/naming/etcd"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "03:00"
+      timezone: "Asia/Shanghai"
+    labels:
+      - "dependencies"
+
+  - package-ecosystem: "gomod"
+    directory: "/store/mysql"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "03:00"
+      timezone: "Asia/Shanghai"
+    labels:
+      - "dependencies"
+
+  - package-ecosystem: "gomod"
+    directory: "/store/redis"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "03:00"
+      timezone: "Asia/Shanghai"
+    labels:
+      - "dependencies"
+
+  - package-ecosystem: "gomod"
+    directory: "/store/postgres"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "03:00"
+      timezone: "Asia/Shanghai"
+    labels:
+      - "dependencies"
+
+  - package-ecosystem: "gomod"
+    directory: "/queue/store/redis"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "03:00"
+      timezone: "Asia/Shanghai"
+    labels:
+      - "dependencies"
+
+  - package-ecosystem: "gomod"
+    directory: "/tracer/jaeger"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "03:00"
+      timezone: "Asia/Shanghai"
+    labels:
+      - "dependencies"
+
+  - package-ecosystem: "gomod"
+    directory: "/logger/zap"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "03:00"
+      timezone: "Asia/Shanghai"
+    labels:
+      - "dependencies"
+
+  - package-ecosystem: "gomod"
+    directory: "/interceptor/zap"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "03:00"
+      timezone: "Asia/Shanghai"
+    labels:
+      - "dependencies"
+
+  - package-ecosystem: "gomod"
+    directory: "/interceptor/validator"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "03:00"
+      timezone: "Asia/Shanghai"
+    labels:
+      - "dependencies"
+
+  - package-ecosystem: "gomod"
+    directory: "/config/etcd"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "03:00"
+      timezone: "Asia/Shanghai"
+    labels:
+      - "dependencies"
+
+  - package-ecosystem: "gomod"
+    directory: "/api/ratelimit"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "03:00"
+      timezone: "Asia/Shanghai"
+    labels:
+      - "dependencies"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "03:00"
+      timezone: "Asia/Shanghai"
+    labels:
+      - "dependencies"

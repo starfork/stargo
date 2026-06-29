@@ -1,6 +1,6 @@
 module github.com/starfork/stargo/samples/11-queue
 
-go 1.26.2
+go 1.26.4
 
 require (
 	github.com/redis/go-redis/v9 v9.19.0

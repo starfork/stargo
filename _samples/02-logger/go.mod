@@ -1,6 +1,6 @@
 module github.com/starfork/stargo/samples/02-logger
 
-go 1.26.2
+go 1.26.4
 
 require (
 	github.com/starfork/stargo v0.0.0

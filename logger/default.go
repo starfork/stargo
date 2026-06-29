@@ -50,10 +50,7 @@ func (l *defaultLogger) Fields(fields map[string]any) Logger {
 }
 
 func copyFields(src map[string]any) map[string]any {
-	dst := make(map[string]any, len(src))
-	maps.Copy(dst, src)
-
-	return dst
+	return maps.Clone(src)
 }
 
 func (l *defaultLogger) Logf(level Level, format string, v ...any) {

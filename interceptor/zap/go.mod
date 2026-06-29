@@ -1,6 +1,6 @@
 module github.com/starfork/stargo/interceptor/zap
 
-go 1.26.2
+go 1.26.4
 
 require (
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.3.2
