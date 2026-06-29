@@ -1,0 +1,65 @@
+# order-service Deployment + Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: order-service
+  namespace: stargo-demo
+  labels:
+    app: order-service
+spec:
+  selector:
+    app: order-service
+  ports:
+    - port: 9092
+      targetPort: 9092
+      name: grpc
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order-service
+  namespace: stargo-demo
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: order-service
+  template:
+    metadata:
+      labels:
+        app: order-service
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+    spec:
+      containers:
+        - name: order-service
+          image: stargo/order-service:latest
+          ports:
+            - containerPort: 9092
+              name: grpc
+          env:
+            - name: MYSQL_HOST
+              value: "mysql.stargo-demo.svc.cluster.local"
+            - name: MYSQL_PORT
+              value: "3306"
+            - name: MYSQL_USER
+              value: "root"
+            - name: MYSQL_PASSWD
+              value: "root123"
+            - name: MYSQL_NAME
+              value: "stargo_demo"
+            - name: STARGO_LOG_LEVEL
+              value: "info"
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
+          livenessProbe:
+            grpc:
+              port: 9092
+            initialDelaySeconds: 10
+            periodSeconds: 15

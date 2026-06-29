@@ -1,0 +1,65 @@
+# product-service Deployment + Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: product-service
+  namespace: stargo-demo
+  labels:
+    app: product-service
+spec:
+  selector:
+    app: product-service
+  ports:
+    - port: 9093
+      targetPort: 9093
+      name: grpc
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: product-service
+  namespace: stargo-demo
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: product-service
+  template:
+    metadata:
+      labels:
+        app: product-service
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+    spec:
+      containers:
+        - name: product-service
+          image: stargo/product-service:latest
+          ports:
+            - containerPort: 9093
+              name: grpc
+          env:
+            - name: MYSQL_HOST
+              value: "mysql.stargo-demo.svc.cluster.local"
+            - name: MYSQL_PORT
+              value: "3306"
+            - name: MYSQL_USER
+              value: "root"
+            - name: MYSQL_PASSWD
+              value: "root123"
+            - name: MYSQL_NAME
+              value: "stargo_demo"
+            - name: STARGO_LOG_LEVEL
+              value: "info"
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
+          livenessProbe:
+            grpc:
+              port: 9093
+            initialDelaySeconds: 10
+            periodSeconds: 15

@@ -1,6 +1,7 @@
 package tracer
 
 type Config struct {
-	Host string
-	Name string //service name
+	Driver string // tracer driver: "jaeger", "otel"
+	Host   string
+	Name   string // service name
 }

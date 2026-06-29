@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"strconv"
 
-	"github.com/starfork/stargo/pm"
+	"github.com/starfork/stargo/util/pm"
 )
 
 type Task struct {

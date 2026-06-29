@@ -1,0 +1,11 @@
+# zap 日志驱动 / zap structured log driver
+# 需要导入 / requires: import _ "github.com/starfork/stargo/logger/zap"
+
+env: dev
+timezone: Asia/Shanghai
+server:
+  addr: ":9102"
+log:
+  driver: zap      # 日志驱动: zap (Uber) / zap (Uber)
+  target: console  # 输出格式: console 或 json(默认) / output format: console or json(default)
+  level: debug     # 日志级别 / log level

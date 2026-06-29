@@ -78,7 +78,6 @@ func DefaultOptions() []grpc.DialOption {
 
 // 获取一个连接
 func (e *Client) NewClient(service string, options ...grpc.DialOption) (conn *grpc.ClientConn, err error) {
-	//如果啥都不传递，则表示匿名链接，否则需要传递所有需要的东西（除了DefaultOptions）
 	var opts []grpc.DialOption
 	if len(options) == 0 {
 		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
@@ -89,9 +88,8 @@ func (e *Client) NewClient(service string, options ...grpc.DialOption) (conn *gr
 	opts = append(opts, DefaultOptions()...)
 	opts = append(opts, grpc.WithResolvers(e.resolver))
 
-	//opts = append(opts, grpc.WithUnaryInterceptor(ForwardUnaryMetadata))
-
 	target := fmt.Sprintf("%s:///%s/%s", e.resolver.Scheme(), ustring.OrString("stargo", e.resolver.Config().Org), service)
 
+	e.logger.Infof("[client] connecting to %s", target)
 	return grpc.NewClient(target, opts...)
 }

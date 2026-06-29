@@ -1,0 +1,78 @@
+# user-service Deployment + Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: user-service
+  namespace: stargo-demo
+  labels:
+    app: user-service
+spec:
+  selector:
+    app: user-service
+  ports:
+    - port: 9091
+      targetPort: 9091
+      name: grpc
+    - port: 9090
+      targetPort: 9090
+      name: metrics
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-service
+  namespace: stargo-demo
+spec:
+  replicas: 2  # 演示负载均衡 / Demo load balancing
+  selector:
+    matchLabels:
+      app: user-service
+  template:
+    metadata:
+      labels:
+        app: user-service
+      annotations:
+        prometheus.io/scrape: "true"    # Prometheus 自动发现 / Auto-discovery
+        prometheus.io/port: "9090"      # Metrics 端口 / Metrics port
+    spec:
+      containers:
+        - name: user-service
+          image: stargo/user-service:latest  # 替换为实际镜像 / Replace with actual image
+          ports:
+            - containerPort: 9091
+              name: grpc
+            - containerPort: 9090
+              name: metrics
+          env:
+            - name: MYSQL_HOST
+              value: "mysql.stargo-demo.svc.cluster.local"
+            - name: MYSQL_PORT
+              value: "3306"
+            - name: MYSQL_USER
+              value: "root"
+            - name: MYSQL_PASSWD
+              value: "root123"
+            - name: MYSQL_NAME
+              value: "stargo_demo"
+            - name: REDIS_HOST
+              value: "redis.stargo-demo.svc.cluster.local:6379"
+            - name: STARGO_LOG_LEVEL
+              value: "info"
+          # 资源限制 / Resource limits
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
+          livenessProbe:
+            grpc:
+              port: 9091
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          readinessProbe:
+            grpc:
+              port: 9091
+            initialDelaySeconds: 5
+            periodSeconds: 10

@@ -1,0 +1,17 @@
+# ============================================================================
+# Kubernetes 部署配置 / Kubernetes Deployment Configs
+# ============================================================================
+# 应用 / Apply:
+#   kubectl apply -f k8s/
+# 查看 / Check:
+#   kubectl -n stargo-demo get all
+# 清理 / Cleanup:
+#   kubectl delete namespace stargo-demo
+# ============================================================================
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: stargo-demo
+  labels:
+    app: stargo

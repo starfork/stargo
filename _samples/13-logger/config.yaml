@@ -1,0 +1,11 @@
+# 默认 logger: console (默认) / Default logger: console (default)
+# 设置 driver: slog 使用 Go 结构化日志 / Set driver: slog for structured logging
+# 设置 driver: zap 使用 Uber 高性能日志 / Set driver: zap for Uber's high-perf logger
+
+env: dev
+timezone: Asia/Shanghai
+server:
+  addr: ":9102"
+log:
+  driver: ""      # 日志驱动: ""=default(console), "slog", "zap" / Log driver
+  level: debug     # 日志级别: trace/debug/info/warn/error/fatal

@@ -1,0 +1,218 @@
+# ============================================================================
+# stargo 微服务全栈示例 / Full-stack Microservices Demo
+# ============================================================================
+# 启动 / Start:
+#   docker compose up -d
+# 查看日志 / View logs:
+#   docker compose logs -f
+# 停止 / Stop:
+#   docker compose down
+# ============================================================================
+
+version: "3.8"
+
+services:
+  # --------------------------------------------------------------------------
+  # MySQL 8.0 — 用户和订单数据持久化 / User & order data persistence
+  # --------------------------------------------------------------------------
+  mysql:
+    image: mysql:8.0
+    container_name: stargo-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: stargo_demo
+      MYSQL_CHARSET: utf8mb4
+      MYSQL_COLLATION: utf8mb4_unicode_ci
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      # 初始化 SQL: 创建用户表和订单表
+      # Init SQL: create user & order tables
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - stargo-net
+
+  # --------------------------------------------------------------------------
+  # Redis 7 — 缓存 + 延迟队列 / Cache + delayed task queue
+  # --------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: stargo-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - stargo-net
+
+  # --------------------------------------------------------------------------
+  # etcd 3.5 — 服务注册与发现 / Service registry & discovery
+  # --------------------------------------------------------------------------
+  etcd:
+    image: quay.io/coreos/etcd:v3.5.9
+    container_name: stargo-etcd
+    restart: unless-stopped
+    environment:
+      ETCD_NAME: etcd0
+      ETCD_DATA_DIR: /etcd-data
+      ETCD_LISTEN_CLIENT_URLS: http://0.0.0.0:2379
+      ETCD_ADVERTISE_CLIENT_URLS: http://0.0.0.0:2379
+      ETCD_LISTEN_PEER_URLS: http://0.0.0.0:2380
+      ETCD_INITIAL_ADVERTISE_PEER_URLS: http://0.0.0.0:2380
+      ETCD_INITIAL_CLUSTER_TOKEN: stargo-cluster
+      ETCD_INITIAL_CLUSTER: etcd0=http://0.0.0.0:2380
+      ETCD_INITIAL_CLUSTER_STATE: new
+      ETCD_AUTO_COMPACTION_RETENTION: "1"
+    ports:
+      - "2379:2379"
+      - "2380:2380"
+    volumes:
+      - etcd_data:/etcd-data
+    healthcheck:
+      test: ["CMD", "etcdctl", "endpoint", "health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - stargo-net
+
+  # --------------------------------------------------------------------------
+  # Jaeger — 分布式链路追踪 / Distributed tracing
+  # --------------------------------------------------------------------------
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: stargo-jaeger
+    restart: unless-stopped
+    environment:
+      COLLECTOR_ZIPKIN_HOST_PORT: ":9411"
+    ports:
+      # Jaeger UI / Jaeger 界面
+      - "16686:16686"    # UI
+      - "4317:4317"      # OTLP gRPC
+      - "4318:4318"      # OTLP HTTP
+      - "6831:6831/udp"  # Thrift compact (agent)
+      - "6832:6832/udp"  # Thrift binary (agent)
+      - "14250:14250"    # gRPC
+      - "14268:14268"    # HTTP
+    networks:
+      - stargo-net
+
+  # --------------------------------------------------------------------------
+  # user-service — 用户微服务 (MySQL + Redis + Auth + Zap + Jaeger)
+  # --------------------------------------------------------------------------
+  user-service:
+    build:
+      context: ./user-service
+      dockerfile: Dockerfile
+    container_name: stargo-user-service
+    restart: unless-stopped
+    ports:
+      - "9091:9091"
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_PORT: "3306"
+      MYSQL_USER: root
+      MYSQL_PASSWD: root123
+      MYSQL_NAME: stargo_demo
+      REDIS_HOST: redis:6379
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      etcd:
+        condition: service_healthy
+    networks:
+      - stargo-net
+
+  # --------------------------------------------------------------------------
+  # product-service — 商品微服务 (MySQL + etcd + Zap + Jaeger)
+  # --------------------------------------------------------------------------
+  product-service:
+    build:
+      context: ./product-service
+      dockerfile: Dockerfile
+    container_name: stargo-product-service
+    restart: unless-stopped
+    ports:
+      - "9093:9093"
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_PORT: "3306"
+      MYSQL_USER: root
+      MYSQL_PASSWD: root123
+      MYSQL_NAME: stargo_demo
+    depends_on:
+      mysql:
+        condition: service_healthy
+      etcd:
+        condition: service_healthy
+    networks:
+      - stargo-net
+
+  # --------------------------------------------------------------------------
+  # order-service — 订单微服务 (MySQL + RateLimit + Client→User+Product + Zap)
+  # --------------------------------------------------------------------------
+  order-service:
+    build:
+      context: ./order-service
+      dockerfile: Dockerfile
+    container_name: stargo-order-service
+    restart: unless-stopped
+    ports:
+      - "9092:9092"
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_PORT: "3306"
+      MYSQL_USER: root
+      MYSQL_PASSWD: root123
+      MYSQL_NAME: stargo_demo
+    depends_on:
+      mysql:
+        condition: service_healthy
+      etcd:
+        condition: service_healthy
+      user-service:
+        condition: service_started   # 需要 user-service 先注册到 etcd
+    networks:
+      - stargo-net
+
+  # --------------------------------------------------------------------------
+  # gateway — API 网关 (HTTP → gRPC + etcd 发现 + Prometheus /metrics)
+  # --------------------------------------------------------------------------
+  gateway:
+    build:
+      context: ./gateway
+      dockerfile: Dockerfile
+    container_name: stargo-gateway
+    restart: unless-stopped
+    ports:
+      - "8080:8080"      # HTTP API (对外 / external)
+      - "9099:9099"      # gRPC metrics (对内 / internal)
+    depends_on:
+      etcd:
+        condition: service_healthy
+    networks:
+      - stargo-net
+
+volumes:
+  mysql_data:
+  redis_data:
+  etcd_data:
+
+networks:
+  stargo-net:
+    driver: bridge

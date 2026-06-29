@@ -14,7 +14,7 @@ func init() {
 		lvl = InfoLevel
 	}
 
-	DefaultLogger = NewLogger(WithLevel(lvl))
+	DefaultLogger = newDefaultLogger(WithLevel(lvl))
 }
 
 type defaultLogger struct {
@@ -89,7 +89,7 @@ func (l *defaultLogger) Options() Options {
 }
 
 // NewLogger builds a new logger based on options.
-func NewLogger(opts ...Option) Logger {
+func newDefaultLogger(opts ...Option) Logger {
 	// Default options
 	options := Options{
 		Level:           InfoLevel,

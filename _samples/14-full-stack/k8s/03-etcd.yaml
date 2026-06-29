@@ -1,0 +1,64 @@
+# etcd StatefulSet + Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: etcd
+  namespace: stargo-demo
+  labels:
+    app: etcd
+spec:
+  clusterIP: None  # Headless service for StatefulSet
+  selector:
+    app: etcd
+  ports:
+    - port: 2379
+      name: client
+    - port: 2380
+      name: peer
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: etcd
+  namespace: stargo-demo
+spec:
+  serviceName: etcd
+  replicas: 1
+  selector:
+    matchLabels:
+      app: etcd
+  template:
+    metadata:
+      labels:
+        app: etcd
+    spec:
+      containers:
+        - name: etcd
+          image: quay.io/coreos/etcd:v3.5.9
+          env:
+            - name: ETCD_NAME
+              value: "etcd0"
+            - name: ETCD_DATA_DIR
+              value: /etcd-data
+            - name: ETCD_LISTEN_CLIENT_URLS
+              value: http://0.0.0.0:2379
+            - name: ETCD_ADVERTISE_CLIENT_URLS
+              value: http://etcd:2379
+            - name: ETCD_LISTEN_PEER_URLS
+              value: http://0.0.0.0:2380
+            - name: ETCD_INITIAL_ADVERTISE_PEER_URLS
+              value: http://etcd:2380
+            - name: ETCD_INITIAL_CLUSTER
+              value: etcd0=http://etcd:2380
+            - name: ETCD_INITIAL_CLUSTER_STATE
+              value: new
+          ports:
+            - containerPort: 2379
+              name: client
+            - containerPort: 2380
+              name: peer
+          livenessProbe:
+            exec:
+              command: ["etcdctl", "endpoint", "health"]
+            initialDelaySeconds: 15
+            periodSeconds: 20

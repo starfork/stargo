@@ -1,0 +1,11 @@
+# slog 日志驱动 / slog structured log driver
+# slog 是 Go 1.21+ 标准库内置的结构化日志 / slog is built-in structured logging since Go 1.21
+
+env: dev
+timezone: Asia/Shanghai
+server:
+  addr: ":9102"
+log:
+  driver: slog     # 日志驱动: slog (Go 标准库) / slog (Go stdlib)
+  target: text     # 输出格式: text(默认) 或 json / output format: text(default) or json
+  level: debug     # 日志级别 / log level

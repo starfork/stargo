@@ -1,6 +1,6 @@
 package broker
 
-import "github.com/starfork/stargo/pm"
+import "github.com/starfork/stargo/util/pm"
 
 type Broker interface {
 	Publish(topic string, message Message) error

@@ -15,7 +15,6 @@ import (
 	"github.com/starfork/stargo/server"
 	"github.com/starfork/stargo/store"
 	"github.com/starfork/stargo/tracer"
-	"github.com/starfork/stargo/util/ustring"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
@@ -62,18 +61,23 @@ func New(name string, conf *config.Config) *App {
 func (s *App) initConfig() {
 
 	s.once.Do(func() {
+		s.logger = logger.DefaultLogger
+
+		if s.conf.Log != nil && s.conf.Log.Driver != "" {
+			if l, err := logger.NewLogger(s.conf.Log.Driver, s.conf.Log); err == nil {
+				s.logger = l
+			}
+		}
+
 		if err := s.conf.Validate(); err != nil {
 			s.logger.Warnf("config validation: %v", err)
 		}
-		s.logger = logger.DefaultLogger
 
 		for k, v := range s.conf.Store {
 			if st := store.NewStore(k, v); st != nil {
-				if k == "mysql" {
-					v.TimeLocation = s.opts.Timezone
-					if v.Prefix == "" {
-						v.Prefix = ustring.Or(s.name+"_", os.Getenv("MYSQL_PREFIX"))
-					}
+				v.TimeLocation = s.opts.Timezone
+				if v.Prefix == "" {
+					v.Prefix = s.name + "_"
 				}
 				s.Store(k, st)
 			}
@@ -86,7 +90,15 @@ func (s *App) initConfig() {
 				s.broker = b
 			}
 		}
-		s.tracer = tracer.DefaultTracer
+		if s.conf.Tracer != nil {
+			if t, err := tracer.NewTracer(s.conf.Tracer.Driver, s.conf.Tracer); err == nil && t != nil {
+				s.tracer = t
+			} else {
+				s.tracer = tracer.DefaultTracer
+			}
+		} else {
+			s.tracer = tracer.DefaultTracer
+		}
 
 		if s.conf.Registry != nil {
 			r := s.conf.Registry
