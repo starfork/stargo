@@ -2,6 +2,7 @@ package redis
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -10,16 +11,27 @@ import (
 )
 
 type Redis struct {
-	rdc *redis.Client
+	rdc  *redis.Client
+	name string
 }
 
-func New(s store.Store) cache.Cache {
-
-	c := &Redis{
-		rdc: s.Instance().(*redis.Client),
+func New(s store.Store, name string) (cache.Cache, error) {
+	instance, err := s.InstanceE()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get redis instance: %w", err)
+	}
+	
+	rdc, ok := instance.(*redis.Client)
+	if !ok || rdc == nil {
+		return nil, fmt.Errorf("invalid redis instance type")
 	}
 
-	return c
+	c := &Redis{
+		rdc:  rdc,
+		name: name,
+	}
+
+	return c, nil
 }
 
 func (e *Redis) Get(ctx context.Context, key string) (any, error) {
@@ -33,11 +45,24 @@ func (e *Redis) Get(ctx context.Context, key string) (any, error) {
 
 // Batch of get
 func (e *Redis) Fetch(ctx context.Context, key []string) ([]any, error) {
-	return nil, nil
+	if len(key) == 0 {
+		return nil, nil
+	}
+	
+	rs, err := e.rdc.MGet(ctx, key...).Result()
+	if err != nil {
+		return nil, err
+	}
+	
+	result := make([]any, len(rs))
+	for i, v := range rs {
+		result[i] = v
+	}
+	return result, nil
 }
 
 func (e *Redis) Put(ctx context.Context, key string, value any, timeout ...time.Duration) error {
-	var expr time.Duration = -1
+	var expr time.Duration = 0 // 0 means no expiration
 	if len(timeout) > 0 {
 		expr = timeout[0]
 	}
@@ -47,8 +72,7 @@ func (e *Redis) Put(ctx context.Context, key string, value any, timeout ...time.
 
 // Delete removes a key from cache.
 func (e *Redis) Delete(ctx context.Context, key string) error {
-	e.rdc.Del(ctx, key).Result()
-	return nil
+	return e.rdc.Del(ctx, key).Err()
 }
 func (e *Redis) Clear(ctx context.Context, key string) error {
 	iter := e.rdc.Scan(ctx, 0, key+"*", 0).Iterator()
@@ -62,23 +86,44 @@ func (e *Redis) Clear(ctx context.Context, key string) error {
 }
 
 func (e *Redis) IsExist(ctx context.Context, key string) (bool, error) {
-	return false, nil
+	rs, err := e.rdc.Exists(ctx, key).Result()
+	if err != nil {
+		return false, err
+	}
+	return rs > 0, nil
 }
 func (e *Redis) ClearAll(ctx context.Context) error {
-	return nil
+	// Use service prefix to avoid deleting keys from other services
+	pattern := e.name + "*"
+	if e.name == "" {
+		pattern = "*"
+	}
+	iter := e.rdc.Scan(ctx, 0, pattern, 0).Iterator()
+	for iter.Next(ctx) {
+		err := e.rdc.Del(ctx, iter.Val()).Err()
+		if err != nil {
+			return err
+		}
+	}
+	return iter.Err()
 }
 
 func (e *Redis) Incr(ctx context.Context, key string) error {
-	return nil
+	return e.rdc.Incr(ctx, key).Err()
 }
 
 // Decrement a cached int value by key, as a counter.
 func (e *Redis) Decr(ctx context.Context, key string) error {
-	return nil
+	return e.rdc.Decr(ctx, key).Err()
 }
 
-func (e *Redis) Expire(ctx context.Context, key string) (bool, error) {
-	return false, nil
+func (e *Redis) Expire(ctx context.Context, key string, ttl time.Duration) (bool, error) {
+	if ttl <= 0 {
+		// If ttl is 0 or negative, remove the key
+		result, err := e.rdc.Del(ctx, key).Result()
+		return result > 0, err
+	}
+	return e.rdc.Expire(ctx, key, ttl).Result()
 }
 
 // func (e *Redis) Scan(ctx context.Context, key string, data any) error {

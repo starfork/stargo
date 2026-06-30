@@ -4,9 +4,13 @@ import "github.com/starfork/stargo/util/pm"
 
 type Broker interface {
 	Publish(topic string, message Message) error
-	Subscribe(topic string, handler MessageHandler)
+	Subscribe(topic string, handler MessageHandler) (Subscription, error)
 	UnSubscribe() error
 	Flush() error
+}
+
+type Subscription interface {
+	Unsubscribe() error
 }
 
 type Message struct {

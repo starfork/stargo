@@ -19,12 +19,15 @@ func main() {
 	go app.Run(&pb.SampleService_ServiceDesc, h)
 
 	// 启动 HTTP 网关 / Start HTTP gateway
-	gw := api.NewApi(&api.Config{
+	gw, err := api.NewApi(&api.Config{
 		App:  "gateway-demo",
 		Port: ":8080",
 		// 可选：加密 marshaler (AES-GCM) / Optional encrypted marshaler
 		// Enc:    true,
 		// EncKey: "0123456789abcdef0123456789abcdef",
 	})
+	if err != nil {
+		panic(err)
+	}
 	gw.Run()
 }

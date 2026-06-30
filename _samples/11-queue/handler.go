@@ -37,6 +37,7 @@ func NewHandler(app *stargo.App) *handler {
 
 		// 创建队列引擎 / Create queue engine
 		q := queue.New(
+			context.Background(),
 			store,
 			queue.WithStep(1),             // 轮询跨度 / Poll step
 			queue.WithInterval(1),         // 轮询间隔(秒) / Poll interval (seconds)

@@ -5,8 +5,8 @@ import (
 	"gorm.io/gorm"
 )
 
-type CheckFunc func(num ...uint32) uint32
-type SetpFunc func(num uint32) uint32
+type CheckFunc func(num ...uint64) uint64
+type SetpFunc func(num uint64) uint64
 
 type Options struct {
 	table  string //表名称

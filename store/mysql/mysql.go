@@ -3,6 +3,7 @@ package mysql
 import (
 	"database/sql"
 	"fmt"
+	"net/url"
 	"os"
 	"time"
 
@@ -45,13 +46,14 @@ func (e *Mysql) connect(confs ...*store.Config) error {
 	var err error
 	dsn := c.DSN
 	if dsn == "" {
+		loc := ustring.Or(c.TimeLocation, "Asia/Shanghai")
 		dsn = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&collation=utf8mb4_general_ci&parseTime=True&loc=%s",
 			ustring.Or(c.User, os.Getenv("MYSQL_USER")),
 			ustring.Or(c.Auth, os.Getenv("MYSQL_PASSWD")),
 			ustring.Or(c.Host, os.Getenv("MYSQL_HOST")),
 			ustring.Or(c.Port, os.Getenv("MYSQL_PORT")),
 			ustring.Or(c.Name, os.Getenv("MYSQL_NAME")),
-			"Asia%2FShanghai",
+			url.QueryEscape(loc),
 		)
 	}
 
@@ -109,6 +111,21 @@ func (e *Mysql) Instance(conf ...*store.Config) any {
 		}
 	}
 	return e.db
+}
+
+func (e *Mysql) InstanceE(conf ...*store.Config) (any, error) {
+	if len(conf) > 0 {
+		if err := e.connect(conf...); err != nil {
+			return nil, err
+		}
+		return e.db, nil
+	}
+	if e.db == nil {
+		if err := e.connect(); err != nil {
+			return nil, err
+		}
+	}
+	return e.db, nil
 }
 
 func (e *Mysql) Close() {

@@ -3,7 +3,7 @@ module github.com/starfork/stargo/samples/03-mysql-redis
 go 1.26.4
 
 require (
-	github.com/redis/go-redis/v9 v9.19.0
+	github.com/redis/go-redis/v9 v9.21.0
 	github.com/starfork/stargo v0.0.0
 	github.com/starfork/stargo/samples/proto/sample v0.0.0
 	github.com/starfork/stargo/store/mysql v0.0.0
@@ -17,6 +17,7 @@ require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/go-sql-driver/mysql v1.8.1 // indirect
+	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.3.2 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.27.3 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect

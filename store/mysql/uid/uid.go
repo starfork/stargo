@@ -1,6 +1,7 @@
 package uid
 
 import (
+	"context"
 	"errors"
 	"time"
 
@@ -15,11 +16,13 @@ var ErrTimeOut = errors.New("get uid timeout")
 
 // UID struct
 type UID struct {
-	ch chan uint32 // id缓冲池
+	ch chan uint64 // id缓冲池
 
-	min, max uint32 // id段最小值，最大值
+	min, max uint64 // id段最小值，最大值
 
-	opt Options
+	opt    Options
+	ctx    context.Context
+	cancel context.CancelFunc
 }
 
 // New 创建一个UID;len：缓冲池大小()
@@ -32,16 +35,20 @@ func New(db *gorm.DB, opts ...Option) (*UID, error) {
 		o(&opt)
 	}
 	opt.db = db
+	
+	ctx, cancel := context.WithCancel(context.Background())
 	lid := UID{
-		ch:  make(chan uint32, opt.len),
-		opt: opt,
+		ch:     make(chan uint64, opt.len),
+		opt:    opt,
+		ctx:    ctx,
+		cancel: cancel,
 	}
 	go lid.productID()
 	return &lid, nil
 }
 
 // Get 获取自增id,当发生超时，返回错误，避免大量请求阻塞，服务器崩溃
-func (e *UID) Get() (uint32, error) {
+func (e *UID) Get() (uint64, error) {
 	timer := time.NewTimer(1 * time.Second)
 	defer timer.Stop()
 	select {
@@ -52,10 +59,21 @@ func (e *UID) Get() (uint32, error) {
 	}
 }
 
+// Close 优雅停止UID生成器
+func (e *UID) Close() {
+	e.cancel()
+}
+
 // productID 生产id，当ch达到最大容量时，这个方法会阻塞，直到ch中的id被消费
 func (e *UID) productID() {
 	e.reLoad()
 	for {
+		select {
+		case <-e.ctx.Done():
+			return
+		default:
+		}
+		
 		if e.min >= e.max {
 			e.reLoad()
 		}
@@ -88,6 +106,12 @@ func (e *UID) productID() {
 func (e *UID) reLoad() error {
 	var err error
 	for {
+		select {
+		case <-e.ctx.Done():
+			return e.ctx.Err()
+		default:
+		}
+		
 		err = e.getFromDB()
 		if err == nil {
 			return nil
@@ -104,12 +128,16 @@ func (e *UID) reLoad() error {
 // getFromDB 从数据库获取id段
 func (e *UID) getFromDB() error {
 	type result struct {
-		MaxID uint32
-		Step  uint32
+		MaxID uint64
+		Step  uint64
 	}
 	var rs result
 
-	tx := e.opt.db.Begin()
+	// Create context with timeout for transaction
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	
+	tx := e.opt.db.WithContext(ctx).Begin()
 	defer tx.Rollback()
 
 	if err := tx.Raw("SELECT max_id,step FROM "+e.opt.table+" WHERE business_id = ? FOR UPDATE", e.opt.id).Scan(&rs).Error; err != nil {

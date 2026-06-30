@@ -8,6 +8,16 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
+const (
+	META_HOST   = "x-host"
+	META_IP     = "x-ip"
+	META_FP     = "x-fp"
+	META_METHOD = "x-method"
+	META_TOKEN  = "x-token"
+	META_DEVICE = "x-device"
+	META_LANG   = "x-lang"
+)
+
 func MetaString(ctx context.Context, key string, out ...bool) string {
 	var md metadata.MD
 	var ok bool

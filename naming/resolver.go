@@ -5,6 +5,7 @@ import "google.golang.org/grpc/resolver"
 type Resolver interface {
 	resolver.Builder
 	Config() *Config
+	Close() error
 }
 
 var resolverFactories = make(map[string]func(*Config) (Resolver, error))

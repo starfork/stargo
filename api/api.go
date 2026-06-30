@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -16,31 +17,31 @@ import (
 )
 
 type Api struct {
-	conf *Config
-	conn *grpc.ClientConn
-	ctx  context.Context
-	rmux *runtime.ServeMux
-	mux  *http.ServeMux
+	conf   *Config
+	conn   *grpc.ClientConn
+	ctx    context.Context
+	rmux   *runtime.ServeMux
+	mux    *http.ServeMux
+	server *http.Server
 }
 
-func E(err error) {
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-func NewApi(conf *Config) *Api {
+func NewApi(conf *Config) (*Api, error) {
 	ctx := context.Background()
 
 	var conn *grpc.ClientConn
 	if conf.Registry != nil {
 		r, err := naming.NewResolver(conf.Registry.Scheme, conf.Registry)
-		E(err)
+		if err != nil {
+			return nil, err
+		}
 		if len(conf.DiaOpts) == 0 {
 			conf.DiaOpts = []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
 		}
 
 		conn, err = client.New(ctx, r, logger.DefaultLogger).NewClient(conf.App, conf.DiaOpts...)
-		E(err)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if len(conf.SMOpts) == 0 {
@@ -55,7 +56,7 @@ func NewApi(conf *Config) *Api {
 		conn: conn,
 		rmux: rmux,
 		mux:  mux,
-	}
+	}, nil
 }
 
 var DefaultMarshalerOption = runtime.JSONPb{
@@ -70,10 +71,13 @@ var DefaultMarshalerOption = runtime.JSONPb{
 
 var DefaultMarshaler = runtime.WithMarshalerOption(runtime.MIMEWildcard, &DefaultMarshalerOption)
 
+// DefaultHandlerWrapper is a pass-through wrapper (used as fallback when no custom wrapper is set)
+var DefaultHandlerWrapper = func(h http.Handler) http.Handler { return h }
+
 func (e *Api) MuxHandler() {
 
 }
-func (e *Api) Run() {
+func (e *Api) Run() error {
 
 	if len(e.conf.MuxHandler) > 0 {
 		for r, f := range e.conf.MuxHandler {
@@ -85,16 +89,44 @@ func (e *Api) Run() {
 
 	//e.WrapperSwagger(e.mux)
 	// start a standard HTTP server with the router
-	log.Println("start listen " + e.conf.Port)
 
+	var handler http.Handler = e.mux
+
+	// Apply CORS wrapper if configured
+	if e.conf.CORS != nil {
+		handler = CORSWrapper(*e.conf.CORS)(handler)
+	}
+
+	// Apply custom wrapper if configured
 	wrapper := DefaultHandlerWrapper
 	if e.conf.Wrapper != nil {
 		wrapper = e.conf.Wrapper
 	}
+	handler = wrapper(handler)
 
-	if err := http.ListenAndServe(e.conf.Port, wrapper(e.mux)); err != nil {
-		log.Fatal(err)
+	e.server = &http.Server{
+		Addr:              e.conf.Port,
+		Handler:           handler,
+		ReadHeaderTimeout: 10 * time.Second,
+		ReadTimeout:       30 * time.Second,
+		WriteTimeout:      60 * time.Second,
+		IdleTimeout:       120 * time.Second,
 	}
+
+	log.Println("start listen " + e.conf.Port)
+
+	// Serve with TLS if configured
+	if e.conf.CertFile != "" && e.conf.KeyFile != "" {
+		return e.server.ListenAndServeTLS(e.conf.CertFile, e.conf.KeyFile)
+	}
+	return e.server.ListenAndServe()
+}
+
+func (e *Api) Stop(ctx context.Context) error {
+	if e.server != nil {
+		return e.server.Shutdown(ctx)
+	}
+	return nil
 }
 
 func (e *Api) SetConn(conn *grpc.ClientConn) {

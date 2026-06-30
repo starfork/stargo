@@ -1,72 +1,115 @@
-# stargo
+# AGENTS.md — stargo
 
-Go microservice framework: gRPC + etcd (registry/resolver) + NATS (broker) + MySQL/GORM (store) + Redis (store/queue/cache) + Jaeger (tracer) + grpc-gateway (HTTP API).
-
-Root module: `github.com/starfork/stargo` · Contrib module: `github.com/starfork/stargo/contrib` · Go 1.25.2 · Apache 2.0. README is in Chinese; documentation and examples at [stargo-examples](https://github.com/starfork/stargo-examples).
-
-## Module split
-
-The root `go.mod` is minimal (~8 direct deps: grpc, grpc-gateway, grpc-middleware, protobuf, yaml, x/time, x/text, x/exp). All optional/pluggable implementations live in `contrib/` with their own `go.mod`:
-
-| Root (core) | Contrib (optional) |
-|---|---|
-| `broker/broker.go` — interface + registry | `contrib/broker/nats` — NATS implementation |
-| `naming/registry.go`, `resolver.go` — interfaces + registries | `contrib/naming/etcd` — etcd implementation |
-| `store/store.go` — interface + registry | `contrib/store/mysql`, `contrib/store/redis` |
-| `tracer/tracer.go` — interface (noop default) | `contrib/tracer/jaeger` |
-| `interceptor/auth`, `recovery`, `ratelimit` | `contrib/interceptor/validator`, `contrib/interceptor/logger/zap` |
-| `api/api.go` — gateway runtime | `contrib/api/custom` — encrypted marshaler |
-| `cache/cache.go` — interface | `contrib/cache/redis` |
-| `queue/store/store.go` — interface | `contrib/queue/store/redis` |
-| `util/request` — HTTP helpers | `contrib/util/request/limiter` — uber/ratelimit |
-
-## Registry pattern
-
-Optional implementations self-register via `init()`:
-
-- **Broker**: `broker.Register("nats", factory)` → used by `broker.NewBroker("nats", config)`
-- **Registry**: `naming.RegisterRegistry("etcd", factory)` → used by `naming.NewRegistry("etcd", config)`
-- **Resolver**: `naming.RegisterResolver("etcd", factory)` → used by `naming.NewResolver("etcd", config)`
-- **Store**: `store.Register("mysql", factory)` → used by `store.NewStore("mysql", config)`
-
-Users blank-import the contrib package in `main.go` to trigger registration:
-
-```go
-import _ "github.com/starfork/stargo/contrib/broker/nats"
-import _ "github.com/starfork/stargo/contrib/naming/etcd"
-import _ "github.com/starfork/stargo/contrib/store/mysql"
-```
-
-## Commands
+## Build & test
 
 ```sh
-go build ./...          # build root module
-go build ./contrib/...  # build contrib module
-go test ./util/...      # test utility packages (no external deps)
-go test ./pm/...        # test pm package
+# Build root module + all sub-modules (replace directives resolve locally)
+go build ./...
+
+# Build all samples
+go build ./_samples/...
+
+# Run all tests (within each module that has test files)
+go test ./...
+
+# Run a single test package (example)
+go test ./store/mysql/
+
+# Run a single sample
+cd _samples/01-basic && go run . -c config.yaml
 ```
 
-## Test quirks
+There is no root Makefile, no golangci-lint config, and no CI build/test/lint pipeline (only a weekly auto-deps workflow).
 
-- **`contrib/broker/nats`** and **`contrib/cache/redis`** tests require running NATS / Redis — they will panic without them. All other test packages pass standalone.
-- Skip infra-dependent tests by targeting specific packages: `go test ./util/... ./pm/...`
+## Multi-module structure
 
-## Architecture
+This is a **Go monorepo with multiple go.mod files**:
 
-- **Entrypoint**: `stargo.New("name", config)` → `app.Run(desc, impl)`. Read `app.go` first.
-- **Store access**: `app.Store("mysql").(*mysql.Mysql).GetInstance()` → `*gorm.DB`; same for redis → `*redis.Client`.
-- **Stores are opt-in**: mysql/redis packages are NOT imported by `app.go`. They register via `init()`. Users must blank-import contrib versions in `main.go`: `_ "github.com/starfork/stargo/contrib/store/mysql"` or `_ "github.com/starfork/stargo/contrib/store/redis"`.
-- **Service discovery**: registry + resolver use registry pattern. Users blank-import `contrib/naming/etcd` to register etcd implementations.
-- **Broker**: users blank-import `contrib/broker/nats` to register NATS broker.
-- **Interceptors**: auth, rate-limit, panic recovery are core (`interceptor/`). Validator and zap logger are in contrib.
-- **gRPC-gateway**: HTTP→gRPC with optional AES-GCM encrypted marshaler (`contrib/api/custom/`). CORS middleware auto-forwards headers as `Grpc-Metadata-*`.
-- **Config**: YAML via `config.LoadConfig()`. Default timezone `Asia/Shanghai`. `DefaultConfig` has nil Broker/Registry — no auto-connection attempts.
-- **Tracer**: `tracer.DefaultTracer` is a no-op by default. Swap in `contrib/tracer/jaeger` or another implementation as needed.
-- **Signal handling**: `app.Run()` owns signal handling (SIGTERM/SIGINT/SIGHUP/SIGQUIT) and calls `app.Stop()` for proper cleanup (registry deregister, store close, broker unsubscribe). `server.Server` has no signal handling.
+- **Root** (`github.com/starfork/stargo`, Go 1.26.4) — framework core (server, config, logger, store/broker/naming/tracer interfaces, interceptors, api, client, cache, queue, util).
+- **Nested sub-modules** — plugin implementations (e.g. `store/mysql`, `broker/nats`, `naming/etcd`, `logger/zap`). Each has its own `go.mod` and **must** contain `replace github.com/starfork/stargo => ../..` (adjust `../` depth based on nesting level).
+- **Sample modules** in `_samples/` — independent, runnable projects.
 
-## Key conventions
+**Critical rule**: when updating dependencies, run `go mod tidy` in both the root **and each changed sub-module**. The CI workflow (`auto-update-deps.yml`) shows the pattern: iterate every non-root `go.mod` directory and run `go get -u ./... && go mod tidy` inside each.
 
-- Functional options pattern everywhere (see `options.go`, `queue/options.go`, `api/config.go`).
-- `pm.Pm` (`map[string]any`) used as the generic parameter bundle — has typed getters (`GetString`, `GetInt`, etc.) and URL encoding.
-- Retracted versions `[v0.1.1, v0.1.9]` and `[v0.0.1, v0.0.8]` — do not depend on those.
-- Store config supports env var override: `MYSQL_USER`, `MYSQL_PASSWD`, `MYSQL_HOST`, `MYSQL_PORT`, `MYSQL_NAME`, `REDIS_HOST`, `REDIS_AUTH`, `REDIS_NUM`.
+**Exception**: `config/etcd/` is a standalone sub-module with **no** `replace` directive for stargo; it does not depend on the root module.
+
+## Plugin registration pattern (critical for adding new components)
+
+The framework uses `init()` + blank import + factory registry:
+
+1. Framework defines `package.Register(name, factory)` and `package.New(name, config)`.
+2. Plugins call `Register()` in `init()`, e.g. `func init() { store.Register("mysql", NewMysql) }`.
+3. Users activate plugins via `_ "github.com/starfork/stargo/store/mysql"`.
+4. At runtime, `app.initConfig()` calls `NewStore(name, cfg)` which looks up the factory by name.
+
+Key registries: `store.Register`, `broker.Register`, `naming.RegisterRegistry`, `naming.RegisterResolver`, `tracer.Register`, `logger.Register`.
+
+When adding a new plugin:
+- Create a sub-directory with its own `go.mod` (use Go 1.26.4).
+- Add `replace github.com/starfork/stargo => ../..` (adjust `../` depth).
+- Call the `Register()` function in `init()` with a factory that returns the interface.
+- Wire the factory name into the YAML config (e.g. `store.mysql.name: mysql` maps to `Register("mysql", ...)`).
+
+## Key environment
+
+- `STARGO_LOG_LEVEL` — sets the default logger level at init time (parseable by `logger.GetLevel()`). Default: `InfoLevel`.
+- Config file flag: `-c config.yaml` (defaults to `-c ../config/debug.yaml`).
+
+## Common pitfalls
+
+- **Don't run `go get` or `go mod tidy` only at root** — sub-modules have independent `go.mod` files; they will be out of sync.
+- **Tests in sub-modules may need infrastructure** — e.g. `broker/nats/nats_test.go` requires a running NATS server, `cache/redis/redis_test.go` requires Redis.
+- **`App.Run()` handles signals and exists the process** — it calls `os.Exit()` on SIGTERM/SIGINT/SIGHUP/SIGQUIT.
+- **Reflection is only enabled in non-production** (`s.conf.Env != config.ENV_PRODUCTION`). Don't assume it's always on.
+- **gRPC version mismatch risk** — sub-modules pin their own gRPC versions (e.g. `naming/etcd` uses `google.golang.org/grpc v1.79.3` while root uses `v1.76.0`). Do not force-align them without checking etcd compatibility.
+- **Retracted versions** — root `go.mod` retracts `[v0.0.1, v0.0.8]` and `[v0.1.1, v0.1.9]`.
+
+## CI
+
+```sh
+# Local CI simulation (runs both tasks)
+# 1. Build + vet root module
+go build -race ./... && go vet ./...
+
+# 2. Build + vet all nested sub-modules
+for dir in $(find . -name go.mod ! -path './_samples/*' -exec dirname {} \;); do
+  [ "$dir" = "." ] && continue
+  (cd "$dir" && go build -race ./... && go vet ./...) || echo "FAIL: $dir"
+done
+
+# 3. Build + vet all samples
+for dir in $(find _samples -name go.mod -exec dirname {} \;); do
+  (cd "$dir" && go build -race ./... && go vet ./...) || echo "FAIL: $dir"
+done
+```
+
+A full CI workflow exists at `.github/workflows/ci-build.yml` covering root, 14 nested modules, and 21 sample modules with `-race` and `go vet`.
+
+## New features (ROADMAP round)
+
+### Graceful shutdown (A)
+`app.Stop()` follows: NOT_SERVING health -> drain in-flight -> Deregister -> GracefulStop. `stopStargo()` respects the order. Health server tracks dependency readiness via `SetDependency()` and exposes `readiness` check endpoint.
+
+### Weighted round-robin balancer (A)
+`naming/etcd/balancer.go` registers a `weighted_round_robin_xds` balancer. Services registered with Weight/Version metadata stored in etcd endpoint metadata. `Registry.List()` fully implemented.
+
+### Timeout/deadline interceptors (B)
+`interceptor/timeout/timeout.go` provides Unary/Stream server interceptors (default timeout) and Unary/Stream client interceptors (deadline validation). Wired into `server.newRpcServer()` (via `Config.DefaultTimeout`, default 60s) and `client.DefaultOptions()`.
+
+### Readiness health (D)
+`server/health.go` supports `readiness` service check that aggregates dependency health (store/broker/registry). `app.initStore/initBroker/initRegistry` register dependencies as healthy.
+
+### mTLS + CORS + TLS (I)
+- `internal/tls/tls.go`: `NewServerTransportCredentials()` and `NewClientTransportCredentials()` with CA-based client/server verification.
+- `server.Config`: `CertFile`, `KeyFile`, `CAFile` fields; wired into `newRpcServer()`.
+- `api/config.go`: `CORS`, `CertFile`, `KeyFile` fields.
+- `api/cors.go`: `CORSWrapper()` middleware with configurable origins/methods/headers.
+- `api/api.go`: `Run()` supports CORS wrapping and `ListenAndServeTLS`.
+
+## Reference
+
+- Architecture docs: `_docs/en/architecture.md` and `_docs/zh/architecture.md`
+- Config reference: `_docs/en/config.md` and `_docs/zh/config.md`
+- 14 runnable samples: `_samples/01-basic` through `_samples/14-full-stack`
+- TODO / roadmap: `_todo/` (P0 = urgent, P1 = high, P2 = medium, P3 = low)
+- Dev reports: `report.md`, `report-dev.md`, `report-plugin.md` at root

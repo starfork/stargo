@@ -27,6 +27,7 @@ func New(conn *redis.Client) *Limiter {
 //4. 设置了ttl的，说明在限定时间内超过上限，限流不放行
 //5. 未设置ttl的，用Set+px参数原子性操作设置为1，成功则放行，失败则限流
 
+// Deprecated: CountLimit 不保证流程原子性，存在并发竞争问题，请使用 SyncCountLimit
 // 不保证流程原子性，存在并发竞争问题
 func (e *Limiter) CountLimit(ctx context.Context, key string, count, ttl int64) bool {
 
@@ -98,6 +99,7 @@ func (e *Limiter) SyncCountLimit(ctx context.Context, key string, count, ttl int
 //4. 小于窗口时间，说明在窗口时间内达到上限，限流不放行
 //5. 大于窗口时间，说明已推进到新窗口，移除最右边的，放入当前时间，放行
 
+// Deprecated: WindowLimit 不保证流程原子性，存在并发竞争问题，请使用 SyncWindowLimit
 // 不保证流程原子性，存在并发竞争问题
 func (e *Limiter) WindowLimit(ctx context.Context, key string, count, windowTime int64) bool {
 

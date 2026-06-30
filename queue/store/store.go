@@ -15,4 +15,10 @@ type Store interface {
 
 	//拉取所有任务队列.返回任务名称
 	FetchJob(step int64) ([]string, error)
+	
+	//原子性认领任务
+	ClaimJob(step int64) ([]string, error)
+	
+	//回收过期任务
+	ReclaimExpired() ([]string, error)
 }

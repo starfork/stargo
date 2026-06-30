@@ -26,6 +26,12 @@ type Config struct {
 	ServerOpts       []grpc.ServerOption
 	ShutdownTimeout  time.Duration
 	Metrics          bool
+	DefaultTimeout   time.Duration // default timeout for server handlers, 0 = no default
+
+	// TLS
+	CertFile string // server cert file for TLS
+	KeyFile  string // server key file for TLS
+	CAFile   string // CA cert file for mTLS client verification (optional)
 }
 
 type RpcServer struct {
@@ -42,4 +48,5 @@ var DefaultConfig = &Config{
 	StreamInterceptor: []grpc.StreamServerInterceptor{},
 	ServerOpts:        []grpc.ServerOption{},
 	ShutdownTimeout:   30 * time.Second,
+	DefaultTimeout:    60 * time.Second,
 }

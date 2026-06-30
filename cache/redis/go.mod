@@ -4,7 +4,7 @@ go 1.26.4
 
 require (
 	github.com/json-iterator/go v1.1.12
-	github.com/redis/go-redis/v9 v9.19.0
+	github.com/redis/go-redis/v9 v9.21.0
 	github.com/starfork/stargo v0.0.0
 )
 

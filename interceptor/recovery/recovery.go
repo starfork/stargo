@@ -12,6 +12,11 @@ func Unary() grpc.UnaryServerInterceptor {
 	return grpc_recovery.UnaryServerInterceptor(Interceptor())
 }
 
+// Stream interceptor
+func Stream() grpc.StreamServerInterceptor {
+	return grpc_recovery.StreamServerInterceptor(Interceptor())
+}
+
 // Interceptor panic时返回Unknown错误吗
 func Interceptor() grpc_recovery.Option {
 	return grpc_recovery.WithRecoveryHandler(func(p any) (err error) {

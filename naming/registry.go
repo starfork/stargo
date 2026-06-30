@@ -6,6 +6,7 @@ type Registry interface {
 	Register(service Service) error
 	Deregister(service Service) error
 	List(name string) []Service
+	Close() error
 }
 
 var registryFactories = make(map[string]func(*Config) (Registry, error))

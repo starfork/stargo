@@ -50,28 +50,43 @@ func (e *Redis) Push(t *task.Task) error {
 		Member: t.Subkey(),
 	}
 
-	if _, err := e.rdc.ZAdd(e.ctx, e.name, member).Result(); err != nil {
-		return err
-	}
-	if _, err := e.rdc.Set(e.ctx, e.name+"."+t.Subkey(), value, 0).Result(); err != nil {
-		return err
-	}
-	return nil
+	// Use pipeline to make operation atomic
+	pipe := e.rdc.Pipeline()
+	pipe.ZAdd(e.ctx, e.name, member)
+	pipe.Set(e.ctx, e.name+"."+t.Subkey(), value, 0)
+	_, err := pipe.Exec(e.ctx)
+	return err
 }
 
 func (e *Redis) Pop(t *task.Task) error {
-	if rs := e.rdc.ZRem(e.ctx, e.name, t.Subkey()); rs.Err() != nil {
-		return rs.Err()
-	}
-	if rs := e.rdc.Del(e.ctx, e.name+"."+t.Subkey()); rs.Err() != nil {
-		return rs.Err()
-	}
-	return nil
+	processingKey := e.name + ".processing"
+	
+	// Use pipeline to remove from both main and processing sets atomically
+	pipe := e.rdc.Pipeline()
+	pipe.ZRem(e.ctx, e.name, t.Subkey())
+	pipe.ZRem(e.ctx, processingKey, t.Subkey())
+	pipe.Del(e.ctx, e.name+"."+t.Subkey())
+	_, err := pipe.Exec(e.ctx)
+	return err
 }
 
 // redis里面，有序集合新增，即可实现update
 func (e *Redis) Update(t *task.Task) error {
-	return e.Push(t)
+	processingKey := e.name + ".processing"
+	value := t.Marshal()
+	interval := time.Now().Unix() + t.Delay
+	member := redis.Z{
+		Score:  float64(interval),
+		Member: t.Subkey(),
+	}
+
+	// Use pipeline to remove from processing and add to main set atomically
+	pipe := e.rdc.Pipeline()
+	pipe.ZRem(e.ctx, processingKey, t.Subkey())
+	pipe.ZAdd(e.ctx, e.name, member)
+	pipe.Set(e.ctx, e.name+"."+t.Subkey(), value, 0)
+	_, err := pipe.Exec(e.ctx)
+	return err
 }
 
 // redis里面，有序集合新增，即可实现update
@@ -80,28 +95,78 @@ func (e *Redis) Clear(key string) error {
 	if rs.Err() != nil {
 		return rs.Err()
 	}
+	
+	// Use pipeline to clear all tasks atomically
+	pipe := e.rdc.Pipeline()
 	for _, v := range rs.Val() {
-		e.Pop(&task.Task{
-			Tag: v,
-			Key: key,
-		})
+		pipe.ZRem(e.ctx, e.name, v)
+		pipe.Del(e.ctx, e.name+"."+v)
 	}
-	return nil
+	_, err := pipe.Exec(e.ctx)
+	return err
 }
 
 func (e *Redis) FetchJob(step int64) ([]string, error) {
 	now := time.Now().Unix()
-	//todo这里的-5，应该配合超exec的超时来
-	s_unix := strconv.FormatInt(now-step-10, 10)
 	e_unix := strconv.FormatInt(now, 10)
 	opt := &redis.ZRangeBy{
-		Min: s_unix, //1秒前
-		Max: e_unix, //当前时间
+		Min: "-inf", // All expired tasks
+		Max: e_unix, // Current time
+		Count: step, // Limit number of tasks
 	}
 
 	rs := e.rdc.ZRangeByScore(e.ctx, e.name, opt)
 	return rs.Val(), rs.Err()
 
+}
+
+func (e *Redis) ClaimJob(step int64) ([]string, error) {
+	now := time.Now().Unix()
+	processingKey := e.name + ".processing"
+	
+	// Lua script to atomically claim jobs
+	luaScript := `
+		local jobs = redis.call('ZRANGEBYSCORE', KEYS[1], '-inf', ARGV[1], 'LIMIT', 0, ARGV[2])
+		if #jobs == 0 then
+			return {}
+		end
+		
+		local claimed = {}
+		for i, job in ipairs(jobs) do
+			-- Move job from main zset to processing zset with visibility timeout
+			redis.call('ZREM', KEYS[1], job)
+			redis.call('ZADD', KEYS[2], ARGV[3], job)
+			table.insert(claimed, job)
+		end
+		
+		return claimed
+	`
+	
+	visibilityTimeout := int64(30) // 30 seconds visibility timeout
+	args := []interface{}{
+		strconv.FormatInt(now, 10),          // max score
+		step,                                 // limit
+		strconv.FormatInt(now+visibilityTimeout, 10), // new score for processing
+	}
+	
+	result, err := e.rdc.Eval(e.ctx, luaScript, []string{e.name, processingKey}, args...).Result()
+	if err != nil {
+		return nil, err
+	}
+	
+	// Convert result to string slice
+	switch v := result.(type) {
+	case []interface{}:
+		res := make([]string, len(v))
+		for i, item := range v {
+			if str, ok := item.(string); ok {
+				res[i] = str
+			}
+		}
+		return res, nil
+	default:
+		return nil, nil
+	}
 }
 func (e *Redis) ReadTask(key string) (*task.Task, error) {
 	rs := e.rdc.Get(e.ctx, e.name+"."+key)
@@ -113,4 +178,52 @@ func (e *Redis) ReadTask(key string) (*task.Task, error) {
 		return nil, err
 	}
 	return task, nil
+}
+
+func (e *Redis) ReclaimExpired() ([]string, error) {
+	now := time.Now().Unix()
+	processingKey := e.name + ".processing"
+	
+	// Lua script to reclaim expired jobs from processing back to main set
+	luaScript := `
+		local expired = redis.call('ZRANGEBYSCORE', KEYS[2], '-inf', ARGV[1])
+		if #expired == 0 then
+			return {}
+		end
+		
+		local reclaimed = {}
+		for i, job in ipairs(expired) do
+			-- Get the payload
+			local payload = redis.call('GET', KEYS[1] .. '.' .. job)
+			if payload then
+				-- Move back to main set with current time as score
+				redis.call('ZADD', KEYS[1], ARGV[1], job)
+				redis.call('ZREM', KEYS[2], job)
+				table.insert(reclaimed, job)
+			else
+				-- No payload, just remove from processing
+				redis.call('ZREM', KEYS[2], job)
+			end
+		end
+		
+		return reclaimed
+	`
+	
+	result, err := e.rdc.Eval(e.ctx, luaScript, []string{e.name, processingKey}, now).Result()
+	if err != nil {
+		return nil, err
+	}
+	
+	switch v := result.(type) {
+	case []interface{}:
+		res := make([]string, len(v))
+		for i, item := range v {
+			if str, ok := item.(string); ok {
+				res[i] = str
+			}
+		}
+		return res, nil
+	default:
+		return nil, nil
+	}
 }

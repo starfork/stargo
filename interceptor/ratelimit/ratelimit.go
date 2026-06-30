@@ -3,6 +3,7 @@ package ratelimit
 import (
 	"context"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/starfork/stargo/api"
@@ -13,11 +14,17 @@ import (
 	"golang.org/x/time/rate"
 )
 
+type limiterEntry struct {
+	limiter  *rate.Limiter
+	lastSeen atomic.Int64
+}
+
 type RateLimiter struct {
-	limiters  sync.Map // map[key]*rate.Limiter
+	limiters  sync.Map // map[key]*limiterEntry
 	rate      rate.Limit
 	burst     int
 	cleanUpIn time.Duration
+	stopChan  chan struct{}
 }
 
 func NewRateLimiter(r rate.Limit, burst int, cleanUpIn time.Duration) *RateLimiter {
@@ -25,14 +32,47 @@ func NewRateLimiter(r rate.Limit, burst int, cleanUpIn time.Duration) *RateLimit
 		rate:      r,
 		burst:     burst,
 		cleanUpIn: cleanUpIn,
+		stopChan:  make(chan struct{}),
+	}
+	if cleanUpIn > 0 {
+		go krl.cleanup()
 	}
 	return krl
 }
 
 // getLimiter 获取或创建一个限流器
 func (k *RateLimiter) getLimiter(key string) *rate.Limiter {
-	limiter, _ := k.limiters.LoadOrStore(key, rate.NewLimiter(k.rate, k.burst))
-	return limiter.(*rate.Limiter)
+	entry, _ := k.limiters.LoadOrStore(key, &limiterEntry{
+		limiter: rate.NewLimiter(k.rate, k.burst),
+	})
+	e := entry.(*limiterEntry)
+	e.lastSeen.Store(time.Now().UnixNano())
+	return e.limiter
+}
+
+func (k *RateLimiter) cleanup() {
+	ticker := time.NewTicker(k.cleanUpIn)
+	defer ticker.Stop()
+	
+	for {
+		select {
+		case <-k.stopChan:
+			return
+		case <-ticker.C:
+			now := time.Now().UnixNano()
+			k.limiters.Range(func(key, value any) bool {
+				e := value.(*limiterEntry)
+				if now-e.lastSeen.Load() > int64(k.cleanUpIn) {
+					k.limiters.Delete(key)
+				}
+				return true
+			})
+		}
+	}
+}
+
+func (k *RateLimiter) Stop() {
+	close(k.stopChan)
 }
 
 func GetKey(ctx context.Context) (string, error) {

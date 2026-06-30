@@ -5,78 +5,78 @@ import (
 	"strings"
 )
 
-const (
-	META_FP     = "Stargo-Fp"
-	META_TOKEN  = "Stargo-Token"
-	META_METHOD = "Stargo-Method"
-	META_IP     = "Stargo-IP"
-	META_HOST   = "Stargo-Host"
-	META_LANG   = "Stargo-Lang"
-	META_DEVICE = "Stargo-Device"
-)
+// CORSConfig holds CORS middleware configuration
+type CORSConfig struct {
+	AllowedOrigins   []string
+	AllowedMethods   []string
+	AllowedHeaders   []string
+	ExposedHeaders   []string
+	AllowCredentials bool
+	MaxAge           int
+}
 
-var (
-	AllowHeaders = []string{"Content-Type", "Origin", "Authorization", "Content-Type", "X-Requested-With",
-		"Accept", "Access-Control-Allow-Credentials",
-		"Access-Token", "Access-Fp", "Accept-Language", "Access-Device",
-	}
-	AllowMethods = []string{"GET", "HEAD", "POST", "PUT", "DELETE"}
-)
+var DefaultCORSConfig = CORSConfig{
+	AllowedOrigins:   []string{"*"},
+	AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+	AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-Requested-With", "X-Request-Id"},
+	ExposedHeaders:   []string{"X-Request-Id"},
+	AllowCredentials: false,
+	MaxAge:           86400,
+}
 
-func Cors(w http.ResponseWriter, req *http.Request, headers ...map[string]string) {
-	inHeaders := map[string]string{
-		META_METHOD: req.Method,
-		META_IP:     ClientIP(req),
-		META_HOST:   req.Host,
-		META_TOKEN:  req.Header.Get("Access-Token"),
-		META_FP:     req.Header.Get("Access-Fp"),
-		META_LANG:   req.Header.Get("Accept-Language"),
-		META_DEVICE: req.Header.Get("Access-Device"),
+// CORSWrapper wraps an http.Handler with CORS headers
+func CORSWrapper(cfg CORSConfig) func(http.Handler) http.Handler {
+	if len(cfg.AllowedMethods) == 0 {
+		cfg.AllowedMethods = DefaultCORSConfig.AllowedMethods
 	}
-	for k, v := range inHeaders {
-		req.Header.Set("Grpc-Metadata-"+k, v)
+	if len(cfg.AllowedHeaders) == 0 {
+		cfg.AllowedHeaders = DefaultCORSConfig.AllowedHeaders
 	}
-
-	if len(headers) > 0 {
-		for k, v := range headers[0] {
-			req.Header.Set("Grpc-Metadata-"+k, v)
-		}
+	if len(cfg.AllowedOrigins) == 0 {
+		cfg.AllowedOrigins = DefaultCORSConfig.AllowedOrigins
 	}
 
-	/**
-	 * 更多时候推荐直接nginx去处理
-	 * 如果这里和nginx有冲突。可以按照如下方案处理
-		proxy_hide_header Access-Control-Allow-Origin;
-		proxy_hide_header Access-Control-Allow-Methods;
-		proxy_hide_header Access-Control-Allow-Headers;
+	allowedMethods := strings.Join(cfg.AllowedMethods, ", ")
+	allowedHeaders := strings.Join(cfg.AllowedHeaders, ", ")
+	exposedHeaders := strings.Join(cfg.ExposedHeaders, ", ")
+	allowCredentials := "false"
+	if cfg.AllowCredentials {
+		allowCredentials = "true"
+	}
 
-		add_header 'Access-Control-Allow-Origin' '*' always;
-		add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS, PUT, DELETE' always;
-		add_header 'Access-Control-Allow-Headers' 'Authorization,Content-Type,Accept,Origin,X-Requested-With,Access-Token,Access-Fp' always;
-		#这里需要cdn如果有启用http2的话会有类似cloudflare 520的问题。需要关闭掉
-		#cloudflare的处理方式-》“速度” > “优化” > “协议优化”中禁用与源站的 HTTP/2 连接。
-		if ($request_method = 'OPTIONS') {
-			add_header 'Access-Control-Allow-Origin' '*' always;
-			add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS, PUT, DELETE' always;
-			add_header 'Access-Control-Allow-Headers' 'Authorization,Content-Type,Accept,Origin,X-Requested-With,Access-Token,Access-Fp' always;
-			add_header 'Content-Length' 0;
-			add_header 'Content-Type' 'text/plain; charset=UTF-8';
-			return 200;
-		}
-	*/
-	if origin := req.Header.Get("Origin"); origin != "" {
-		w.Header().Set("Access-Control-Allow-Origin", origin)
-		if req.Method == "OPTIONS" && req.Header.Get("Access-Control-Request-Method") != "" {
-			w.Header().Set("Access-Control-Allow-Headers", strings.Join(AllowHeaders, ","))
-			w.Header().Set("Access-Control-Allow-Methods", strings.Join(AllowMethods, ","))
-			return
-		}
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			origin := r.Header.Get("Origin")
+			if origin != "" {
+				if cfg.isOriginAllowed(origin) {
+					w.Header().Set("Access-Control-Allow-Origin", origin)
+				} else if len(cfg.AllowedOrigins) > 0 && cfg.AllowedOrigins[0] == "*" {
+					w.Header().Set("Access-Control-Allow-Origin", "*")
+				}
+			}
+			w.Header().Set("Access-Control-Allow-Methods", allowedMethods)
+			w.Header().Set("Access-Control-Allow-Headers", allowedHeaders)
+			w.Header().Set("Access-Control-Expose-Headers", exposedHeaders)
+			w.Header().Set("Access-Control-Allow-Credentials", allowCredentials)
+
+			if r.Method == http.MethodOptions {
+				w.WriteHeader(http.StatusNoContent)
+				return
+			}
+
+			next.ServeHTTP(w, r)
+		})
 	}
 }
 
-func DefaultHandlerWrapper(h http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		Cors(w, req)
-		h.ServeHTTP(w, req)
-	})
+func (c *CORSConfig) isOriginAllowed(origin string) bool {
+	if len(c.AllowedOrigins) == 1 && c.AllowedOrigins[0] == "*" {
+		return true
+	}
+	for _, o := range c.AllowedOrigins {
+		if o == origin {
+			return true
+		}
+	}
+	return false
 }

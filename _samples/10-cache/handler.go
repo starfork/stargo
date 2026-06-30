@@ -25,8 +25,13 @@ func NewHandler(app *stargo.App) *handler {
 		logger: app.Logger(),
 	}
 	if rdc := app.Store("redis"); rdc != nil {
-		h.cache = redis_cache.New(rdc)
-		h.logger.Infof("redis cache ready")
+		c, err := redis_cache.New(rdc, "user")
+		if err != nil {
+			h.logger.Errorf("failed to create redis cache: %v", err)
+		} else {
+			h.cache = c
+			h.logger.Infof("redis cache ready")
+		}
 	}
 	return h
 }

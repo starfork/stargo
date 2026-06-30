@@ -2,7 +2,6 @@ package postgres
 
 import (
 	"database/sql"
-	"fmt"
 	"time"
 
 	"github.com/starfork/stargo/store"
@@ -32,9 +31,20 @@ func (e *Postgres) Instance(confs ...*store.Config) any {
 		c = confs[0]
 	}
 	if err := e.connect(c); err != nil {
-		panic(fmt.Sprintf("postgres connect error: %+v", err))
+		return nil
 	}
 	return e.db
+}
+
+func (e *Postgres) InstanceE(confs ...*store.Config) (any, error) {
+	c := e.c
+	if len(confs) > 0 {
+		c = confs[0]
+	}
+	if err := e.connect(c); err != nil {
+		return nil, err
+	}
+	return e.db, nil
 }
 
 func (e *Postgres) GetInstance() *gorm.DB {

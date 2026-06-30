@@ -21,4 +21,8 @@ type Config struct {
 
 	Enc    bool   //是否开启API数据混淆/加密
 	EncKey string //加密key
+
+	CORS      *CORSConfig // CORS 跨域配置
+	CertFile  string      // TLS cert file
+	KeyFile   string      // TLS key file
 }

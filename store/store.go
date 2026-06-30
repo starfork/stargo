@@ -2,6 +2,7 @@ package store
 
 type Store interface {
 	Instance(conf ...*Config) any
+	InstanceE(conf ...*Config) (any, error)
 	Close() //关闭连接
 }
 

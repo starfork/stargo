@@ -70,8 +70,26 @@ func (e *Redis) Instance(conf ...*store.Config) any {
 	return e.rdc
 }
 
+func (e *Redis) InstanceE(conf ...*store.Config) (any, error) {
+	if len(conf) > 0 {
+		if err := e.Connect(conf...); err != nil {
+			return nil, err
+		}
+		return e.rdc, nil
+	}
+
+	if e.rdc == nil {
+		if err := e.Connect(); err != nil {
+			return nil, err
+		}
+	}
+
+	return e.rdc, nil
+}
+
 // 集群client
 func (e *Redis) GetCluster(conf ...*store.Config) *redis.ClusterClient {
+	// TODO: Implement cluster client
 	return nil
 }
 

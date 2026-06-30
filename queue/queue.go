@@ -1,6 +1,7 @@
 package queue
 
 import (
+	"context"
 	"sync"
 	"time"
 
@@ -11,19 +12,25 @@ import (
 var tformat = "2006-01-02 15:04:05"
 
 type Queue struct {
-	store    store.Store
-	handlers *sync.Map
-	opts     Options
-	//interval   time.Duration //间隔时段
-	//workers int           //最大处理数
+	ctx       context.Context
+	cancel    context.CancelFunc
+	store     store.Store
+	handlers  *sync.Map
+	opts      Options
+	executing bool
+	mu        sync.Mutex
+	wg        sync.WaitGroup
 }
 
-func New(store store.Store, opts ...Option) *Queue {
+func New(ctx context.Context, store store.Store, opts ...Option) *Queue {
 	options := DefaultOptions()
 	for _, o := range opts {
 		o(&options)
 	}
+	ctx, cancel := context.WithCancel(ctx)
 	q := &Queue{
+		ctx:      ctx,
+		cancel:   cancel,
 		store:    store,
 		handlers: &sync.Map{},
 		opts:     options,
@@ -60,16 +67,57 @@ func (e *Queue) Push(t *task.Task) error {
 func (e *Queue) run() {
 	t := time.NewTicker(time.Second * time.Duration(e.opts.interval))
 	defer t.Stop()
+	
+	// Reclaim expired jobs ticker (every 10 seconds)
+	reclaimTicker := time.NewTicker(10 * time.Second)
+	defer reclaimTicker.Stop()
+	
 	for {
-		<-t.C
-		go e.exec()
+		select {
+		case <-e.ctx.Done():
+			return
+		case <-t.C:
+			e.wg.Add(1)
+			go func() {
+				defer e.wg.Done()
+				e.exec()
+			}()
+		case <-reclaimTicker.C:
+			e.wg.Add(1)
+			go func() {
+				defer e.wg.Done()
+				e.reclaim()
+			}()
+		}
 	}
 }
 func (e *Queue) exec() {
-	rs, err := e.store.FetchJob(e.opts.step)
+	// Try to acquire lock
+	e.mu.Lock()
+	if e.executing {
+		e.mu.Unlock()
+		e.log("exec already in progress, skipping")
+		return
+	}
+	e.executing = true
+	e.mu.Unlock()
+	
+	defer func() {
+		e.mu.Lock()
+		e.executing = false
+		e.mu.Unlock()
+	}()
+	
+	rs, err := e.store.ClaimJob(e.opts.step)
 	if err != nil {
 		e.log(ErrFailGetJob, err)
+		return
 	}
+	
+	if len(rs) == 0 {
+		return
+	}
+	
 	var (
 		wg  sync.WaitGroup
 		sem = make(chan struct{}, e.opts.maxThread)
@@ -126,4 +174,20 @@ func (e *Queue) log(template string, args ...any) {
 		start := time.Now()
 		e.opts.logger.Debugf(start.Format(tformat)+" "+template+" \r\n", args...)
 	}
+}
+
+func (e *Queue) reclaim() {
+	rs, err := e.store.ReclaimExpired()
+	if err != nil {
+		e.log("reclaim expired jobs error: %v", err)
+		return
+	}
+	if len(rs) > 0 {
+		e.log("reclaimed %d expired jobs", len(rs))
+	}
+}
+
+func (e *Queue) Stop() {
+	e.cancel()
+	e.wg.Wait()
 }

@@ -3,14 +3,24 @@ package nats
 import (
 	jsoniter "github.com/json-iterator/go"
 	"github.com/nats-io/nats.go"
-	"github.com/nats-io/nats.go/jetstream"
 	"github.com/starfork/stargo/broker"
+	"github.com/starfork/stargo/logger"
 )
+
+type natsSubscription struct {
+	sub *nats.Subscription
+}
+
+func (s *natsSubscription) Unsubscribe() error {
+	if s.sub != nil {
+		return s.sub.Unsubscribe()
+	}
+	return nil
+}
 
 type NatsBroker struct {
 	c  *broker.Config
 	nc *nats.Conn
-	js jetstream.JetStream
 }
 
 func init() {
@@ -20,48 +30,59 @@ func init() {
 }
 
 func NewBroker(c *broker.Config) (broker.Broker, error) {
-	nc, err := nats.Connect(c.Host)
+	// Add reconnected and disconnected handlers
+	opts := []nats.Option{
+		nats.ReconnectHandler(func(nc *nats.Conn) {
+			logger.DefaultLogger.Infof("NATS reconnected to %s", nc.ConnectedUrl())
+		}),
+		nats.DisconnectHandler(func(nc *nats.Conn) {
+			logger.DefaultLogger.Warnf("NATS disconnected from %s", nc.ConnectedUrl())
+		}),
+		nats.ClosedHandler(func(nc *nats.Conn) {
+			logger.DefaultLogger.Infof("NATS connection closed")
+		}),
+	}
 
+	nc, err := nats.Connect(c.Host, opts...)
 	if err != nil {
 		return nil, err
 	}
-	js, _ := jetstream.New(nc)
 
-	return &NatsBroker{c, nc, js}, nil
+	return &NatsBroker{c, nc}, nil
 }
 
 func (e *NatsBroker) Publish(topic string, msg broker.Message) error {
-	//必须带上当前的app名字
 	b, err := jsoniter.Marshal(msg)
 	if err != nil {
 		return err
 	}
-	//fmt.Println("publish topic", e.c.App+"."+topic)
+	// Use consistent topic prefix
 	return e.nc.Publish(e.c.App+"."+topic, b)
-	//
 }
 
 func (e *NatsBroker) Flush() error {
 	return e.nc.Flush()
 }
 
-// 需要完整的app.name.
-// !大多数情况下，需要使用 go Subscribe
-func (e *NatsBroker) Subscribe(topic string, handler broker.MessageHandler) {
-
-	e.nc.Subscribe(topic, func(msg *nats.Msg) {
-
+func (e *NatsBroker) Subscribe(topic string, handler broker.MessageHandler) (broker.Subscription, error) {
+	// Use consistent topic prefix
+	sub, err := e.nc.Subscribe(e.c.App+"."+topic, func(msg *nats.Msg) {
 		bmsg := broker.Message{}
 		err := jsoniter.Unmarshal(msg.Data, &bmsg)
-		if err == nil {
-			bmsg.Topic = msg.Subject //传递给后续方便做wilcard
-			handler(bmsg)
+		if err != nil {
+			logger.DefaultLogger.Errorf("NATS unmarshal error: %v", err)
+			return
 		}
+		bmsg.Topic = msg.Subject
+		handler(bmsg)
 	})
+	if err != nil {
+		return nil, err
+	}
 
-	select {}
-
+	return &natsSubscription{sub: sub}, nil
 }
+
 func (e *NatsBroker) UnSubscribe() error {
 	return e.nc.Drain()
 }

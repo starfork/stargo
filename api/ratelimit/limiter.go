@@ -5,19 +5,53 @@ import (
 	"net/http"
 	"strings"
 	"sync"
+	"sync/atomic"
+	"time"
 
 	"github.com/starfork/stargo/util/request"
 	"go.uber.org/ratelimit"
 )
 
-var store sync.Map
+type limiterEntry struct {
+	limiter  ratelimit.Limiter
+	lastSeen atomic.Int64
+}
+
+var (
+	store     sync.Map
+	cleanOnce sync.Once
+	stopChan  = make(chan struct{})
+)
+
+func init() {
+	go cleanup()
+}
+
+func cleanup() {
+	ticker := time.NewTicker(10 * time.Minute)
+	defer ticker.Stop()
+	
+	for {
+		select {
+		case <-stopChan:
+			return
+		case <-ticker.C:
+			now := time.Now().UnixNano()
+			store.Range(func(key, value any) bool {
+				e := value.(*limiterEntry)
+				if now-e.lastSeen.Load() > int64(10*time.Minute) {
+					store.Delete(key)
+				}
+				return true
+			})
+		}
+	}
+}
 
 type Limiter struct {
 	p Policy
-	//store map[string]*ratelimit.Limiter
-	//visits  uint64
-
 }
+
 type Policy struct {
 	Type string
 	Tk   string
@@ -40,13 +74,18 @@ func (e *Limiter) Allow() bool {
 	return lr.Take().Unix() > 0
 }
 
-func (e *Limiter) getLimier() (ratelimit.Limiter, error) {
-	tk, err := e.getToken()
+func (l *Limiter) getLimier() (ratelimit.Limiter, error) {
+	tk, err := l.getToken()
 	if err != nil {
 		return nil, fmt.Errorf("limiter token: %w", err)
 	}
-	limiter, _ := store.LoadOrStore(tk, ratelimit.New(e.p.Num, ratelimit.WithoutSlack))
-	return limiter.(ratelimit.Limiter), nil
+	
+	entry, _ := store.LoadOrStore(tk, &limiterEntry{
+		limiter: ratelimit.New(l.p.Num, ratelimit.WithoutSlack),
+	})
+	le := entry.(*limiterEntry)
+	le.lastSeen.Store(time.Now().UnixNano())
+	return le.limiter, nil
 }
 
 func (e *Limiter) getToken() (tk string, err error) {

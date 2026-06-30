@@ -2,9 +2,11 @@ package server
 
 import (
 	"net"
-	"strings"
 	"time"
 
+	"github.com/starfork/stargo/interceptor/recovery"
+	"github.com/starfork/stargo/interceptor/timeout"
+	internaltls "github.com/starfork/stargo/internal/tls"
 	"github.com/starfork/stargo/logger"
 	"github.com/starfork/stargo/naming"
 	"google.golang.org/grpc"
@@ -40,6 +42,7 @@ func New(conf *Config) *Server {
 		conf:      conf,
 		health:    NewHealthServer(),
 	}
+	app.registerHealth()
 
 	return app
 }
@@ -47,11 +50,12 @@ func New(conf *Config) *Server {
 // Run   server
 func (e *Server) Run() {
 
-	ports := strings.Split(e.conf.Addr, ":")
-	port := ports[0]
-	if len(ports) > 1 {
-		port = ports[1] //centos docker 监听ip:port模式有问题
+	_, port, err := net.SplitHostPort(e.conf.Addr)
+	if err != nil {
+		// If parsing fails, assume it's just a port
+		port = e.conf.Addr
 	}
+	
 	lis, err := net.Listen("tcp", ":"+port)
 	e.lis = lis
 
@@ -88,7 +92,23 @@ func (e *Server) Stop() {
 // Restart server
 func (e *Server) Restart() {
 	e.Stop()
-	e.rpcServer.Serve(e.lis)
+	// Create new listener
+	_, port, err := net.SplitHostPort(e.conf.Addr)
+	if err != nil {
+		// If parsing fails, assume it's just a port
+		port = e.conf.Addr
+	}
+	lis, err := net.Listen("tcp", ":"+port)
+	if err != nil {
+		e.logger.Fatalf("failed to listen: %v", err)
+	}
+	e.lis = lis
+	
+	// Create new RPC server
+	s := newRpcServer(e.conf)
+	e.rpcServer = s.(*grpc.Server)
+	e.health = NewHealthServer()
+	e.registerHealth()
 }
 
 func (e *Server) Health() *HealthServer {
@@ -104,6 +124,16 @@ func newRpcServer(conf *Config) (s grpc.ServiceRegistrar) {
 	interceptors := conf.UnaryInterceptor
 	streamInterceptors := conf.StreamInterceptor
 
+	// Add default timeout interceptor if configured
+	if conf.DefaultTimeout > 0 {
+		interceptors = append([]grpc.UnaryServerInterceptor{timeout.Unary(conf.DefaultTimeout)}, interceptors...)
+		streamInterceptors = append([]grpc.StreamServerInterceptor{timeout.Stream(conf.DefaultTimeout)}, streamInterceptors...)
+	}
+
+	// Add recovery interceptors by default
+	interceptors = append([]grpc.UnaryServerInterceptor{recovery.Unary()}, interceptors...)
+	streamInterceptors = append([]grpc.StreamServerInterceptor{recovery.Stream()}, streamInterceptors...)
+
 	if conf.Metrics {
 		interceptors = append([]grpc.UnaryServerInterceptor{UnaryServerMetricsInterceptor}, interceptors...)
 		streamInterceptors = append([]grpc.StreamServerInterceptor{StreamServerMetricsInterceptor}, streamInterceptors...)
@@ -113,6 +143,14 @@ func newRpcServer(conf *Config) (s grpc.ServiceRegistrar) {
 		grpc.ChainUnaryInterceptor(interceptors...),
 		grpc.ChainStreamInterceptor(streamInterceptors...),
 	)
+
+	// Add TLS if configured
+	if conf.CertFile != "" && conf.KeyFile != "" {
+		creds, err := internaltls.NewServerTransportCredentials(conf.CertFile, conf.KeyFile, conf.CAFile)
+		if err == nil {
+			opt = append(opt, grpc.Creds(creds))
+		}
+	}
 
 	s = grpc.NewServer(opt...)
 	return s
@@ -127,4 +165,8 @@ func (e *Server) Service() naming.Service {
 
 func (e *Server) Server() *grpc.Server {
 	return e.rpcServer
+}
+
+func (e *Server) Config() *Config {
+	return e.conf
 }

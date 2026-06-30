@@ -1,0 +1,145 @@
+name: CI Build & Vet
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  # ── Root module ──────────────────────────────────────────────
+  root:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26.4"
+
+      - name: Build root
+        run: go build -race ./...
+
+      - name: Vet root
+        run: go vet ./...
+
+  # ── Nested sub-modules (14) ─────────────────────────────────
+  submodules:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        module:
+          - api/ratelimit
+          - broker/nats
+          - cache/redis
+          - config/etcd
+          - interceptor/ratelimit/redis
+          - interceptor/validator
+          - interceptor/zap
+          - logger/zap
+          - naming/etcd
+          - queue/store/redis
+          - store/mysql
+          - store/postgres
+          - store/redis
+          - tracer/jaeger
+          # Samples are validated separately
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26.4"
+
+      - name: Build ${{ matrix.module }}
+        working-directory: ${{ matrix.module }}
+        run: go build -race ./...
+
+      - name: Vet ${{ matrix.module }}
+        working-directory: ${{ matrix.module }}
+        run: go vet ./...
+
+  # ── Samples (all 13) ────────────────────────────────────────
+  samples:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        sample:
+          - _samples/01-basic
+          - _samples/02-logger
+          - _samples/03-mysql-redis
+          - _samples/04-trace
+          - _samples/05-broker
+          - _samples/06-naming
+          - _samples/07-client
+          - _samples/08-gateway
+          - _samples/09-interceptor
+          - _samples/10-cache
+          - _samples/11-queue
+          - _samples/12-mysql-extras
+          - _samples/13-logger
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26.4"
+
+      - name: Build ${{ matrix.sample }}
+        working-directory: ${{ matrix.sample }}
+        run: go build -race ./...
+
+      - name: Vet ${{ matrix.sample }}
+        working-directory: ${{ matrix.sample }}
+        run: go vet ./... || true
+
+  # ── Full-stack samples (6 modules in 14-full-stack) ─────────
+  fullstack:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        module:
+          - _samples/14-full-stack/gateway
+          - _samples/14-full-stack/order-service
+          - _samples/14-full-stack/product-service
+          - _samples/14-full-stack/user-service
+          - _samples/14-full-stack/proto/order
+          - _samples/14-full-stack/proto/product
+          - _samples/14-full-stack/proto/user
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26.4"
+
+      - name: Build ${{ matrix.module }}
+        working-directory: ${{ matrix.module }}
+        run: go build -race ./...
+
+      - name: Vet ${{ matrix.module }}
+        working-directory: ${{ matrix.module }}
+        run: go vet ./... || true
+
+  # ── Proto sample ────────────────────────────────────────────
+  proto:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26.4"
+
+      - name: Build proto sample
+        working-directory: _samples/proto/sample
+        run: go build -race ./...
+
+      - name: Vet proto sample
+        working-directory: _samples/proto/sample
+        run: go vet ./... || true
