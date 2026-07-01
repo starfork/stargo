@@ -1,7 +1,9 @@
 package server
 
 import (
+	"context"
 	"net"
+	"net/http"
 	"time"
 
 	"github.com/starfork/stargo/interceptor/recovery"
@@ -15,11 +17,12 @@ import (
 
 // App App
 type Server struct {
-	rpcServer *grpc.Server
-	lis       net.Listener
-	logger    logger.Logger
-	conf      *Config
-	health    *HealthServer
+	rpcServer    *grpc.Server
+	lis          net.Listener
+	logger       logger.Logger
+	conf         *Config
+	health       *HealthServer
+	metricsSrv   *http.Server
 }
 
 func New(conf *Config) *Server {
@@ -65,6 +68,22 @@ func (e *Server) Run() {
 
 	e.logger.Infof("starting: gRPC Listener %s\n", e.conf.Addr)
 
+	// Start metrics HTTP server if configured
+	if e.conf.MetricsAddr != "" {
+		mux := http.NewServeMux()
+		mux.Handle("/metrics", MetricsHandler())
+		e.metricsSrv = &http.Server{
+			Addr:    e.conf.MetricsAddr,
+			Handler: mux,
+		}
+		go func() {
+			e.logger.Infof("metrics server listening on %s", e.conf.MetricsAddr)
+			if err := e.metricsSrv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+				e.logger.Errorf("metrics server error: %v", err)
+			}
+		}()
+	}
+
 	e.rpcServer.Serve(lis)
 }
 
@@ -86,6 +105,12 @@ func (e *Server) Stop() {
 	case <-timer.C:
 		e.logger.Warnf("graceful stop timed out after %v, forcing stop", timeout)
 		e.rpcServer.Stop()
+	}
+
+	if e.metricsSrv != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		e.metricsSrv.Shutdown(ctx)
 	}
 }
 

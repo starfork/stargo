@@ -28,7 +28,9 @@ type Task struct {
 
 	Args pm.Pm // 任务参数
 
+	RetryOnPanic bool // panic 后是否重试（默认 false，panic 进 DLQ）
 }
+
 
 func (e *Task) Marshal() string {
 	task, _ := json.Marshal(e)

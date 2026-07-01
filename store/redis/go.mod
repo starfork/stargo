@@ -10,7 +10,7 @@ require (
 require (
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
-	golang.org/x/text v0.30.0 // indirect
+	golang.org/x/text v0.37.0 // indirect
 )
 
 replace github.com/starfork/stargo => ../../

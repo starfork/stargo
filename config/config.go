@@ -8,6 +8,7 @@ import (
 	"github.com/starfork/stargo/broker"
 	"github.com/starfork/stargo/logger"
 	"github.com/starfork/stargo/naming"
+	"github.com/starfork/stargo/secrets"
 	"github.com/starfork/stargo/server"
 	"github.com/starfork/stargo/store"
 	"github.com/starfork/stargo/tracer"
@@ -34,6 +35,7 @@ type Config struct {
 	Broker   *broker.Config
 	Registry *naming.Config
 	Tracer   *tracer.Config
+	Secret   *secrets.Config
 
 	//Jwt *JwtConfig
 }

@@ -1,6 +1,9 @@
 package logger
 
-import "fmt"
+import (
+	"context"
+	"fmt"
+)
 
 type Logger interface {
 	Warnf(format string, v ...any)
@@ -8,6 +11,8 @@ type Logger interface {
 	Errorf(format string, v ...any)
 	Fatalf(format string, v ...any)
 	Infof(format string, v ...any)
+
+	WithContext(ctx context.Context) Logger
 
 	String() string
 	Options() Options

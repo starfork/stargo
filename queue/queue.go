@@ -140,7 +140,23 @@ func (e *Queue) exec() {
 			defer func() {
 				if r := recover(); r != nil {
 					e.log("panic in handler %s: %v", t.Subkey(), r)
-					e.store.Pop(t)
+					ttl := t.GetTTL(t.Retry)
+					t.Retry++
+					if t.RetryOnPanic && ttl > 0 && t.Retry <= t.RetryMax {
+						t.Delay = ttl
+						if err := e.store.Update(t); err != nil {
+							e.log("[task panic retry failed] %s: %v", t.Subkey(), err)
+							e.store.Pop(t)
+						} else {
+							e.log("[task panic retry scheduled] %s retry=%d", t.Subkey(), t.Retry)
+						}
+					} else {
+						e.log("[task panic dlq] %s", t.Subkey())
+						if dlqErr := e.store.PushDLQ(t); dlqErr != nil {
+							e.log("[task panic dlq failed] %s: %v", t.Subkey(), dlqErr)
+						}
+						e.store.Pop(t)
+					}
 				}
 				<-sem
 			}()
@@ -157,7 +173,10 @@ func (e *Queue) exec() {
 						e.log("[task upd retry] %s", t.Subkey())
 					}
 				} else {
-					e.log("[task err pop] %s %s", t.Subkey(), err.Error())
+					e.log("[task err dlq] %s %s", t.Subkey(), err.Error())
+					if dlqErr := e.store.PushDLQ(t); dlqErr != nil {
+						e.log("[task dlq failed] %s: %v", t.Subkey(), dlqErr)
+					}
 					e.store.Pop(t)
 				}
 			} else {
@@ -185,6 +204,32 @@ func (e *Queue) reclaim() {
 	if len(rs) > 0 {
 		e.log("reclaimed %d expired jobs", len(rs))
 	}
+}
+
+func (e *Queue) ListDLQ(offset, limit int64) ([]*task.Task, error) {
+	keys, err := e.store.FetchDLQ(offset, limit)
+	if err != nil {
+		return nil, err
+	}
+	var tasks []*task.Task
+	for _, key := range keys {
+		if t, err := e.store.ReadDLQTask(key); err == nil {
+			tasks = append(tasks, t)
+		}
+	}
+	return tasks, nil
+}
+
+func (e *Queue) ReplayFromDLQ(taskKey string) error {
+	t, err := e.store.ReadDLQTask(taskKey)
+	if err != nil {
+		return err
+	}
+	return e.store.ReplayFromDLQ(t)
+}
+
+func (e *Queue) DeleteFromDLQ(key string) error {
+	return e.store.PopDLQ(key)
 }
 
 func (e *Queue) Stop() {

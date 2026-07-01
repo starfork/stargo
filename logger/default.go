@@ -74,6 +74,10 @@ func (l *defaultLogger) Infof(format string, v ...any) {
 	l.Logf(InfoLevel, format, v...)
 }
 
+func (l *defaultLogger) WithContext(ctx context.Context) Logger {
+	return l
+}
+
 func (l *defaultLogger) Options() Options {
 	// not guard against options Context values
 	l.RLock()

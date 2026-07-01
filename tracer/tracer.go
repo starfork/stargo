@@ -1,6 +1,9 @@
 package tracer
 
+import "go.opentelemetry.io/otel/trace"
+
 type Tracer interface {
+	Tracer() trace.Tracer
 	Close() error
 }
 
@@ -8,7 +11,8 @@ var DefaultTracer Tracer = &NoopTracer{}
 
 type NoopTracer struct{}
 
-func (t *NoopTracer) Close() error { return nil }
+func (t *NoopTracer) Tracer() trace.Tracer { return trace.NewNoopTracerProvider().Tracer("") }
+func (t *NoopTracer) Close() error         { return nil }
 
 var tracerFactories = make(map[string]func(*Config) (Tracer, error))
 

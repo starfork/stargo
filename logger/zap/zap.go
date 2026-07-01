@@ -1,7 +1,10 @@
 package zap
 
 import (
+	"context"
+
 	"github.com/starfork/stargo/logger"
+	"github.com/starfork/stargo/util/tracing"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -48,3 +51,12 @@ func (z *ZapLogger) Fatalf(format string, v ...any) { z.l.Fatalf(format, v...) }
 func (z *ZapLogger) Infof(format string, v ...any)  { z.l.Infof(format, v...) }
 func (z *ZapLogger) String() string                  { return "zap" }
 func (z *ZapLogger) Options() logger.Options         { return logger.Options{} }
+
+func (z *ZapLogger) WithContext(ctx context.Context) logger.Logger {
+	traceID := tracing.TraceIDFromContext(ctx)
+	spanID := tracing.SpanIDFromContext(ctx)
+	return &ZapLogger{l: z.l.With(
+		"trace_id", traceID,
+		"span_id", spanID,
+	)}
+}

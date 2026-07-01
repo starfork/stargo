@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/starfork/stargo/secrets"
 	"gopkg.in/yaml.v3"
 )
 
@@ -37,6 +38,19 @@ func ParseConfig(f string) (*Config, error) {
 	if err != nil {
 		return conf, err
 	}
+
+	if conf.Secret != nil && conf.Secret.Driver != "" {
+		sm, err := secrets.New(conf.Secret.Driver, conf.Secret)
+		if err != nil {
+			return conf, fmt.Errorf("secret manager init: %w", err)
+		}
+		defer sm.Close()
+
+		if err := secrets.ResolveAll(sm, conf); err != nil {
+			return conf, fmt.Errorf("secret resolve: %w", err)
+		}
+	}
+
 	if err := conf.Validate(); err != nil {
 		return conf, fmt.Errorf("config validation failed: %w", err)
 	}

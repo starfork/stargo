@@ -65,3 +65,7 @@ func (s *SlogLogger) Fatalf(format string, v ...any) { s.log(slog.LevelError, fo
 func (s *SlogLogger) Infof(format string, v ...any)  { s.log(slog.LevelInfo, format, v...) }
 func (s *SlogLogger) String() string                  { return "slog" }
 func (s *SlogLogger) Options() logger.Options         { return logger.Options{} }
+
+func (s *SlogLogger) WithContext(ctx context.Context) logger.Logger {
+	return s
+}

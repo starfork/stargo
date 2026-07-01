@@ -8,6 +8,7 @@ import (
 	opentracing "github.com/opentracing/opentracing-go"
 	jaeger "github.com/uber/jaeger-client-go"
 	config "github.com/uber/jaeger-client-go/config"
+	"go.opentelemetry.io/otel/trace"
 )
 
 func init() {
@@ -17,6 +18,10 @@ func init() {
 type JaegerTracer struct {
 	tracer opentracing.Tracer
 	closer io.Closer
+}
+
+func (j *JaegerTracer) Tracer() trace.Tracer {
+	return trace.NewNoopTracerProvider().Tracer("jaeger")
 }
 
 func (j *JaegerTracer) Close() error {

@@ -101,7 +101,9 @@ func DefaultOptions() []grpc.DialOption {
 			MinConnectTimeout: DialTimeout,
 		}),
 		grpc.WithChainUnaryInterceptor(timeout.UnaryClient()),
+		grpc.WithChainUnaryInterceptor(UnaryClientMetricsInterceptor),
 		grpc.WithChainStreamInterceptor(timeout.StreamClient()),
+		grpc.WithChainStreamInterceptor(StreamClientMetricsInterceptor),
 	}
 	return opts
 }

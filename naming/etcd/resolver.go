@@ -45,11 +45,16 @@ func NewResolver(conf *naming.Config) (naming.Resolver, error) {
 		return nil, err
 	}
 
-	return &Resolver{
+	r := &Resolver{
 		Builder: b,
 		conf:    conf,
 		cli:     cli,
-	}, nil
+	}
+
+	if conf.ResolverFallback && conf.ResolverCacheTTL > 0 {
+		return NewCachedResolver(r, cli, conf), nil
+	}
+	return r, nil
 }
 
 func (e *Resolver) Config() *naming.Config {

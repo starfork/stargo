@@ -9,9 +9,9 @@ require (
 
 require (
 	github.com/benbjohnson/clock v1.3.0 // indirect
-	golang.org/x/sys v0.37.0 // indirect
+	golang.org/x/sys v0.45.0 // indirect
 	golang.org/x/time v0.14.0 // indirect
-	google.golang.org/grpc v1.76.0 // indirect
+	google.golang.org/grpc v1.81.1 // indirect
 )
 
 replace github.com/starfork/stargo => ../../

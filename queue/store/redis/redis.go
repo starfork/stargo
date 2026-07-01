@@ -180,6 +180,53 @@ func (e *Redis) ReadTask(key string) (*task.Task, error) {
 	return task, nil
 }
 
+func (e *Redis) PushDLQ(t *task.Task) error {
+	dlqKey := e.name + ".dlq"
+	member := redis.Z{
+		Score:  float64(time.Now().Unix()),
+		Member: t.Subkey(),
+	}
+	pipe := e.rdc.Pipeline()
+	pipe.ZAdd(e.ctx, dlqKey, member)
+	pipe.Set(e.ctx, e.name+".dlq."+t.Subkey(), t.Marshal(), 0)
+	_, err := pipe.Exec(e.ctx)
+	return err
+}
+
+func (e *Redis) PopDLQ(key string) error {
+	dlqKey := e.name + ".dlq"
+	pipe := e.rdc.Pipeline()
+	pipe.ZRem(e.ctx, dlqKey, key)
+	pipe.Del(e.ctx, e.name+".dlq."+key)
+	_, err := pipe.Exec(e.ctx)
+	return err
+}
+
+func (e *Redis) ReplayFromDLQ(t *task.Task) error {
+	pipe := e.rdc.Pipeline()
+	pipe.ZRem(e.ctx, e.name+".dlq", t.Subkey())
+	pipe.Del(e.ctx, e.name+".dlq."+t.Subkey())
+	if _, err := pipe.Exec(e.ctx); err != nil {
+		return err
+	}
+	t.Retry = 0
+	return e.Push(t)
+}
+
+func (e *Redis) FetchDLQ(offset, limit int64) ([]string, error) {
+	dlqKey := e.name + ".dlq"
+	rs := e.rdc.ZRange(e.ctx, dlqKey, offset, offset+limit-1)
+	return rs.Val(), rs.Err()
+}
+
+func (e *Redis) ReadDLQTask(key string) (*task.Task, error) {
+	rs := e.rdc.Get(e.ctx, e.name+".dlq."+key)
+	if rs.Err() != nil {
+		return nil, rs.Err()
+	}
+	return task.UnmarshalJson(rs.Val())
+}
+
 func (e *Redis) ReclaimExpired() ([]string, error) {
 	now := time.Now().Unix()
 	processingKey := e.name + ".processing"

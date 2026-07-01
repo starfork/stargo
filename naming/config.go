@@ -1,5 +1,7 @@
 package naming
 
+import "time"
+
 type Config struct {
 	Org         string
 	Environment string
@@ -9,4 +11,9 @@ type Config struct {
 	Auth string //认证。多个用逗号隔开。于host一一对应
 	Num  int    //库的数字
 	Ttl  int64  //过期时间
+
+	ResolverCacheTTL    time.Duration
+	ResolverFallback    bool
+	HealthCheckInterval time.Duration
+	FallbackThreshold   int
 }

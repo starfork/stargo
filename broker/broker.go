@@ -9,18 +9,35 @@ type Broker interface {
 	Flush() error
 }
 
+type JetStreamBroker interface {
+	Broker
+
+	JetStreamPublish(topic string, msg Message) (*PubAck, error)
+	JetStreamSubscribe(topic, consumerGroup string, handler JetStreamHandler) (Subscription, error)
+}
+
+type PubAck struct {
+	Stream    string
+	Sequence  uint64
+	Duplicate bool
+}
+
 type Subscription interface {
 	Unsubscribe() error
 }
 
 type Message struct {
-	Topic  string
-	Reply  string
-	Header pm.Pm
-	Body   []byte
+	Topic     string
+	Reply     string
+	Header    pm.Pm
+	Body      []byte
+	MsgID     string
+	Timestamp int64
 }
 
 type MessageHandler func(Message)
+
+type JetStreamHandler func(msg Message) error
 
 var brokerFactories = make(map[string]func(*Config) (Broker, error))
 

@@ -23,10 +23,11 @@ type Config struct {
 	UnaryInterceptor  []grpc.UnaryServerInterceptor
 	StreamInterceptor []grpc.StreamServerInterceptor
 
-	ServerOpts       []grpc.ServerOption
-	ShutdownTimeout  time.Duration
-	Metrics          bool
-	DefaultTimeout   time.Duration // default timeout for server handlers, 0 = no default
+	ServerOpts      []grpc.ServerOption
+	ShutdownTimeout time.Duration
+	Metrics         bool
+	MetricsAddr     string        // metrics HTTP serve address, e.g. ":9090"
+	DefaultTimeout  time.Duration // default timeout for server handlers, 0 = no default
 
 	// TLS
 	CertFile string // server cert file for TLS
