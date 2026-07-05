@@ -10,7 +10,7 @@ retract (
 // bugs found, not support
 
 require (
-	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.3.2
+	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.3.3
 	github.com/prometheus/client_golang v1.22.0
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.69.0
 	go.opentelemetry.io/otel/trace v1.44.0
