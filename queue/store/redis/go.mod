@@ -4,7 +4,7 @@ go 1.26.4
 
 require (
 	github.com/redis/go-redis/v9 v9.21.0
-	github.com/starfork/stargo v0.0.0
+	github.com/starfork/stargo v0.4.0
 )
 
 require (
