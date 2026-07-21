@@ -7,13 +7,16 @@ on:
 
 permissions:
   contents: write
-  pull-requests: write
 
 jobs:
   update-deps:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+          fetch-tags: true
 
       - uses: actions/setup-go@v5
         with:
@@ -26,10 +29,13 @@ jobs:
 
       - name: Update contrib submodule dependencies
         run: |
-          for dir in $(find . -name "go.mod" -not -path "./go.mod" | sed 's|/go.mod||g'); do
+          for dir in $(find . -name "go.mod" -not -path "./go.mod" ! -path './_samples/*' | sed 's|/go.mod||g'); do
             echo "=== Updating $dir ==="
             (cd "$dir" && go get -u ./... && go mod tidy) || echo "Failed to update $dir, continuing..."
           done
+
+      - name: Build verification
+        run: go build ./...
 
       - name: git config
         run: |
@@ -45,20 +51,35 @@ jobs:
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Create Pull Request
+      - name: Commit and push changes
         if: steps.check.outputs.changed == 'true'
-        uses: peter-evans/create-pull-request@v7
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "chore(deps): auto-update Go dependencies"
-          branch: auto/deps-update
-          delete-branch: true
-          title: "chore(deps): auto-update Go dependencies"
-          body: |
-            Automated Go dependency update.
+        run: |
+          git add -A
+          git commit -m "chore(deps): auto-update Go dependencies"
+          git push origin main
 
-            - Root module: `go get -u ./... && go mod tidy`
-            - All contrib submodules updated with the same commands.
+      - name: Compute next tag
+        if: steps.check.outputs.changed == 'true'
+        id: tag
+        run: |
+          LATEST_TAG=$(git tag --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -1)
+          if [ -z "$LATEST_TAG" ]; then
+            echo "No semver tag found, defaulting to v0.0.0"
+            LATEST_TAG="v0.0.0"
+          fi
+          echo "Latest tag: $LATEST_TAG"
+          
+          MAJOR=$(echo "$LATEST_TAG" | cut -d. -f1 | tr -d 'v')
+          MINOR=$(echo "$LATEST_TAG" | cut -d. -f2)
+          PATCH=$(echo "$LATEST_TAG" | cut -d. -f3)
+          NEXT_PATCH=$((PATCH + 1))
+          NEXT_TAG="v${MAJOR}.${MINOR}.${NEXT_PATCH}"
+          
+          echo "next_tag=$NEXT_TAG" >> "$GITHUB_OUTPUT"
+          echo "Next tag: $NEXT_TAG"
 
-            This PR was created automatically by the `auto-update-deps` workflow.
-          labels: dependencies
+      - name: Create and push tag
+        if: steps.check.outputs.changed == 'true'
+        run: |
+          git tag ${{ steps.tag.outputs.next_tag }}
+          git push origin ${{ steps.tag.outputs.next_tag }}
