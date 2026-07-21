@@ -5,6 +5,8 @@ import (
 	"github.com/starfork/stargo/api"
 	"github.com/starfork/stargo/config"
 	pb "github.com/starfork/stargo/samples/proto/sample"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 func main() {
@@ -12,22 +14,19 @@ func main() {
 	app := stargo.New("gateway-demo", conf)
 	h := NewHandler(app.Logger())
 
-	// 注册 gRPC 服务端 / Register the gRPC server
 	pb.RegisterSampleServiceServer(app.RpcServer(), h)
 
-	// 在 goroutine 中启动 gRPC 服务 / Start gRPC in background
 	go app.Run(&pb.SampleService_ServiceDesc, h)
 
-	// 启动 HTTP 网关 / Start HTTP gateway
 	gw, err := api.NewApi(&api.Config{
-		App:  "gateway-demo",
-		Port: ":8080",
-		// 可选：加密 marshaler (AES-GCM) / Optional encrypted marshaler
-		// Enc:    true,
-		// EncKey: "0123456789abcdef0123456789abcdef",
+		App:      "gateway-demo",
+		Port:     ":8080",
+		Registry: conf.Registry,
+		DiaOpts:  []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())},
 	})
-	if err != nil {
-		panic(err)
-	}
-	gw.Run()
+	api.E(err)
+
+	api.E(pb.RegisterSampleServiceHandlerClient(gw.Ctx(), gw.Rmux(), pb.NewSampleServiceClient(gw.Conn())))
+
+	api.E(gw.Run())
 }
