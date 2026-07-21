@@ -67,19 +67,40 @@ jobs:
             echo "No semver tag found, defaulting to v0.0.0"
             LATEST_TAG="v0.0.0"
           fi
-          echo "Latest tag: $LATEST_TAG"
-          
+          echo "Latest root tag: $LATEST_TAG"
+
           MAJOR=$(echo "$LATEST_TAG" | cut -d. -f1 | tr -d 'v')
           MINOR=$(echo "$LATEST_TAG" | cut -d. -f2)
           PATCH=$(echo "$LATEST_TAG" | cut -d. -f3)
           NEXT_PATCH=$((PATCH + 1))
           NEXT_TAG="v${MAJOR}.${MINOR}.${NEXT_PATCH}"
-          
+
           echo "next_tag=$NEXT_TAG" >> "$GITHUB_OUTPUT"
           echo "Next tag: $NEXT_TAG"
 
-      - name: Create and push tag
+      - name: Create and push all tags (root + submodules)
         if: steps.check.outputs.changed == 'true'
         run: |
-          git tag ${{ steps.tag.outputs.next_tag }}
-          git push origin ${{ steps.tag.outputs.next_tag }}
+          V=${{ steps.tag.outputs.next_tag }}
+
+          # Root tag
+          git tag "$V"
+          echo "tagged: $V"
+
+          # All submodule tags
+          git tag "api/ratelimit/$V"
+          git tag "broker/nats/$V"
+          git tag "cache/redis/$V"
+          git tag "config/etcd/$V"
+          git tag "interceptor/ratelimit/redis/$V"
+          git tag "interceptor/validator/$V"
+          git tag "interceptor/zap/$V"
+          git tag "logger/zap/$V"
+          git tag "naming/etcd/$V"
+          git tag "queue/store/redis/$V"
+          git tag "store/mysql/$V"
+          git tag "store/postgres/$V"
+          git tag "store/redis/$V"
+          git tag "tracer/jaeger/$V"
+
+          git push origin --tags
