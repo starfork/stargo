@@ -71,6 +71,12 @@ var DefaultMarshalerOption = runtime.JSONPb{
 
 var DefaultMarshaler = runtime.WithMarshalerOption(runtime.MIMEWildcard, &DefaultMarshalerOption)
 
+func E(err error) {
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
 // DefaultHandlerWrapper is a pass-through wrapper (used as fallback when no custom wrapper is set)
 var DefaultHandlerWrapper = func(h http.Handler) http.Handler { return h }
 
