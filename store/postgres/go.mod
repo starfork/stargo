@@ -4,7 +4,7 @@ go 1.26.4
 
 require (
 	github.com/starfork/stargo v1.1.1
-	gorm.io/driver/postgres v1.6.0
+	gorm.io/driver/postgres v1.6.1
 	gorm.io/gorm v1.31.2
 )
 
