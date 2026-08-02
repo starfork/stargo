@@ -5,7 +5,7 @@ go 1.26.4
 require (
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.3.3
 	go.uber.org/zap v1.28.0
-	google.golang.org/grpc v1.82.1
+	google.golang.org/grpc v1.83.0
 )
 
 require (
