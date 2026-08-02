@@ -5,7 +5,7 @@ go 1.26.4
 require (
 	github.com/starfork/stargo v1.1.1
 	go.etcd.io/etcd/client/v3 v3.7.1
-	google.golang.org/grpc v1.82.1
+	google.golang.org/grpc v1.83.0
 )
 
 require (
