@@ -5,7 +5,7 @@ go 1.26.4
 require (
 	github.com/redis/go-redis/v9 v9.21.0
 	github.com/starfork/gorm-cache v0.0.0-20251013074659-4bf32fdac72c
-	github.com/starfork/stargo v1.1.1
+	github.com/starfork/stargo v1.1.2
 	github.com/twpayne/go-geom v1.6.1
 	gorm.io/driver/mysql v1.6.0
 	gorm.io/gorm v1.31.2

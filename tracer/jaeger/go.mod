@@ -4,7 +4,7 @@ go 1.26.4
 
 require (
 	github.com/opentracing/opentracing-go v1.2.0
-	github.com/starfork/stargo v1.1.1
+	github.com/starfork/stargo v1.1.2
 	github.com/uber/jaeger-client-go v2.30.0+incompatible
 	go.opentelemetry.io/otel/trace v1.44.0
 )

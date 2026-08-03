@@ -3,8 +3,8 @@ module github.com/starfork/stargo/store/postgres
 go 1.26.4
 
 require (
-	github.com/starfork/stargo v1.1.1
-	gorm.io/driver/postgres v1.6.0
+	github.com/starfork/stargo v1.1.2
+	gorm.io/driver/postgres v1.6.2
 	gorm.io/gorm v1.31.2
 )
 
