@@ -4,8 +4,8 @@ go 1.26.4
 
 require (
 	github.com/json-iterator/go v1.1.12
-	github.com/redis/go-redis/v9 v9.21.0
-	github.com/starfork/stargo v1.1.2
+	github.com/redis/go-redis/v9 v9.22.0
+	github.com/starfork/stargo v1.1.3
 )
 
 require (
@@ -14,6 +14,7 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
 	golang.org/x/sync v0.22.0 // indirect
+	golang.org/x/sys v0.47.0 // indirect
 )
 
 replace github.com/starfork/stargo => ../../
