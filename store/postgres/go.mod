@@ -3,7 +3,7 @@ module github.com/starfork/stargo/store/postgres
 go 1.26.4
 
 require (
-	github.com/starfork/stargo v1.1.3
+	github.com/starfork/stargo v1.1.4
 	gorm.io/driver/postgres v1.6.2
 	gorm.io/gorm v1.31.2
 )
@@ -16,7 +16,7 @@ require (
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	golang.org/x/sync v0.22.0 // indirect
-	golang.org/x/text v0.40.0 // indirect
+	golang.org/x/text v0.41.0 // indirect
 )
 
 replace github.com/starfork/stargo => ../../

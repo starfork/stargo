@@ -5,7 +5,7 @@ go 1.26.4
 require (
 	github.com/redis/go-redis/v9 v9.22.0
 	github.com/starfork/gorm-cache v0.0.0-20251013074659-4bf32fdac72c
-	github.com/starfork/stargo v1.1.3
+	github.com/starfork/stargo v1.1.4
 	github.com/twpayne/go-geom v1.6.1
 	gorm.io/driver/mysql v1.6.0
 	gorm.io/gorm v1.31.2
@@ -20,7 +20,7 @@ require (
 	go.uber.org/atomic v1.11.0 // indirect
 	golang.org/x/sync v0.22.0 // indirect
 	golang.org/x/sys v0.47.0 // indirect
-	golang.org/x/text v0.40.0 // indirect
+	golang.org/x/text v0.41.0 // indirect
 )
 
 replace github.com/starfork/stargo => ../../
