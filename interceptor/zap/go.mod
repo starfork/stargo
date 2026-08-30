@@ -3,13 +3,12 @@ module github.com/starfork/stargo/interceptor/zap
 go 1.26.4
 
 require (
-	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.3.3
+	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.3.4
 	go.uber.org/zap v1.28.0
 	google.golang.org/grpc v1.83.1
 )
 
 require (
-	github.com/stretchr/testify v1.11.1 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/net v0.58.0 // indirect
 	golang.org/x/sys v0.47.0 // indirect
