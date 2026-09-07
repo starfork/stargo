@@ -3,7 +3,7 @@ module github.com/starfork/stargo/api/ratelimit
 go 1.26.4
 
 require (
-	github.com/starfork/stargo v1.1.6
+	github.com/starfork/stargo v1.1.7
 	go.uber.org/ratelimit v0.3.1
 )
 
