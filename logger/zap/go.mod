@@ -3,7 +3,7 @@ module github.com/starfork/stargo/logger/zap
 go 1.26.4
 
 require (
-	github.com/starfork/stargo v1.1.7
+	github.com/starfork/stargo v1.1.8
 	go.uber.org/zap v1.28.0
 )
 
