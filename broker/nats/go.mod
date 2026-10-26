@@ -4,8 +4,8 @@ go 1.26.4
 
 require (
 	github.com/json-iterator/go v1.1.12
-	github.com/nats-io/nats.go v1.54.0
-	github.com/starfork/stargo v1.1.13
+	github.com/nats-io/nats.go v1.55.0
+	github.com/starfork/stargo v1.1.14
 )
 
 require (
